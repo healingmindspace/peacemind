@@ -371,7 +371,7 @@ export default function SummaryTab() {
         <div className="max-w-sm md:max-w-lg mx-auto mt-8">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold text-pm-text">
-              {lang === "zh" ? "💡 Healer 洞察" : "💡 Healer Insight"}
+              {lang === "zh" ? "💡 Peacemind 洞察" : "💡 Peacemind Insight"}
             </h3>
             <div className="flex gap-1">
               {(["today", "week", "month", "quarter"] as const).map((p) => (

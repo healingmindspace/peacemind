@@ -20,7 +20,7 @@ To make mental health support accessible, gentle, and stigma-free — helping pe
 
 ## The Solution
 
-Heal meets people where they are — whether they're having a good day or struggling. It combines mood tracking, breathing exercises, journaling, goal-setting, and validated self-assessments in one calm, beautiful interface. AI (Healer) acts as a warm companion, not a therapist — noticing patterns, offering gentle encouragement, and knowing when to suggest professional help.
+Heal meets people where they are — whether they're having a good day or struggling. It combines mood tracking, breathing exercises, journaling, goal-setting, and validated self-assessments in one calm, beautiful interface. AI (Peacemind) acts as a warm companion, not a therapist — noticing patterns, offering gentle encouragement, and knowing when to suggest professional help.
 
 ## Four Tabs
 
@@ -41,7 +41,7 @@ Heal meets people where they are — whether they're having a good day or strugg
 
 ### 🌱 Grow — Small steps forward
 - Growth paths (School, Work, Life, Exercise, or custom)
-- AI-powered step planning (Healer suggests 3 gentle first steps)
+- AI-powered step planning (Peacemind suggests 3 gentle first steps)
 - Smart schedule detection from natural language ("run tomorrow 9am")
 - Built-in calendar scheduling with date/time picker
 - Journal with AI responses, photo extraction, threaded updates
@@ -50,7 +50,7 @@ Heal meets people where they are — whether they're having a good day or strugg
 
 ### ✨ Me — Your story at a glance
 - Today's stats, streaks, weekly overview
-- Healer Insight: AI analysis integrating mood, journal, path progress, and assessment scores
+- Peacemind Insight: AI analysis integrating mood, journal, path progress, and assessment scores
 - Read-aloud support
 - About, privacy, feedback
 

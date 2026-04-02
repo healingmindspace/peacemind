@@ -64,7 +64,7 @@ export default function WeeklyReview({ user }: { user: { id: string } }) {
         >
           <span className="text-2xl">✨</span>
           <p className="text-sm font-medium text-brand mt-1">{lang === "zh" ? "生成回顾" : "Generate Review"}</p>
-          <p className="text-xs text-pm-text-muted">{lang === "zh" ? "Healer 为你总结本周进展" : "Healer summarizes your week"}</p>
+          <p className="text-xs text-pm-text-muted">{lang === "zh" ? "Peacemind 为你总结本周进展" : "Peacemind summarizes your week"}</p>
         </button>
       )}
 

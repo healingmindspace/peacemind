@@ -107,7 +107,7 @@ All 15+ API routes already follow API-first:
 | /api/tasks | Tasks CRUD (encrypted) | Yes | 100/hr |
 | /api/goal-review | Weekly review AI | Yes | 5/hr |
 | /api/plan-path | AI step planning | No* | 10/hr |
-| /api/daily-summary | Healer Insight AI | No* | 10/hr |
+| /api/daily-summary | Peacemind Insight AI | No* | 10/hr |
 | /api/daily-comfort | Daily comfort AI | Optional | 10/hr |
 | /api/breathing | Breathing sessions | Yes | 100/hr |
 | /api/assessments | PHQ-9/GAD-7 scores | Yes | 100/hr |

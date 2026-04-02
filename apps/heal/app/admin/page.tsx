@@ -650,7 +650,7 @@ export default function AdminPage() {
                 <p>• <strong>/api/journal</strong> — encrypted CRUD</p>
                 <p>• <strong>/api/respond</strong> — journal AI (20/hr)</p>
                 <p>• <strong>/api/mood-respond</strong> — mood AI with history (20/hr)</p>
-                <p>• <strong>/api/daily-summary</strong> — Healer Insight with assessment data (10/hr)</p>
+                <p>• <strong>/api/daily-summary</strong> — Peacemind Insight with assessment data (10/hr)</p>
                 <p>• <strong>/api/mood-options</strong> — custom trigger/helped tags CRUD</p>
                 <p>• <strong>/api/assessments</strong> — PHQ-9/GAD-7 scores CRUD</p>
                 <p>• <strong>/api/visit</strong> — IP tracking (bot-filtered)</p>

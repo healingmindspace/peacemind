@@ -17,7 +17,7 @@
 Every piece of guidance on peacemind is either:
 1. **From a vetted expert** — licensed, credentialed, verified
 2. **From validated science** — PHQ-9, GAD-7, evidence-based techniques
-3. **From AI trained on professional standards** — Healer doesn't guess, it follows clinical frameworks
+3. **From AI trained on professional standards** — Peacemind doesn't guess, it follows clinical frameworks
 
 YouTube tells you what worked for one person. Peacemind shows you **what works for you**, validated by professionals.
 
@@ -41,7 +41,7 @@ YouTube tells you what worked for one person. Peacemind shows you **what works f
 Layer 1: Self-tracking (Heal, Health, Move)
     → You understand your own patterns
 
-Layer 2: AI insights (Healer)
+Layer 2: AI insights (Peacemind)
     → AI notices patterns you miss, trained on clinical standards
 
 Layer 3: Community (Forum)

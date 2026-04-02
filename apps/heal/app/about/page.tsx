@@ -131,7 +131,7 @@ export default function AboutPage() {
               <p className="text-xs text-[#6b5b8a]">{zh ? "日记条目使用AES-256加密存储。即使管理员也无法读取。" : "Your journal entries are now encrypted with AES-256 before being stored. Even database administrators cannot read them."}</p>
             </div>
             <div>
-              <p className="font-semibold text-[#3d3155]">{zh ? "Healer 洞察" : "Healer Insight"}</p>
+              <p className="font-semibold text-[#3d3155]">{zh ? "Peacemind 洞察" : "Peacemind Insight"}</p>
               <p className="text-xs text-[#6b5b8a]">{zh ? "获取每日/每周/每月/每季度的情绪、日记和自评AI分析，支持朗读。" : "Get AI analysis of your mood, journal, and self-assessment patterns — daily, weekly, monthly, or quarterly. With read-aloud support."}</p>
             </div>
             <div>

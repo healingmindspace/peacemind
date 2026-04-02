@@ -119,7 +119,7 @@ A network of vetted professionals who provide real expert guidance across the pe
 ### Phase 4: AI + Expert Hybrid
 - AI drafts initial responses, expert reviews and approves
 - AI flags questions that need expert attention
-- Expert-trained AI: improve Healer's responses based on expert feedback
+- Expert-trained AI: improve Peacemind's responses based on expert feedback
 
 ## Tech Requirements
 - Expert role in auth system (Supabase RLS)

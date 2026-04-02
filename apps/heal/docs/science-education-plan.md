@@ -80,11 +80,11 @@ Add 4-5 new topics:
 
 ### Phase 2: Interactive Elements
 - Mini self-assessments: "What's your Big Five profile?"
-- "Did you know?" cards in daily comfort / Healer Insight
+- "Did you know?" cards in daily comfort / Peacemind Insight
 - Link science to actions: "Your cortisol might be high. Try 3 slow breaths."
 
 ### Phase 3: Science-Informed AI
-- Healer references science in responses: "That's your amygdala doing its job — it's trying to protect you"
+- Peacemind references science in responses: "That's your amygdala doing its job — it's trying to protect you"
 - AI insights include brain chemistry context: "Exercise days correlate with better mood — that's the serotonin and endorphin boost"
 
 ## Content Principles

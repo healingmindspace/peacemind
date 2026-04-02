@@ -35,7 +35,7 @@ Exercise isn't punishment. It's medicine for your nervous system. Even 5 minutes
 - Weekly movement goals (not calories or miles — minutes of movement)
 - Streaks that celebrate consistency, not intensity
 - "Rest days matter" — rest is part of the plan
-- AI coach (Healer): "You've been stressed this week. A gentle walk might help."
+- AI coach (Peacemind): "You've been stressed this week. A gentle walk might help."
 
 ### 📚 Learn
 - Why exercise helps depression (serotonin, endorphins, BDNF)
