@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useI18n } from "@/lib/i18n";
 import BreathingExercise from "./BreathingExercise";
 import GroundingExercise from "./GroundingExercise";
+import RainOnWindow from "./RainOnWindow";
+import OneMinutePause from "./OneMinutePause";
 import RelaxTab from "./RelaxTab";
 import SelfAssessment from "./SelfAssessment";
 
@@ -42,6 +44,10 @@ export default function CalmTab({ suggestedAssessment }: { suggestedAssessment?:
         <>
           <BreathingExercise />
           <GroundingExercise />
+          <div className="border-t border-pm-accent/50 mt-4" />
+          <OneMinutePause />
+          <div className="border-t border-pm-accent/50 mt-4" />
+          <RainOnWindow />
           <div className="border-t border-pm-accent/50 mt-4" />
           <RelaxTab />
         </>
