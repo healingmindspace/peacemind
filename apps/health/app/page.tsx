@@ -23,12 +23,21 @@ function AppContent() {
   const { t } = useI18n();
 
   const [greeting, setGreeting] = useState("");
+  const [buildInfo, setBuildInfo] = useState("");
   useEffect(() => {
     const hour = new Date().getHours();
     if (hour < 12) setGreeting(t("greeting.morning"));
     else if (hour < 17) setGreeting(t("greeting.afternoon"));
     else setGreeting(t("greeting.evening"));
   }, [t]);
+
+  useEffect(() => {
+    const sha = (process.env.NEXT_PUBLIC_COMMIT_SHA || "local").slice(0, 7);
+    const time = process.env.NEXT_PUBLIC_BUILD_TIME
+      ? new Date(process.env.NEXT_PUBLIC_BUILD_TIME).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })
+      : "local";
+    setBuildInfo(`Build: ${sha} · ${time}`);
+  }, []);
 
   return (
     <div className="flex min-h-screen">
@@ -59,6 +68,7 @@ function AppContent() {
             <LangSwitcher />
           </div>
           <AuthButton />
+          {buildInfo && <p className="text-[10px] text-pm-text-muted">{buildInfo}</p>}
         </div>
       </aside>
 
