@@ -1,12 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { createClient } from "@/lib/supabase";
+import { ADMIN_EMAIL } from "@/lib/admin";
 import AppGrid from "./components/AppGrid";
 import InsightPanel from "./components/InsightPanel";
 import AccountBar from "./components/AccountBar";
+import AdminDashboard from "./components/admin/AdminDashboard";
+
+type Section = "apps" | "insights" | "discover" | "admin";
 
 export default function Console() {
-  const [activeSection, setActiveSection] = useState<"apps" | "insights" | "discover">("apps");
+  const [activeSection, setActiveSection] = useState<Section>("apps");
+  const [isAdmin, setIsAdmin] = useState(false);
+  const supabase = useMemo(() => createClient(), []);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setIsAdmin(user?.email === ADMIN_EMAIL);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAdmin(session?.user?.email === ADMIN_EMAIL);
+    });
+    return () => subscription.unsubscribe();
+  }, [supabase]);
+
+  const tabs: { id: Section; label: string }[] = [
+    { id: "apps", label: "My Apps" },
+    { id: "insights", label: "Insights" },
+    { id: "discover", label: "Discover" },
+    ...(isAdmin ? [{ id: "admin" as Section, label: "Admin" }] : []),
+  ];
 
   return (
     <div className="min-h-screen">
@@ -22,11 +46,7 @@ export default function Console() {
       {/* Navigation */}
       <nav className="px-6 max-w-4xl mx-auto mb-6">
         <div className="flex gap-1">
-          {([
-            { id: "apps", label: "My Apps" },
-            { id: "insights", label: "Insights" },
-            { id: "discover", label: "Discover" },
-          ] as const).map((tab) => (
+          {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveSection(tab.id)}
@@ -47,6 +67,7 @@ export default function Console() {
         {activeSection === "apps" && <AppGrid />}
         {activeSection === "insights" && <InsightPanel />}
         {activeSection === "discover" && <DiscoverSection />}
+        {activeSection === "admin" && isAdmin && <AdminDashboard />}
       </main>
     </div>
   );
