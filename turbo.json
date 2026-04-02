@@ -1,5 +1,14 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "globalEnv": [
+    "NEXT_PUBLIC_SUPABASE_URL",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+    "NEXT_PUBLIC_GOOGLE_CALENDAR_CLIENT_ID",
+    "ANTHROPIC_API_KEY",
+    "ENCRYPTION_KEY",
+    "GOOGLE_CALENDAR_CLIENT_SECRET",
+    "IPINFO_TOKEN"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
