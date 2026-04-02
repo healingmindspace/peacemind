@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  transpilePackages: ["@peacemind/lib", "@peacemind/ui", "@peacemind/theme"],
 };
 
 export default nextConfig;
