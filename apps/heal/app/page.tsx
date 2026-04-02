@@ -91,6 +91,7 @@ function AppContent() {
             <a href="/about" className="text-xs text-pm-text-muted hover:text-brand">About</a>
             <a href="/privacy" className="text-xs text-pm-text-muted hover:text-brand">Privacy</a>
             <a href="/security" className="text-xs text-pm-text-muted hover:text-brand">Security</a>
+            <a href="https://github.com/healingmindspace/peacemind" target="_blank" rel="noopener noreferrer" className="text-xs text-pm-text-muted hover:text-brand">Open Source</a>
             <CrisisResources compact />
             <LangSwitcher />
           </div>

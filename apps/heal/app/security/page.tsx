@@ -138,6 +138,14 @@ export default function SecurityPage() {
                     ? "Peacemind是开源的。每一行代码都是公开的。任何人都可以验证我们的加密是否真实、是否有隐藏追踪器、你的数据到底去了哪里。透明不只是政策——它在代码里。"
                     : "Peacemind is open source. Every line of code is public. Anyone can verify that our encryption is real, that there are no hidden trackers, and that your data goes exactly where we say it does. Transparency isn't just a policy — it's in the code."}
                 </p>
+                <a
+                  href="https://github.com/healingmindspace/peacemind"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block mt-3 px-4 py-2 rounded-full text-xs font-medium bg-[#f0e6f6] text-[#7c6a9e] hover:bg-[#e8dff0] transition-all"
+                >
+                  {zh ? "查看源代码 →" : "View source code →"}
+                </a>
               </div>
             </div>
           </div>
