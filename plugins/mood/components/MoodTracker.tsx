@@ -8,6 +8,7 @@ import { useI18n } from "@/lib/i18n";
 import MoodChart from "./MoodChart";
 import TriggerStep from "./mood/TriggerStep";
 import MoodHistoryList from "./mood/MoodHistoryList";
+import StreakBanner from "@/app/components/StreakBanner";
 
 interface MoodEntry {
   id: string;
@@ -50,6 +51,7 @@ interface GrowIntent {
 
 export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: { onNavigateToGrow?: (intent: GrowIntent) => void; onSuggestAssessment?: (type: "phq9" | "gad7") => void }) {
   const [step, setStep] = useState<Step>("mood");
+  const [moodLogCount, setMoodLogCount] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [selectedTriggers, setSelectedTriggers] = useState<string[]>([]);
   const [customTrigger, setCustomTrigger] = useState("");
@@ -352,6 +354,7 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
 
     if (insertedData?.id) {
       setStep("done");
+      setMoodLogCount((c) => c + 1);
       loadHistory(user.id, timeRange);
 
       // Wellness check: detect concerning mood patterns
@@ -451,6 +454,7 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
 
   return (
     <section className="py-6 px-4 text-center">
+      <StreakBanner onMoodLogged={moodLogCount > 0} />
       <h2 className="text-xl font-semibold text-pm-text mb-1">
         {t("mood.title")}
       </h2>
