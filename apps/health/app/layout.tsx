@@ -10,7 +10,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#e8f0e6",
+  themeColor: "#f5f6f0",
 };
 
 export default function RootLayout({
@@ -20,7 +20,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full antialiased">
-      <body className="min-h-full flex flex-col bg-gradient-to-b from-[#e8f0e6] via-[#f0f6ee] to-[#e6efe8]">
+      <body className="min-h-full flex flex-col bg-gradient-to-b from-[#f5f6f0] via-[#f0f4ec] to-[#eef3e8]">
         {children}
       </body>
     </html>

@@ -33,10 +33,10 @@ function AppContent() {
   return (
     <div className="flex min-h-screen">
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex md:flex-col md:w-56 md:fixed md:inset-y-0 bg-white/60 backdrop-blur-md border-r border-[#d0e0cc]">
+      <aside className="hidden md:flex md:flex-col md:w-56 md:fixed md:inset-y-0 bg-pm-surface-active backdrop-blur-md border-r border-pm-border">
         <div className="p-6">
-          <h1 className="text-lg font-bold text-[#2d4a2d]">Health</h1>
-          <p className="text-xs text-[#6a8a6a]">Your Body, Understood</p>
+          <h1 className="text-lg font-bold text-pm-text">Health</h1>
+          <p className="text-xs text-pm-text-tertiary">Your Body, Understood</p>
         </div>
         <nav className="flex-1 px-3 space-y-1">
           {tabKeys.map((tab) => (
@@ -45,8 +45,8 @@ function AppContent() {
               onClick={() => setActiveTab(tab.id)}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all cursor-pointer ${
                 activeTab === tab.id
-                  ? "bg-[#4a7a4a] text-white font-medium"
-                  : "text-[#3d5a3d] hover:bg-white/60"
+                  ? "bg-brand text-white font-medium"
+                  : "text-pm-text-secondary hover:bg-pm-surface-active"
               }`}
             >
               <span className="text-lg">{tab.icon}</span>
@@ -54,7 +54,7 @@ function AppContent() {
             </button>
           ))}
         </nav>
-        <div className="p-4 border-t border-[#d0e0cc] space-y-3">
+        <div className="p-4 border-t border-pm-border space-y-3">
           <div className="flex items-center gap-2 flex-wrap">
             <LangSwitcher />
           </div>
@@ -72,14 +72,14 @@ function AppContent() {
 
       {/* Main content */}
       <div className="flex-1 flex flex-col md:ml-56">
-        <header className="hidden md:flex items-center justify-between px-8 py-4 border-b border-[#d0e0cc]/50">
+        <header className="hidden md:flex items-center justify-between px-8 py-4 border-b border-pm-border/50">
           <div />
           <AuthButton />
         </header>
 
         {activeTab === "today" && (
           <div className="text-center py-4 px-4 md:py-8">
-            <h1 className="text-2xl md:text-3xl font-bold text-[#2d4a2d]">{greeting}</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-pm-text">{greeting}</h1>
           </div>
         )}
 
@@ -94,14 +94,14 @@ function AppContent() {
       </div>
 
       {/* Mobile bottom nav */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-[#d0e0cc] safe-bottom md:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-pm-border safe-bottom md:hidden">
         <div className="flex justify-around items-center h-16 max-w-md mx-auto">
           {tabKeys.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all cursor-pointer ${
-                activeTab === tab.id ? "text-[#4a7a4a]" : "text-[#a0b8a0]"
+                activeTab === tab.id ? "text-brand" : "text-pm-text-muted"
               }`}
             >
               <span className="text-xl">{tab.icon}</span>

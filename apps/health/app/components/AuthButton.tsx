@@ -23,7 +23,7 @@ export default function AuthButton() {
     return (
       <button
         onClick={() => supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: window.location.origin + "/auth/callback" } })}
-        className="text-xs px-3 py-1.5 rounded-full bg-[#4a7a4a] text-white cursor-pointer"
+        className="text-xs px-3 py-1.5 rounded-full bg-brand text-white cursor-pointer"
       >
         {t("auth.signIn")}
       </button>
@@ -34,7 +34,7 @@ export default function AuthButton() {
 
   return (
     <div className="relative">
-      <button onClick={() => setShowMenu(!showMenu)} className="text-xs text-[#3d5a3d] cursor-pointer">
+      <button onClick={() => setShowMenu(!showMenu)} className="text-xs text-pm-text-secondary cursor-pointer">
         {firstName}
       </button>
       {showMenu && (

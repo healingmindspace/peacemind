@@ -1,8 +1,25 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f5f6f0;
+  --foreground: #3a4a2d;
+  --breathe-duration: 4s;
+
+  --pm-brand: #5a8a5a;
+  --pm-brand-hover: #4a7a4a;
+  --pm-brand-light: #b0d0a8;
+  --pm-brand-bg: #eef3e8;
+  --pm-text: #3a4a2d;
+  --pm-text-secondary: #506840;
+  --pm-text-tertiary: #7a9a6a;
+  --pm-text-muted: #a8c098;
+  --pm-surface: rgba(255, 255, 255, 0.5);
+  --pm-surface-hover: rgba(255, 255, 255, 0.8);
+  --pm-surface-active: rgba(255, 255, 255, 0.6);
+  --pm-border: #c8dcc0;
+  --pm-accent: #dce8d4;
+  --pm-accent-light: #eef3e8;
+  --pm-placeholder: #a8c098;
 }
 
 @theme inline {
@@ -10,17 +27,30 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-brand: var(--pm-brand);
+  --color-brand-hover: var(--pm-brand-hover);
+  --color-brand-light: var(--pm-brand-light);
+  --color-brand-bg: var(--pm-brand-bg);
+  --color-pm-text: var(--pm-text);
+  --color-pm-text-secondary: var(--pm-text-secondary);
+  --color-pm-text-tertiary: var(--pm-text-tertiary);
+  --color-pm-text-muted: var(--pm-text-muted);
+  --color-pm-surface: var(--pm-surface);
+  --color-pm-surface-hover: var(--pm-surface-hover);
+  --color-pm-surface-active: var(--pm-surface-active);
+  --color-pm-border: var(--pm-border);
+  --color-pm-accent: var(--pm-accent);
+  --color-pm-accent-light: var(--pm-accent-light);
+  --color-pm-placeholder: var(--pm-placeholder);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }

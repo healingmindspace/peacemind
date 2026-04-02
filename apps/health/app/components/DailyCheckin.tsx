@@ -36,8 +36,8 @@ export default function DailyCheckin() {
   }) => (
     <div className="mb-5">
       <div className="flex justify-between mb-1">
-        <p className="text-sm font-medium text-[#2d4a2d]">{label}</p>
-        <p className="text-sm text-[#6a8a6a]">{value}/{max}</p>
+        <p className="text-sm font-medium text-pm-text">{label}</p>
+        <p className="text-sm text-pm-text-tertiary">{value}/{max}</p>
       </div>
       <input
         type="range"
@@ -47,7 +47,7 @@ export default function DailyCheckin() {
         onChange={(e) => onChange(parseInt(e.target.value))}
         className="w-full accent-[#4a7a4a]"
       />
-      <div className="flex justify-between text-[10px] text-[#a0b8a0]">
+      <div className="flex justify-between text-[10px] text-pm-text-muted">
         <span>{leftLabel}</span>
         <span>{rightLabel}</span>
       </div>
@@ -57,10 +57,10 @@ export default function DailyCheckin() {
   return (
     <section className="py-6 px-4">
       <div className="max-w-sm md:max-w-lg mx-auto">
-        <h2 className="text-xl font-semibold text-[#2d4a2d] mb-1 text-center">{t("checkin.title")}</h2>
-        <p className="text-sm text-[#6a8a6a] mb-6 text-center">{t("checkin.subtitle")}</p>
+        <h2 className="text-xl font-semibold text-pm-text mb-1 text-center">{t("checkin.title")}</h2>
+        <p className="text-sm text-pm-text-tertiary mb-6 text-center">{t("checkin.subtitle")}</p>
 
-        <div className="bg-white/50 rounded-2xl p-5">
+        <div className="bg-pm-surface rounded-2xl p-5">
           <Slider label={t("checkin.energy")} value={energy} onChange={setEnergy} leftLabel={t("checkin.low")} rightLabel={t("checkin.high")} />
           <Slider label={t("checkin.pain")} value={pain} onChange={setPain} leftLabel={t("checkin.none")} rightLabel={t("checkin.severe")} />
           <Slider label={t("checkin.sleep")} value={sleep} onChange={setSleep} leftLabel={t("checkin.poor")} rightLabel={t("checkin.great")} />
@@ -70,13 +70,13 @@ export default function DailyCheckin() {
             onChange={(e) => setNotes(e.target.value)}
             placeholder={t("checkin.notes")}
             rows={2}
-            className="w-full px-3 py-2 rounded-xl bg-white/60 border border-[#c0d8c0] text-[#2d4a2d] text-sm focus:outline-none focus:ring-2 focus:ring-[#a0c8a0] resize-none mb-4"
+            className="w-full px-3 py-2 rounded-xl bg-pm-surface-active border border-pm-border text-pm-text text-sm focus:outline-none focus:ring-2 focus:ring-brand-light resize-none mb-4"
           />
 
           <button
             onClick={save}
             disabled={saving || saved}
-            className="w-full py-2.5 rounded-full text-sm font-medium bg-[#4a7a4a] text-white cursor-pointer disabled:opacity-40 transition-all"
+            className="w-full py-2.5 rounded-full text-sm font-medium bg-brand text-white cursor-pointer disabled:opacity-40 transition-all"
           >
             {saved ? t("checkin.saved") : saving ? "..." : t("checkin.save")}
           </button>
