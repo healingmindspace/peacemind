@@ -50,7 +50,7 @@ Heal meets people where they are — whether they're having a good day or strugg
 
 ### ✨ Me — Your story at a glance
 - Today's stats, streaks, weekly overview
-- Heal Insight: AI analysis integrating mood, journal, path progress, and assessment scores
+- Healer Insight: AI analysis integrating mood, journal, path progress, and assessment scores
 - Read-aloud support
 - About, privacy, feedback
 

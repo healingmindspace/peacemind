@@ -22,6 +22,10 @@ export const ENTITY_PREFIX = {
   symptom: "symp",
   bloodSugar: "bglu",
   activity: "actv",
+  // Platform entities
+  pluginConnection: "pcon",
+  userPlugin: "uplg",
+  pluginConsent: "pcns",
 } as const;
 
 export type EntityPrefix = typeof ENTITY_PREFIX[keyof typeof ENTITY_PREFIX];

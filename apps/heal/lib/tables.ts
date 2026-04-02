@@ -13,6 +13,10 @@ export const TABLES = {
   feedback: "feedback",
   visits: "visits",
   dailyCheckins: "daily_checkins",
+  // Platform tables
+  pluginConnections: "plugin_connections",
+  userPlugins: "user_plugins",
+  pluginConsents: "plugin_consents",
 } as const;
 
 // Storage buckets

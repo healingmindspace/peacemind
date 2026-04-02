@@ -21,6 +21,9 @@ export default function SummaryTab() {
   const [insightPeriod, setInsightPeriod] = useState<"today" | "week" | "month" | "quarter">("today");
   const [speaking, setSpeaking] = useState(false);
   const [unreadReplies, setUnreadReplies] = useState(0);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteMsg, setDeleteMsg] = useState<string | null>(null);
   const { t, lang } = useI18n();
 
   useEffect(() => {
@@ -242,6 +245,48 @@ export default function SummaryTab() {
     setLoadingInsight(false);
   };
 
+  const categories = ["moods", "journals", "goals", "tasks", "breathing", "assessments", "photos"] as const;
+
+  const handleDeleteCategory = async (category: string) => {
+    if (!accessToken) return;
+    setDeleting(true);
+    setDeleteMsg(null);
+    try {
+      const res = await fetch("/api/account", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "delete-category", category, accessToken }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setDeleteMsg(t("data.deleted", { count: data.count, category: t(`data.${category}`) }));
+        if (user) loadWeek(user.id);
+      }
+    } catch { /* silently fail */ }
+    setDeleting(false);
+    setDeleteConfirm(null);
+  };
+
+  const handleDeleteAll = async () => {
+    if (!accessToken) return;
+    setDeleting(true);
+    setDeleteMsg(null);
+    try {
+      const res = await fetch("/api/account", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "delete-all", accessToken }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setDeleteMsg(t("data.deletedAll"));
+        if (user) loadWeek(user.id);
+      }
+    } catch { /* silently fail */ }
+    setDeleting(false);
+    setDeleteConfirm(null);
+  };
+
   const today = days[days.length - 1];
 
   return (
@@ -326,7 +371,7 @@ export default function SummaryTab() {
         <div className="max-w-sm md:max-w-lg mx-auto mt-8">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold text-pm-text">
-              {lang === "zh" ? "💡 Heal 洞察" : "💡 Heal Insight"}
+              {lang === "zh" ? "💡 Healer 洞察" : "💡 Healer Insight"}
             </h3>
             <div className="flex gap-1">
               {(["today", "week", "month", "quarter"] as const).map((p) => (
@@ -443,6 +488,69 @@ export default function SummaryTab() {
           </p>
         </div>
       </div>
+
+      {/* My Data */}
+      {user && (
+        <div className="max-w-sm md:max-w-lg mx-auto mt-10 px-4">
+          <div className="bg-pm-surface backdrop-blur-sm rounded-2xl p-5">
+            <h3 className="text-sm font-semibold text-pm-text mb-3">{t("data.title")}</h3>
+
+            {deleteMsg && (
+              <p className="text-xs text-brand mb-3">{deleteMsg}</p>
+            )}
+
+            {/* Delete by category */}
+            <p className="text-xs text-pm-text-secondary mb-2">{t("data.deleteCategory")}</p>
+            <div className="flex flex-wrap gap-2 mb-4">
+              {categories.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setDeleteConfirm(cat)}
+                  disabled={deleting}
+                  className="px-3 py-1.5 rounded-full text-xs bg-pm-surface-active text-pm-text-secondary hover:bg-red-100 hover:text-red-600 transition-all cursor-pointer disabled:opacity-40"
+                >
+                  {t(`data.${cat}`)}
+                </button>
+              ))}
+            </div>
+
+            {/* Delete all */}
+            <button
+              onClick={() => setDeleteConfirm("all")}
+              disabled={deleting}
+              className="w-full py-2.5 rounded-xl text-xs font-medium text-red-500 bg-red-50 hover:bg-red-100 transition-all cursor-pointer disabled:opacity-40"
+            >
+              {deleting ? t("data.deleting") : t("data.deleteAll")}
+            </button>
+
+            {/* Confirmation modal */}
+            {deleteConfirm && (
+              <div className="mt-3 p-3 rounded-xl bg-red-50 border border-red-200">
+                <p className="text-xs text-red-700 mb-3">
+                  {deleteConfirm === "all"
+                    ? t("data.confirmAll")
+                    : t("data.confirmCategory", { category: t(`data.${deleteConfirm}`) })}
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => deleteConfirm === "all" ? handleDeleteAll() : handleDeleteCategory(deleteConfirm)}
+                    disabled={deleting}
+                    className="flex-1 py-2 rounded-lg text-xs font-medium text-white bg-red-500 hover:bg-red-600 transition-all cursor-pointer disabled:opacity-40"
+                  >
+                    {deleting ? t("data.deleting") : (lang === "zh" ? "确认删除" : "Confirm Delete")}
+                  </button>
+                  <button
+                    onClick={() => setDeleteConfirm(null)}
+                    className="flex-1 py-2 rounded-lg text-xs font-medium text-pm-text-secondary bg-pm-surface-active hover:bg-pm-surface transition-all cursor-pointer"
+                  >
+                    {lang === "zh" ? "取消" : "Cancel"}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Links */}
       <div className="flex justify-center gap-4 mt-8 text-xs">

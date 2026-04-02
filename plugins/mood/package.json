@@ -1,0 +1,23 @@
+{
+  "name": "@peacemind/plugin-mood",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./components/*": "./components/*.tsx",
+    "./api/*": "./api/*.ts"
+  },
+  "dependencies": {
+    "@peacemind/plugin-sdk": "*",
+    "@peacemind/lib": "*"
+  },
+  "peerDependencies": {
+    "@anthropic-ai/sdk": "*",
+    "@supabase/supabase-js": "*",
+    "next": "*",
+    "react": "*",
+    "recharts": "*"
+  }
+}

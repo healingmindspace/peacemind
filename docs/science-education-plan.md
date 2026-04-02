@@ -80,7 +80,7 @@ Add 4-5 new topics:
 
 ### Phase 2: Interactive Elements
 - Mini self-assessments: "What's your Big Five profile?"
-- "Did you know?" cards in daily comfort / Heal Insight
+- "Did you know?" cards in daily comfort / Healer Insight
 - Link science to actions: "Your cortisol might be high. Try 3 slow breaths."
 
 ### Phase 3: Science-Informed AI

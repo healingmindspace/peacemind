@@ -79,7 +79,7 @@ POST /api/content
 - Cross-app content sharing (shared category)
 
 ### Phase 4: Dynamic Content Everywhere
-- Daily tips in Heal Insight context
+- Daily tips in Healer Insight context
 - "Did you know?" cards on mood done screen
 - Move app exercise descriptions from DB
 - Health app condition info from DB

@@ -576,7 +576,7 @@ export default function AdminPage() {
               <div className="space-y-3 text-xs text-[#5a4a7a] border-l-2 border-[#c4b5e0] pl-4">
                 <div>
                   <p className="font-semibold text-[#3d3155]">Apr 1 — Major Feature Day</p>
-                  <p>🌿 5-4-3-2-1 grounding exercise. 🧠 PHQ-9/GAD-7 self-assessment (free, no login needed) with wellness nudge. 📅 Decoupled from Google Calendar — built-in scheduling. Custom mood tags (DB-backed, deletable). Crisis resources: China + international. &quot;Emotions Are Normal&quot; + &quot;Daily Habits&quot; learn topics. Heal Insight integrates assessment scores. Path achieve/archive. Review on-demand. 🏗️ API-first architecture: AuthProvider + useAuth(), /api/photos route, removed direct Supabase from 10+ components.</p>
+                  <p>🌿 5-4-3-2-1 grounding exercise. 🧠 PHQ-9/GAD-7 self-assessment (free, no login needed) with wellness nudge. 📅 Decoupled from Google Calendar — built-in scheduling. Custom mood tags (DB-backed, deletable). Crisis resources: China + international. &quot;Emotions Are Normal&quot; + &quot;Daily Habits&quot; learn topics. Healer Insight integrates assessment scores. Path achieve/archive. Review on-demand. 🏗️ API-first architecture: AuthProvider + useAuth(), /api/photos route, removed direct Supabase from 10+ components.</p>
                 </div>
                 <div>
                   <p className="font-semibold text-[#3d3155]">Mar 31 — Security Hardening + Code Cleanup</p>
@@ -650,7 +650,7 @@ export default function AdminPage() {
                 <p>• <strong>/api/journal</strong> — encrypted CRUD</p>
                 <p>• <strong>/api/respond</strong> — journal AI (20/hr)</p>
                 <p>• <strong>/api/mood-respond</strong> — mood AI with history (20/hr)</p>
-                <p>• <strong>/api/daily-summary</strong> — Heal Insight with assessment data (10/hr)</p>
+                <p>• <strong>/api/daily-summary</strong> — Healer Insight with assessment data (10/hr)</p>
                 <p>• <strong>/api/mood-options</strong> — custom trigger/helped tags CRUD</p>
                 <p>• <strong>/api/assessments</strong> — PHQ-9/GAD-7 scores CRUD</p>
                 <p>• <strong>/api/visit</strong> — IP tracking (bot-filtered)</p>

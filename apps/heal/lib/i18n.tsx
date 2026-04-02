@@ -336,6 +336,23 @@ const translations: Record<Lang, Record<string, string>> = {
     "summary.aboutMe": "See your daily stats, weekly activity, streak, and Healer insights to celebrate showing up for yourself.",
     "summary.learnMore": "Visit the Understand tab in Calm to learn more",
 
+    // Data Management
+    "data.title": "My Data",
+    "data.deleteCategory": "Delete by category",
+    "data.deleteAll": "Delete All My Data",
+    "data.deleting": "Deleting...",
+    "data.confirmCategory": "Delete all your {category} data? This cannot be undone.",
+    "data.confirmAll": "Delete ALL your data across every category? This cannot be undone.",
+    "data.deleted": "Deleted {count} records from {category}.",
+    "data.deletedAll": "All your data has been deleted.",
+    "data.moods": "Moods",
+    "data.journals": "Journals",
+    "data.goals": "Goals",
+    "data.tasks": "Tasks",
+    "data.breathing": "Breathing",
+    "data.assessments": "Assessments",
+    "data.photos": "Photos",
+
     // In Loving Memory
     "memory.line1": "You are loved. You are not alone.",
     "memory.line2": "In every quiet moment, know that you are held by something greater than yourself. You are worthy of peace, of joy, and of grace.",
@@ -691,6 +708,23 @@ const translations: Record<Lang, Record<string, string>> = {
     "summary.aboutGrow": "设定温柔的路径，迈出小小的步伐，写下心声，每周收到温暖的进步回顾。",
     "summary.aboutMe": "查看每日统计、每周活动、连续天数和 Healer 洞察，为自己的坚持喝彩。",
     "summary.learnMore": "前往平静中的「了解」标签了解更多",
+
+    // Data Management
+    "data.title": "我的数据",
+    "data.deleteCategory": "按类别删除",
+    "data.deleteAll": "删除所有数据",
+    "data.deleting": "删除中...",
+    "data.confirmCategory": "确定删除所有{category}数据？此操作无法撤销。",
+    "data.confirmAll": "确定删除所有类别的全部数据？此操作无法撤销。",
+    "data.deleted": "已从{category}删除 {count} 条记录。",
+    "data.deletedAll": "所有数据已删除。",
+    "data.moods": "心情",
+    "data.journals": "日记",
+    "data.goals": "目标",
+    "data.tasks": "任务",
+    "data.breathing": "呼吸",
+    "data.assessments": "评估",
+    "data.photos": "照片",
 
     // In Loving Memory
     "memory.line1": "你是被爱的。你并不孤单。",

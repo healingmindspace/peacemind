@@ -5,13 +5,14 @@ import { I18nProvider, useI18n } from "@/lib/i18n";
 import { AuthProvider } from "@/lib/auth-context";
 import HeroSection from "./components/HeroSection";
 import AuthButton from "./components/AuthButton";
-import MoodTracker from "./components/MoodTracker";
+import { MoodTracker } from "@peacemind/plugin-mood";
 import CalmTab from "./components/CalmTab";
 import GoalsTab from "./components/GoalsTab";
 import CrisisResources from "./components/CrisisResources";
 import CommunityCounter from "./components/CommunityCounter";
 import SummaryTab from "./components/SummaryTab";
 import LangSwitcher from "./components/LangSwitcher";
+import ClaimBanner from "./components/ClaimBanner";
 
 type Tab = "mood" | "calm" | "goals" | "summary";
 
@@ -112,6 +113,8 @@ function AppContent() {
           <div />
           <AuthButton />
         </header>
+
+        <ClaimBanner />
 
         {activeTab === "mood" && (
           <>
