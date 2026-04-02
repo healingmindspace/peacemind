@@ -17,7 +17,7 @@ const apps: AppCard[] = [
     icon: "🌈",
     tagline: "Mental wellness",
     color: "#7c6a9e",
-    href: "/heal",
+    href: "https://heal.peacemind.app",
     active: true,
   },
   {
@@ -26,7 +26,7 @@ const apps: AppCard[] = [
     icon: "🌿",
     tagline: "Your body, understood",
     color: "#5a8a5a",
-    href: "/health",
+    href: "https://health.peacemind.app",
     active: true,
   },
 ];
