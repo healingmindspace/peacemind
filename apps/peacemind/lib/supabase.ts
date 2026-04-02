@@ -3,14 +3,26 @@ import { createBrowserClient } from "@supabase/ssr";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co";
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder-key";
 
+function getCookieDomain(): string | undefined {
+  try {
+    if (typeof window !== "undefined" && window.location.hostname.endsWith(".peacemind.app")) {
+      return ".peacemind.app";
+    }
+    if (typeof window !== "undefined" && window.location.hostname === "peacemind.app") {
+      return ".peacemind.app";
+    }
+  } catch {}
+  return undefined;
+}
+
 export function createClient() {
+  const domain = getCookieDomain();
   return createBrowserClient(SUPABASE_URL, SUPABASE_KEY, {
+    isSingleton: false,
     cookieOptions: {
-      domain: typeof window !== "undefined" && window.location.hostname.endsWith(".peacemind.app")
-        ? ".peacemind.app"
-        : undefined,
+      ...(domain ? { domain } : {}),
       path: "/",
-      sameSite: "lax",
+      sameSite: "lax" as const,
       secure: true,
     },
   });
