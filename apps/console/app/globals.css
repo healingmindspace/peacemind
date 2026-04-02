@@ -1,0 +1,35 @@
+@import "tailwindcss";
+@import "@peacemind/theme/base.css";
+
+:root {
+  /* Console theme — neutral, platform-level */
+  --pm-brand: #4a5568;
+  --pm-brand-hover: #2d3748;
+  --pm-brand-light: #a0aec0;
+  --pm-brand-bg: #f7fafc;
+  --pm-text: #1a202c;
+  --pm-text-secondary: #4a5568;
+  --pm-text-tertiary: #718096;
+  --pm-text-muted: #a0aec0;
+  --pm-surface: rgba(255, 255, 255, 0.7);
+  --pm-surface-hover: rgba(255, 255, 255, 0.9);
+  --pm-surface-active: rgba(255, 255, 255, 0.5);
+  --pm-border: #e2e8f0;
+  --pm-accent: #edf2f7;
+  --pm-accent-light: #f7fafc;
+}
+
+@theme inline {
+  --color-brand: var(--pm-brand);
+  --color-brand-hover: var(--pm-brand-hover);
+  --color-pm-text: var(--pm-text);
+  --color-pm-text-secondary: var(--pm-text-secondary);
+  --color-pm-text-tertiary: var(--pm-text-tertiary);
+  --color-pm-text-muted: var(--pm-text-muted);
+  --color-pm-surface: var(--pm-surface);
+  --color-pm-surface-hover: var(--pm-surface-hover);
+  --color-pm-surface-active: var(--pm-surface-active);
+  --color-pm-border: var(--pm-border);
+  --color-pm-accent: var(--pm-accent);
+  --color-pm-accent-light: var(--pm-accent-light);
+}

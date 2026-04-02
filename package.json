@@ -8,6 +8,7 @@
     "build": "turbo build",
     "dev:heal": "turbo dev --filter=heal",
     "dev:health": "turbo dev --filter=health",
+    "dev:console": "turbo dev --filter=console",
     "type-check": "turbo type-check"
   },
   "devDependencies": {
