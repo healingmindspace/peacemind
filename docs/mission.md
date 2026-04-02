@@ -1,33 +1,20 @@
-# Peacemind — Mission Statement
+# Peacemind
 
-## Mission
-Peacemind is a personal space for anyone to freely share their concerns, receive thoughtful consultation, and become fully prepared for life's challenges.
+*Your life is one thing. We help you understand it that way.*
 
-## What This Means
+Every aspect of your life is connected — your mood affects your sleep, your finances affect your stress, your health affects everything. But the tools you use treat each domain in isolation, leaving the most valuable insights hidden in the gaps between them.
 
-**A personal space** — Not a social media platform competing for attention. A quiet, safe place that belongs to you. Your data is encrypted. Your feelings are respected. No ads, no algorithms pushing engagement, no comparison with others.
+Peacemind is a platform of gentle, dedicated apps — each excellent on its own, powerful together. One account, one voice, one place that sees the whole picture of your life and helps you make sense of it.
 
-**For anyone** — Free to use. No income barrier. Bilingual. Works on any device. You don't need to be "sick enough" to use it. Whether you're having a bad day or facing a crisis, this is your space.
+## We Believe
 
-**To freely share** — Without judgment, without fear. Anonymous when you want to be. Your journal is encrypted. The community is moderated for kindness. Emotions are normal here — all of them.
-
-**Thoughtful consultation** — Not generic advice from strangers on the internet. Real guidance from:
-- AI that knows your patterns and history
-- Validated scientific tools (PHQ-9, GAD-7)
-- Evidence-based educational content
-- Vetted professional experts who care
-
-**Fully prepared for life's challenges** — Life will be hard sometimes. Peacemind doesn't promise to fix that. It prepares you:
-- Understand your brain and emotions (science education)
-- Track your patterns so you see problems early (mood, health, exercise)
-- Build resilience through daily small habits (breathing, journaling, movement)
-- Have a support network ready (community, experts, crisis resources)
-- Know when to seek professional help and how to find it
-
-## The Promise
-We believe the simplest things can heal — a walk in the sun, a deep breath, writing down how you feel, knowing someone understands. Peacemind puts these simple tools in your hands, backed by science and professionals, so you're never facing life alone.
+- **Your data is yours.** Encrypted at rest, never sold, deletable in one click.
+- **Simple things heal.** A walk, a deep breath, a moment of awareness — small actions compound.
+- **No judgment, ever.** Peacemind meets you where you are, not where you think you should be.
+- **Understanding beats tracking.** Numbers mean nothing without insight. We connect the dots so you don't have to.
 
 ## Values
+
 1. **Gentle over aggressive** — We suggest, never push. "Even 5 minutes counts."
 2. **Science over opinion** — Every feature is evidence-based or expert-reviewed.
 3. **Privacy over growth** — We encrypt your data, not monetize it.
@@ -36,23 +23,31 @@ We believe the simplest things can heal — a walk in the sun, a deep breath, wr
 
 ## The Platform
 
-| | What | For |
+Mental wellness. Physical health. Financial peace. Sleep. Fitness. Relationships. Learning. Each has its own dedicated app. All share one gentle voice — Peacemind — looking out for you across every part of your life.
+
+| App | Domain | Purpose |
 |---|---|---|
 | **Heal** | Mind | Mood tracking, calm, journaling, self-assessment |
 | **Health** | Body | Chronic conditions, symptoms, medications |
-| **Move** | Movement | Exercise + mood connection, mind-body |
-| **Community** | People | Safe threads, shared experiences, support |
-| **Experts** | Professionals | Real guidance from vetted advisors |
-| **Science** | Knowledge | Brain, chemistry, personality, habits |
+| **Money** | Finances | Financial wellness, investing as lifelong learning |
+| **Rest** | Sleep | Sleep tracking and recovery insights |
+| **Move** | Fitness | Exercise and movement with gentle goals |
+| **Connect** | Relationships | Social wellness and community |
+| **Grow** | Learning | Career development and personal growth |
 
-All connected. All backed by the same gentle philosophy.
+All connected through cross-app insights. All backed by the same gentle philosophy.
 
 ## Who We Serve
+
 - The student who can't afford therapy but needs someone to talk to
 - The parent managing chronic illness while keeping it together
 - The person who doesn't know if what they're feeling is normal
 - The introvert who processes better in writing than in conversation
 - The professional burning out but thinking "other people have it worse"
+- The first-time investor anxious about money decisions
+- The person using 10 different apps but missing the connections between them
 - Anyone who has ever googled "am I depressed?" at 2am
 
-You deserve a space that takes your wellbeing seriously. That's Peacemind.
+You deserve a space that takes your whole life seriously. That's Peacemind.
+
+*The tools are free. The insights are yours. The peace of mind is the point.*
