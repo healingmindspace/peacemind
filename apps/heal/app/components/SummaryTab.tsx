@@ -533,7 +533,7 @@ export default function SummaryTab() {
                 </p>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => deleteConfirm === "all" ? handleDeleteAll() : handleDeleteCategory(deleteConfirm)}
+                    onClick={() => deleteConfirm === "all" ? handleDeleteAll() : handleDeleteCategory(deleteConfirm!)}
                     disabled={deleting}
                     className="flex-1 py-2 rounded-lg text-xs font-medium text-white bg-red-500 hover:bg-red-600 transition-all cursor-pointer disabled:opacity-40"
                   >
