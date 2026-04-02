@@ -5,16 +5,16 @@ node_modules
 .env.local
 .vercel
 
-# Private docs (moved to Notion/Confluence)
-docs/mission.md
-docs/platform-positioning.md
-docs/platform-review.md
-docs/expert-advisors-plan.md
-docs/cms-plan.md
-docs/forum-plan.md
-docs/move-app-plan.md
-docs/health-app-plan.md
-docs/science-education-plan.md
+# Private docs (moved to healingmindspace/peacemind-docs)
+**/mission.md
+**/platform-positioning.md
+**/platform-review.md
+**/expert-advisors-plan.md
+**/cms-plan.md
+**/forum-plan.md
+**/move-app-plan.md
+**/health-app-plan.md
+**/science-education-plan.md
 
 # Admin dashboard (internal only)
 apps/*/app/admin/
