@@ -75,11 +75,11 @@ export default function Console() {
 
 function DiscoverSection() {
   const upcomingApps = [
+    { id: "move", name: "Move", icon: "🏃", description: "Fitness, sleep, and recovery — rest is part of the plan", status: "coming-soon" as const },
     { id: "money", name: "Money", icon: "💰", description: "Financial wellness — investing as lifelong learning", status: "coming-soon" as const },
-    { id: "rest", name: "Rest", icon: "🌙", description: "Sleep tracking and recovery insights", status: "planned" as const },
-    { id: "move", name: "Move", icon: "🏃", description: "Fitness and movement with gentle goals", status: "planned" as const },
+    { id: "grow", name: "Grow", icon: "📚", description: "Lifelong learning — career, fashion, cooking, life skills", status: "planned" as const },
     { id: "connect", name: "Connect", icon: "🤝", description: "Relationships and social wellness", status: "planned" as const },
-    { id: "grow", name: "Grow", icon: "📚", description: "Learning and career development", status: "planned" as const },
+    { id: "market", name: "Market", icon: "🛍️", description: "Buy and sell small goods in the Peacemind community", status: "planned" as const },
   ];
 
   return (
