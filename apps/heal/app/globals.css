@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+:root {
+  --background: #fdf6f0;
+  --foreground: #3d3155;
+  --breathe-duration: 4s;
+
+  /* Peacemind theme tokens — Heal (purple) */
+  --pm-brand: #7c6a9e;
+  --pm-brand-hover: #6b5b8a;
+  --pm-brand-light: #c4b5e0;
+  --pm-brand-bg: #f0e6f6;
+  --pm-text: #3d3155;
+  --pm-text-secondary: #5a4a7a;
+  --pm-text-tertiary: #8a7da0;
+  --pm-text-muted: #b0a3c4;
+  --pm-surface: rgba(255, 255, 255, 0.5);
+  --pm-surface-hover: rgba(255, 255, 255, 0.8);
+  --pm-surface-active: rgba(255, 255, 255, 0.6);
+  --pm-border: #d8cfe8;
+  --pm-accent: #e8dff0;
+  --pm-accent-light: #f0e6f6;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  /* Theme color tokens for Tailwind */
+  --color-brand: var(--pm-brand);
+  --color-brand-hover: var(--pm-brand-hover);
+  --color-brand-light: var(--pm-brand-light);
+  --color-brand-bg: var(--pm-brand-bg);
+  --color-pm-text: var(--pm-text);
+  --color-pm-text-secondary: var(--pm-text-secondary);
+  --color-pm-text-tertiary: var(--pm-text-tertiary);
+  --color-pm-text-muted: var(--pm-text-muted);
+  --color-pm-surface: var(--pm-surface);
+  --color-pm-surface-hover: var(--pm-surface-hover);
+  --color-pm-surface-active: var(--pm-surface-active);
+  --color-pm-border: var(--pm-border);
+  --color-pm-accent: var(--pm-accent);
+  --color-pm-accent-light: var(--pm-accent-light);
+  --color-pm-placeholder: var(--pm-text-muted);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@keyframes breathe-in {
+  0% { transform: scale(1); opacity: 0.6; }
+  100% { transform: scale(1.5); opacity: 1; }
+}
+
+@keyframes breathe-out {
+  0% { transform: scale(1.5); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.6; }
+}
+
+.animate-breathe-in {
+  animation: breathe-in var(--breathe-duration) ease-in-out forwards;
+}
+
+.animate-breathe-hold {
+  transform: scale(1.5);
+  opacity: 1;
+}
+
+.animate-breathe-out {
+  animation: breathe-out var(--breathe-duration) ease-in-out forwards;
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}

@@ -1,0 +1,15 @@
+{
+  "name": "peacemind",
+  "private": true,
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "dev:heal": "turbo dev --filter=heal",
+    "dev:health": "turbo dev --filter=health",
+    "type-check": "turbo type-check"
+  },
+  "devDependencies": {
+    "turbo": "^2.9.3"
+  }
+}

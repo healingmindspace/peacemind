@@ -1,0 +1,21 @@
+/* Heal — purple palette */
+:root {
+  --background: #fdf6f0;
+  --foreground: #3d3155;
+  --breathe-duration: 4s;
+
+  --pm-brand: #7c6a9e;
+  --pm-brand-hover: #6b5b8a;
+  --pm-brand-light: #c4b5e0;
+  --pm-brand-bg: #f0e6f6;
+  --pm-text: #3d3155;
+  --pm-text-secondary: #5a4a7a;
+  --pm-text-tertiary: #8a7da0;
+  --pm-text-muted: #b0a3c4;
+  --pm-surface: rgba(255, 255, 255, 0.5);
+  --pm-surface-hover: rgba(255, 255, 255, 0.8);
+  --pm-surface-active: rgba(255, 255, 255, 0.6);
+  --pm-border: #d8cfe8;
+  --pm-accent: #e8dff0;
+  --pm-accent-light: #f0e6f6;
+}

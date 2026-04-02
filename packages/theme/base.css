@@ -1,0 +1,28 @@
+/* Peacemind shared base — animations, safe-area, breathe */
+
+@keyframes breathe-in {
+  0% { transform: scale(1); opacity: 0.6; }
+  100% { transform: scale(1.5); opacity: 1; }
+}
+
+@keyframes breathe-out {
+  0% { transform: scale(1.5); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.6; }
+}
+
+.animate-breathe-in {
+  animation: breathe-in var(--breathe-duration) ease-in-out forwards;
+}
+
+.animate-breathe-hold {
+  transform: scale(1.5);
+  opacity: 1;
+}
+
+.animate-breathe-out {
+  animation: breathe-out var(--breathe-duration) ease-in-out forwards;
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}

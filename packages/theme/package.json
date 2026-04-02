@@ -1,0 +1,10 @@
+{
+  "name": "@peacemind/theme",
+  "version": "0.0.1",
+  "private": true,
+  "exports": {
+    "./base.css": "./base.css",
+    "./heal.css": "./heal.css",
+    "./health.css": "./health.css"
+  }
+}

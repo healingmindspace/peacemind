@@ -1,0 +1,21 @@
+{
+  "name": "Heal — A Moment of Calm",
+  "short_name": "Heal",
+  "description": "A gentle app to help you breathe, reflect, and find calm.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fdf6f0",
+  "theme_color": "#7c6a9e",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

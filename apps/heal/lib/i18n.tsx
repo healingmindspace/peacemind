@@ -1,0 +1,766 @@
+"use client";
+
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+
+export type Lang = "en" | "zh";
+
+const translations: Record<Lang, Record<string, string>> = {
+  en: {
+    // Greetings
+    "greeting.morning": "Good morning",
+    "greeting.afternoon": "Good afternoon",
+    "greeting.evening": "Good evening",
+    "greeting.hello": "Hello",
+
+    // Hero messages
+    "hero.1": "You are not alone in this.",
+    "hero.2": "It's okay to take things one moment at a time.",
+    "hero.3": "You deserve kindness — especially from yourself.",
+    "hero.4": "This feeling is temporary. You are not.",
+    "hero.5": "Taking a moment for yourself is a sign of strength.",
+    "hero.6": "You showed up today. That matters more than you know.",
+    "hero.7": "Be gentle with yourself — you're doing the best you can.",
+    "hero.8": "Even the smallest step forward is still progress.",
+    "hero.9": "You are worthy of peace, just as you are.",
+    "hero.10": "It's okay to rest. You don't have to earn it.",
+    "hero.11": "Your feelings are valid. All of them.",
+    "hero.12": "Tomorrow is a new page. Today, just breathe.",
+    "hero.13": "You carry more strength than you realize.",
+    "hero.14": "Asking for help is brave, not weak.",
+
+    // Tabs
+    "tab.mood": "Mood",
+    "tab.calm": "Calm",
+    "tab.goals": "Grow",
+    "tab.me": "Me",
+
+    // Auth
+    "auth.signIn": "Sign in to track moods",
+    "auth.signOut": "Sign out",
+    "auth.google": "Sign in with Google",
+    "auth.or": "or",
+    "auth.firstName": "First name",
+    "auth.email": "Email",
+    "auth.password": "Password",
+    "auth.signUp": "Sign up",
+    "auth.signInBtn": "Sign in",
+    "auth.haveAccount": "Have an account? Sign in",
+    "auth.newUser": "New? Sign up",
+    "auth.cancel": "Cancel",
+    "auth.checkEmail": "Check your email for a confirmation link!",
+
+    // Mood
+    "mood.title": "How are you feeling?",
+    "mood.subtitle": "No judgment — just checking in",
+    "mood.limit": "You've logged 5 moods today — come back tomorrow!",
+    "mood.struggling": "Struggling",
+    "mood.low": "Low",
+    "mood.neutral": "Neutral",
+    "mood.okay": "Okay",
+    "mood.good": "Good",
+    "mood.response.struggling": "It's okay to not be okay. You're brave for showing up today.",
+    "mood.response.low": "Tough days happen. Be gentle with yourself right now.",
+    "mood.response.neutral": "A neutral day is still a day you made it through.",
+    "mood.response.okay": "That's wonderful. Small moments of okay matter.",
+    "mood.response.good": "So glad you're feeling good! You deserve this.",
+    "mood.recent": "Recent moods",
+    "mood.signIn": "Sign in to save and track your moods over time",
+    "mood.yourMood": "Your mood",
+    "mood.whatHappened": "What happened?",
+    "mood.whatHelped": "What helped?",
+    "mood.skip": "Skip",
+    "mood.done": "Done",
+    "mood.trigger.work": "Work",
+    "mood.trigger.relationship": "Relationship",
+    "mood.trigger.family": "Family",
+    "mood.trigger.health": "Health",
+    "mood.trigger.money": "Money",
+    "mood.trigger.loneliness": "Loneliness",
+    "mood.trigger.loss": "Loss",
+    "mood.trigger.stress": "Stress",
+    "mood.trigger.goodNews": "Good news",
+    "mood.trigger.friends": "Friends",
+    "mood.trigger.nature": "Nature",
+    "mood.trigger.achievement": "Achievement",
+    "mood.helped.talk": "Talked to someone",
+    "mood.helped.walk": "Went for a walk",
+    "mood.helped.music": "Music",
+    "mood.helped.breathe": "Breathing",
+    "mood.helped.rest": "Rest",
+    "mood.helped.exercise": "Exercise",
+    "mood.helped.journal": "Journaling",
+    "mood.helped.nothing": "Nothing yet",
+    "mood.growSuggestion": "Would you like Healer to help with this?",
+    "mood.growFromHistory": "Plan with Healer",
+    "mood.photoMood": "Take photo",
+    "mood.uploadMood": "Upload",
+    "mood.readingPhoto": "Reading photo...",
+
+    // Chart
+    "chart.week": "Week",
+    "chart.month": "Month",
+    "chart.3mo": "3mo",
+
+    // Breathing
+    "breathe.title": "Guided Breathing",
+    "breathe.subtitle": "Breathing and meditation bring you back to calm",
+    "breathe.why": "Why breathe?",
+    "breathe.whyText": "Slow, intentional breathing activates your parasympathetic nervous system — lowering your heart rate, reducing stress hormones, and bringing your body back to calm. Just a few minutes can shift how you feel.",
+    "breathe.box": "Box Breathing",
+    "breathe.boxDesc": "4-4-4-4 — used by Navy SEALs to stay calm",
+    "breathe.relax": "4-7-8 Relaxing",
+    "breathe.relaxDesc": "Deep relaxation for anxiety and sleep",
+    "breathe.simple": "Simple Calm",
+    "breathe.simpleDesc": "Easy 4-4 breathing for beginners",
+    "breathe.start": "Start",
+    "breathe.in": "Breathe in...",
+    "breathe.hold": "Hold...",
+    "breathe.out": "Breathe out...",
+    "breathe.cycle": "Cycle {current} of {total}",
+    "breathe.stop": "Stop",
+    "breathe.begin": "Begin ({count} cycles)",
+
+    // Grounding
+    "ground.title": "5-4-3-2-1 Grounding",
+    "ground.subtitle": "Come back to the present moment",
+    "ground.step.see": "Notice {count} things you can see",
+    "ground.step.hear": "Listen for {count} sounds around you",
+    "ground.step.touch": "Feel {count} things you can touch",
+    "ground.step.smell": "Notice {count} things you can smell",
+    "ground.step.taste": "Notice {count} thing you can taste",
+    "ground.hint.see": "Colors, shapes, light, shadows — anything in your view",
+    "ground.hint.hear": "Close your eyes if it helps — distant sounds, nearby sounds",
+    "ground.hint.touch": "The texture of your clothes, the surface under your hands",
+    "ground.hint.smell": "The air, your drink, something nearby",
+    "ground.hint.taste": "A sip of water, the taste in your mouth right now",
+    "ground.next": "Next",
+    "ground.finish": "Done",
+    "ground.done": "You're here. You're grounded.",
+    "ground.doneDesc": "Take a deep breath. You made it back to the present.",
+    "ground.close": "Close",
+
+    // Journal
+    "journal.title": "Journal",
+    "journal.subtitle": "Your words matter — let them flow freely here",
+    "journal.placeholder": "What's on your heart today? A thought, a win, a feeling, anything...",
+    "journal.saving": "Saving...",
+    "journal.save": "Save",
+    "journal.signIn": "Sign in to save journal entries",
+    "journal.past": "Past entries",
+    "journal.thinking": "Thinking...",
+    "journal.edit": "edit",
+    "journal.delete": "delete",
+    "journal.cancel": "Cancel",
+    "journal.update": "update",
+    "journal.takePhoto": "Take photo",
+    "journal.uploadPhoto": "Upload",
+    "journal.extracting": "Reading photo...",
+
+    // Goals & Tasks
+    "goals.title": "Grow",
+    "goals.subtitle": "You don't have to do it all — just the next small thing. That's enough.",
+    "goals.goals": "Paths",
+    "goals.journal": "Journal",
+    "goals.review": "Review",
+    "goals.signIn": "Sign in to track your paths",
+    "goals.addGoal": "Add a new path",
+    "goals.addTask": "Add a step",
+    "goals.hidePath": "hide",
+    "goals.showHidden": "{count} hidden paths",
+    "goals.hideHidden": "hide",
+    "goals.activate": "restore",
+    "goals.showDeleted": "{count} deleted paths",
+    "goals.objectivePlaceholder": "What do you want to achieve on this path?",
+    "goals.planWithAi": "Plan with Healer",
+    "goals.planning": "Thinking...",
+    "goals.acceptPlan": "Add these steps",
+    "goals.tryAgain": "Try again",
+    "goals.aiPlan": "✨ Healer",
+    "goals.planRetry": "Healer couldn't create a plan this time — try again?",
+    "goals.calendarConnected": "Google Calendar connected",
+    "goals.showCalendar": "This week's events",
+    "goals.hideCalendar": "Hide calendar",
+    "goals.noEvents": "No events this week",
+    "goals.today": "Today",
+    "goals.tomorrow": "Tomorrow",
+    "goals.overdue": "overdue",
+    "goals.growContext": "From your thoughts:",
+    "goals.choosePath": "Which path does this belong to?",
+    "goals.newPathName": "Or create a new path...",
+    "goals.createAndPlan": "Create & plan",
+    "goals.disconnect": "disconnect",
+    "goals.noTasks": "No steps yet — add one!",
+    "goals.getStarted": "Get started with some paths?",
+    "goals.addPresets": "Add these",
+    "goals.customGoal": "Custom path",
+    "goals.goalName": "Path name",
+    "goals.reviewTitle": "Your Week",
+    "goals.reviewSubtitle": "Where you've been, where you are, and what's ahead",
+    "goals.thisWeek": "Now",
+    "goals.lastWeek": "Review",
+    "goals.ahead": "Ahead",
+    "goals.stepsCompleted": "completed",
+    "goals.stepsRemaining": "in progress",
+    "goals.journalEntries": "journal entries",
+    "goals.reviewLoading": "Reflecting on your week...",
+    "goals.refreshReview": "Refresh",
+    "tasks.titleField": "What's the next step?",
+    "tasks.descriptionField": "Details (optional)",
+    "tasks.save": "Save",
+    "tasks.edit": "edit",
+    "tasks.delete": "delete",
+    "tasks.remove": "Remove",
+    "tasks.reschedule": "Reschedule",
+    "tasks.cancel": "Cancel",
+    "tasks.when": "When?",
+    "tasks.once": "Once",
+    "tasks.habit": "Habit",
+    "tasks.gentle": "Whenever",
+    "tasks.onceDesc": "Pick a date & time",
+    "tasks.habitDesc": "Build a routine",
+    "tasks.gentleDesc": "No pressure",
+    "tasks.duration": "How long?",
+    "tasks.min": "min",
+    "tasks.daily": "Daily",
+    "tasks.weekdays": "Weekdays",
+    "tasks.weekly": "Weekly",
+    "tasks.atTime": "at",
+    "tasks.thisWeek": "This week",
+    "tasks.soon": "Soon",
+    "tasks.noRush": "No rush",
+    "tasks.date": "Date",
+    "tasks.time": "Time",
+    "tasks.syncCalendar": "Sync to Google Calendar",
+    "tasks.connectCalendar": "Connect Google Calendar",
+    "tasks.addToCal": "Add to calendar",
+    "tasks.removeFromCal": "Remove from calendar",
+
+    // Relax
+    "relax.label": "Label your photo",
+    "relax.labelHint": "e.g. Cloud, My Dog, Happy Place — same label groups photos together",
+    "relax.labelPlaceholder": "Enter a label...",
+    "relax.uploading": "Uploading...",
+    "relax.add": "+ Add",
+    "relax.restoreAll": "Restore all",
+    "relax.signIn": "Sign in to upload your own photos",
+
+    // Calm
+    "calm.breatheRelax": "Breathe & Relax",
+    "calm.learn": "Understand",
+
+    // Learn
+    "learn.title": "Understanding Your Feelings",
+    "learn.subtitle": "Knowledge is a gentle kind of power",
+    "learn.signsLabel": "What it might feel like:",
+    "learn.helpLabel": "What can help:",
+    "learn.disclaimer": "This is general information, not medical advice. If you're struggling, please reach out to a professional or call 988.",
+
+    "learn.emotionsTitle": "Emotions Are Normal",
+    "learn.emotionsWhat": "Feeling sad, angry, frustrated, or anxious doesn't mean something is wrong with you. These emotions are a natural part of being human — they carry information about what matters to you. You can't be happy all the time, and you shouldn't try to be. The goal isn't to eliminate difficult feelings, but to feel them without getting stuck.",
+    "learn.emotionsSigns": "Normal emotions come and go — you feel sad about something, then it passes. Depression is different: it stays, it numbs, it takes away your interest in things you used to enjoy. If sadness or anger lingers for weeks, feels heavy in your body, or makes daily life hard — that's worth paying attention to.",
+    "learn.emotionsHelp": "Let yourself feel without judging the feeling. Name it: \"I'm angry\" or \"I'm sad\" — this alone reduces its intensity. Move your body — walk, stretch, breathe. Talk to someone. Write it down. Remember: feeling deeply is not a flaw. It means you're alive and paying attention. The danger isn't feeling emotions — it's when they stop passing.",
+
+    "learn.anxietyTitle": "Understanding Anxiety",
+    "learn.anxietyWhat": "Anxiety is a physical and neurological response — not a character flaw. Your brain's alarm system becomes overactive, flooding your body with stress hormones like cortisol and adrenaline. It's biology, not weakness. Understanding this is the first step to finding relief.",
+    "learn.anxietySigns": "Racing thoughts, tight chest, trouble sleeping, feeling restless, avoiding things that worry you, stomach tension, difficulty concentrating.",
+    "learn.anxietyHelp": "Slow breathing activates your parasympathetic nervous system (try the exercises here). Physical movement helps regulate stress hormones — even a short walk. Talking to a therapist can give you tools that work. Medication (like SSRIs) can help rebalance brain chemistry when needed — there's no shame in it. Fresh air, sunlight, and naming your feelings out loud also help.",
+
+    "learn.depressionTitle": "Understanding Depression",
+    "learn.depressionWhat": "Depression is a physical condition rooted in brain chemistry — changes in serotonin, dopamine, and norepinephrine levels affect how you feel, think, and move. It's not sadness you can snap out of. It's as real as diabetes or a broken bone. It's not your fault, and it's treatable.",
+    "learn.depressionSigns": "Emotional: persistent low mood, loss of interest, feelings of worthlessness, withdrawing from others. Physical (often overlooked): fatigue, changes in sleep or appetite, difficulty concentrating, blurry vision, headaches, body aches and muscle tension, digestive issues, dizziness, chest tightness. These physical symptoms are real — depression affects your whole body, not just your mood.",
+    "learn.depressionHelp": "See a doctor or therapist — this is a medical condition that deserves medical care. Medication can genuinely help by restoring chemical balance in your brain — it's not a crutch, it's treatment. Alongside professional help: start very small (getting dressed counts), get sunlight and fresh air, gentle movement like walking, stay connected with one person. You deserve help, and asking for it is brave.",
+
+    "learn.copingTitle": "Simple Things That Heal",
+    "learn.copingWhat": "Sometimes the most powerful healing comes from the simplest things. Your body knows how to find calm — it just needs a little help remembering.",
+    "learn.copingHelp": "Walk outside and feel the sun on your face. Look at something beautiful — a flower, the sky, a tree. Breathe slowly and deeply for one minute. Drink a glass of water mindfully. Write one sentence about how you feel. Listen to music that moves you.",
+
+    "learn.supportTitle": "Supporting Someone You Love",
+    "learn.supportWhat": "If someone you care about is struggling with anxiety or depression, your presence matters more than you know. You don't need to fix it — just being there is powerful.",
+    "learn.supportHelp": "Listen without trying to solve. Say \"I'm here\" and mean it. Don't minimize their feelings. Invite them for small things — a walk, a coffee. Check in regularly. Take care of yourself too.",
+
+    "learn.habitsTitle": "Daily Habits That Help",
+    "learn.habitsWhat": "Depression and anxiety aren't solved by willpower alone — but small daily habits can shift your brain chemistry over time. These aren't replacements for professional help, but they work alongside it. Think of them as medicine for your nervous system.",
+    "learn.habitsSigns": "Morning: Get sunlight within 30 minutes of waking — it resets your circadian rhythm and boosts serotonin. Move your body for even 10 minutes — a walk counts. Drink water before coffee.\n\nDuring the day: Step outside when you feel stuck. Take 3 slow breaths when anxiety spikes. Eat something nourishing — your gut produces 90% of your serotonin. Limit doom-scrolling — set a timer.\n\nEvening: Write one thing that went okay today. Put your phone away 30 minutes before bed. Do a body scan or breathing exercise. Keep a consistent sleep time.",
+    "learn.habitsHelp": "Start with just ONE of these. Not all of them — one. Do it for 3 days. Then maybe add another. Progress isn't about doing everything right. It's about showing up for yourself, even in the smallest way. On bad days, the bare minimum counts: getting out of bed, drinking water, stepping outside for 30 seconds. That's enough. That's real progress.\n\nIf it helps, lean on whatever gives you a sense of meaning — faith, nature, community, or simply the belief that this moment will pass. You don't have to carry this alone.",
+
+    // Science: How Your Brain Works
+    "learn.brainTitle": "How Your Brain Works",
+    "learn.brainWhat": "Your brain has different regions that work together to create your experience. The amygdala is your alarm system — it detects threats and triggers fear, anxiety, and anger before your conscious mind even knows what's happening. The prefrontal cortex is your wise advisor — it handles rational thinking, planning, and impulse control. When you're stressed or overwhelmed, the amygdala takes over and the prefrontal cortex goes quiet. That's why you can't \"think your way out\" of a panic attack.",
+    "learn.brainSigns": "Your nervous system has two modes: sympathetic (fight-or-flight) and parasympathetic (rest-and-digest). Anxiety is your sympathetic system stuck in overdrive. The good news: you can manually switch to parasympathetic mode through slow breathing, which activates the vagus nerve — the longest nerve in your body, running from your brain to your gut.\n\nNeuroplasticity means your brain physically changes based on what you repeatedly do. Every time you practice a new habit — breathing, journaling, even just pausing before reacting — you're literally building new neural pathways. Your brain can change at any age.",
+    "learn.brainHelp": "When anxiety hits, remember: that's your amygdala doing its job. It's not broken — it's trying to protect you. Take 3 slow breaths to activate your vagus nerve and bring your prefrontal cortex back online. Try the breathing exercises in this app — they're designed to shift your nervous system from fight-or-flight to rest-and-digest.",
+
+    // Science: Brain Chemistry
+    "learn.chemTitle": "Brain Chemistry 101",
+    "learn.chemWhat": "Your mood isn't just \"in your head\" — it's driven by real chemicals called neurotransmitters. Understanding them helps you understand yourself and takes the mystery out of why you feel the way you do.",
+    "learn.chemSigns": "Serotonin — your mood stabilizer. Low serotonin = depression, anxiety, poor sleep, cravings. Boosted by: sunlight, exercise, tryptophan-rich food (turkey, eggs, nuts), and gut health (90% is made in your gut).\n\nDopamine — your motivation chemical. It drives reward, pleasure, and focus. Doom-scrolling and social media give cheap dopamine hits that leave you emptier. Healthy sources: completing tasks, exercise, music, cooking, learning.\n\nCortisol — your stress hormone. Short bursts are normal and helpful. But chronic stress keeps cortisol high, which damages sleep, memory, immune function, and mood. Lowered by: exercise, nature, breathing, sleep, social connection.\n\nGABA — your calm chemical. It quiets neural activity and reduces anxiety. Boosted by: breathing exercises, yoga, meditation.\n\nEndorphins — natural painkillers. Released during exercise, laughter, music, and even spicy food. That \"runner's high\" is real brain chemistry.",
+    "learn.chemHelp": "You don't need to memorize all of this. The takeaway: sunlight, exercise, good food, sleep, breathing, and human connection aren't just nice ideas — they directly change your brain chemistry. When you feel low, your brain may be low on serotonin. A 10-minute walk in sunlight isn't a platitude — it's a serotonin prescription.",
+
+    // Science: Why Anxiety Feels Physical
+    "learn.physicalTitle": "Why Anxiety Feels Physical",
+    "learn.physicalWhat": "Racing heart, tight chest, stomach knots, shaking hands, blurry vision, dizziness — anxiety isn't just worry. It lives in your body. This is because your brain and body are connected through the autonomic nervous system. When your amygdala detects a threat (real or imagined), it triggers a cascade of physical responses designed to help you survive.",
+    "learn.physicalSigns": "What happens in your body during anxiety:\n\n• Heart races → pumping blood to muscles for fight-or-flight\n• Breathing gets shallow → taking in more oxygen quickly\n• Stomach churns → digestion shuts down (not a priority when \"running from a tiger\")\n• Muscles tense → preparing to fight or run\n• Vision narrows → focusing on the threat (tunnel vision)\n• Hands shake → adrenaline surge\n• Dizziness → hyperventilation changes blood CO2 levels\n• Chest tightness → intercostal muscles tensing\n\nThese symptoms are your body working correctly — just responding to a false alarm.",
+    "learn.physicalHelp": "When anxiety feels physical, work with your body, not against it. Slow breathing (especially long exhales) tells your vagus nerve to switch off the alarm. The 4-7-8 technique works because the long exhale activates your parasympathetic system. Grounding exercises (5-4-3-2-1) redirect your attention from internal panic to external reality. Movement helps burn off the adrenaline. Remind yourself: this is my body protecting me. It's uncomfortable, but it's not dangerous.",
+
+    // Science: Personality & Temperament
+    "learn.personalityTitle": "Personality & Temperament",
+    "learn.personalityWhat": "Your personality isn't random — it's a combination of what you're born with (temperament) and what you've experienced (environment). Understanding your wiring helps you stop fighting yourself and start working with who you are.",
+    "learn.personalitySigns": "The Big Five traits (everyone has all five, in different amounts):\n\n• Openness — curiosity, creativity, love of new experiences\n• Conscientiousness — organization, discipline, reliability\n• Extraversion — energy from social interaction vs solitude\n• Agreeableness — empathy, cooperation, trust\n• Neuroticism — tendency to experience negative emotions\n\nIntrovert vs Extrovert isn't about being shy — it's about where you get energy. Introverts recharge alone; extroverts recharge with people. Neither is better.\n\nHighly Sensitive Person (HSP): about 20% of people process stimulation more deeply. Not a disorder — a trait. HSPs notice more, feel more, and need more downtime. It's a strength when understood.\n\nAttachment styles (from childhood): secure (comfortable with closeness), anxious (fear of abandonment), avoidant (fear of closeness), disorganized (mixed). These shape adult relationships but can change with awareness.",
+    "learn.personalityHelp": "There's no \"right\" personality. The goal is self-awareness, not self-improvement. If you're introverted, honor your need for solitude — it's not antisocial, it's how you recharge. If you score high on neuroticism, you're not broken — you may just need more tools for emotional regulation (this app can help). If you're an HSP, protect your energy. Understanding your attachment style can transform your relationships. Start by noticing patterns, not judging them.",
+
+    // Science: The Habit Loop
+    "learn.habitsLoopTitle": "The Habit Loop",
+    "learn.habitsLoopWhat": "Every habit — good or bad — follows the same brain circuit: cue → routine → reward. Understanding this loop gives you power over behaviors that feel automatic. Procrastination, doom-scrolling, stress eating, and nail biting all follow this pattern. So do exercise, journaling, and meditation.",
+    "learn.habitsLoopSigns": "The loop:\n\n1. CUE — a trigger (time of day, emotion, location, preceding action). Example: feeling stressed (cue)\n2. ROUTINE — the behavior. Example: reaching for your phone (routine)\n3. REWARD — what your brain gets. Example: dopamine hit from scrolling (reward)\n\nTo change a habit, you don't fight the loop — you redirect it. Keep the same cue and reward, swap the routine:\n• Cue: feeling stressed → Routine: 3 slow breaths instead of phone → Reward: calm feeling\n• Cue: bored after dinner → Routine: short walk instead of snacking → Reward: fresh air + movement\n\nKey insight: willpower is overrated. The brain automates repeated behaviors to save energy. The trick is making the new routine easier than the old one. Start absurdly small — \"I'll do one push-up\" or \"I'll write one sentence.\"",
+    "learn.habitsLoopHelp": "Pick ONE habit you want to change. Identify the cue (what triggers it?) and the reward (what does your brain get?). Then swap the routine with something slightly better. Don't aim for perfect — aim for slightly better, repeated consistently. After 21-66 days (research varies), the new pathway becomes automatic. Every step you log in this app, every breathing session, every mood check-in — you're building a neural pathway. It gets easier.",
+
+    // Spotify
+    "spotify.remove": "remove",
+    "spotify.paste": "Paste a Spotify playlist, album, or track URL",
+    "spotify.connect": "Connect Spotify",
+
+    // Summary
+    "summary.today": "Today",
+    "summary.moods": "{count} mood",
+    "summary.moods_plural": "{count} moods",
+    "summary.sessions": "session",
+    "summary.sessions_plural": "sessions",
+    "summary.entries": "entry",
+    "summary.entries_plural": "entries",
+    "summary.streak": "{count} day streak",
+    "summary.week": "This week",
+    "summary.signIn": "Sign in to track your progress",
+    "summary.about": "About Heal",
+    "summary.aboutMood": "Check in with how you feel — snap a photo or pick an emoji. Track patterns across days, weeks, and months.",
+    "summary.aboutCalm": "Guided breathing exercises, calming photos, and your favorite Spotify playlists — all in one peaceful space.",
+    "summary.aboutGrow": "Set gentle paths, take small steps, journal your thoughts, and get a warm weekly review of your progress.",
+    "summary.aboutMe": "See your daily stats, weekly activity, streak, and Healer insights to celebrate showing up for yourself.",
+    "summary.learnMore": "Visit the Understand tab in Calm to learn more",
+
+    // In Loving Memory
+    "memory.line1": "You are loved. You are not alone.",
+    "memory.line2": "In every quiet moment, know that you are held by something greater than yourself. You are worthy of peace, of joy, and of grace.",
+    "memory.line3": "In loving memory of all who carry weight in their hearts — you are seen, you are enough, and you are never forgotten.",
+    "memory.line4": "Sometimes the greatest healing comes from the simplest things — a walk outside, the warmth of the sun, the quiet beauty of a flower.",
+
+    // Crisis
+    "crisis.needHelp": "Need help?",
+    "crisis.title": "Crisis Resources",
+    "crisis.fullTitle": "Need to talk to someone?",
+    "crisis.available": "Available 24/7",
+    "crisis.us": "US",
+    "crisis.china": "China",
+    "crisis.intl": "International",
+    "crisis.988": "988 Suicide & Crisis Lifeline",
+    "crisis.988action": "Call or text",
+    "crisis.textLine": "Crisis Text Line",
+    "crisis.textAction": "Text HELLO to",
+    "crisis.chinaLine": "National Mental Health Hotline",
+    "crisis.chinaAction": "Call",
+    "crisis.intlLine": "Find a Helpline",
+    "crisis.intlAction": "Find support in your country",
+  },
+  zh: {
+    // Greetings
+    "greeting.morning": "早上好",
+    "greeting.afternoon": "下午好",
+    "greeting.evening": "晚上好",
+    "greeting.hello": "你好",
+
+    // Hero messages
+    "hero.1": "你并不孤单。",
+    "hero.2": "慢慢来，一步一步也没关系。",
+    "hero.3": "你值得被温柔以待——尤其是来自自己的温柔。",
+    "hero.4": "这种感觉是暂时的，而你不是。",
+    "hero.5": "给自己一刻休息，是一种力量。",
+    "hero.6": "今天你出现了，这比你想象的更重要。",
+    "hero.7": "对自己温柔些——你已经在尽力了。",
+    "hero.8": "哪怕是最小的一步，也是前进。",
+    "hero.9": "你值得拥有平静，就这样的你。",
+    "hero.10": "休息是可以的，你不需要去赢得它。",
+    "hero.11": "你的感受都是有效的，每一种都是。",
+    "hero.12": "明天是新的一页，今天，只需呼吸。",
+    "hero.13": "你比自己意识到的更坚强。",
+    "hero.14": "寻求帮助是勇敢，不是软弱。",
+
+    // Tabs
+    "tab.mood": "心情",
+    "tab.calm": "平静",
+    "tab.goals": "成长",
+    "tab.me": "我",
+
+    // Auth
+    "auth.signIn": "登录以记录心情",
+    "auth.signOut": "退出",
+    "auth.google": "使用 Google 登录",
+    "auth.or": "或",
+    "auth.firstName": "名字",
+    "auth.email": "邮箱",
+    "auth.password": "密码",
+    "auth.signUp": "注册",
+    "auth.signInBtn": "登录",
+    "auth.haveAccount": "已有账号？登录",
+    "auth.newUser": "新用户？注册",
+    "auth.cancel": "取消",
+    "auth.checkEmail": "请查收确认邮件！",
+
+    // Mood
+    "mood.title": "你现在感觉怎么样？",
+    "mood.subtitle": "没有评判——只是关心一下",
+    "mood.limit": "今天已记录5次心情——明天再来吧！",
+    "mood.struggling": "挣扎",
+    "mood.low": "低落",
+    "mood.neutral": "一般",
+    "mood.okay": "还好",
+    "mood.good": "开心",
+    "mood.response.struggling": "不好也没关系。今天你能出现，已经很勇敢了。",
+    "mood.response.low": "难过的日子会过去的。现在对自己温柔一点。",
+    "mood.response.neutral": "平淡的一天，也是你走过来的一天。",
+    "mood.response.okay": "真好。小小的还好也很重要。",
+    "mood.response.good": "真高兴你感觉不错！你值得拥有快乐。",
+    "mood.recent": "最近心情",
+    "mood.signIn": "登录以保存和追踪你的心情",
+    "mood.yourMood": "你的心情",
+    "mood.whatHappened": "发生了什么？",
+    "mood.whatHelped": "什么帮到了你？",
+    "mood.skip": "跳过",
+    "mood.done": "完成",
+    "mood.trigger.work": "工作",
+    "mood.trigger.relationship": "感情",
+    "mood.trigger.family": "家庭",
+    "mood.trigger.health": "健康",
+    "mood.trigger.money": "经济",
+    "mood.trigger.loneliness": "孤独",
+    "mood.trigger.loss": "失去",
+    "mood.trigger.stress": "压力",
+    "mood.trigger.goodNews": "好消息",
+    "mood.trigger.friends": "朋友",
+    "mood.trigger.nature": "自然",
+    "mood.trigger.achievement": "成就",
+    "mood.helped.talk": "找人聊了",
+    "mood.helped.walk": "散了步",
+    "mood.helped.music": "听音乐",
+    "mood.helped.breathe": "呼吸练习",
+    "mood.helped.rest": "休息",
+    "mood.helped.exercise": "运动",
+    "mood.helped.journal": "写日记",
+    "mood.helped.nothing": "还没有",
+    "mood.growSuggestion": "想让 Healer 帮你处理这个吗？",
+    "mood.growFromHistory": "让 Healer 帮忙",
+    "mood.photoMood": "拍照",
+    "mood.uploadMood": "上传",
+    "mood.readingPhoto": "正在读取照片...",
+
+    // Chart
+    "chart.week": "周",
+    "chart.month": "月",
+    "chart.3mo": "季",
+
+    // Breathing
+    "breathe.title": "引导呼吸",
+    "breathe.subtitle": "呼吸和冥想，带你回归平静",
+    "breathe.why": "为什么要练习呼吸？",
+    "breathe.whyText": "缓慢而有意识的呼吸能激活副交感神经系统——降低心率、减少压力激素，让身体回归平静。只需几分钟，就能改变你的感受。",
+    "breathe.box": "箱式呼吸",
+    "breathe.boxDesc": "4-4-4-4——海豹突击队用来保持冷静",
+    "breathe.relax": "4-7-8 放松",
+    "breathe.relaxDesc": "深度放松，适合焦虑和助眠",
+    "breathe.simple": "简单平静",
+    "breathe.simpleDesc": "适合初学者的 4-4 呼吸",
+    "breathe.start": "开始",
+    "breathe.in": "吸气...",
+    "breathe.hold": "屏住...",
+    "breathe.out": "呼气...",
+    "breathe.cycle": "第 {current} 轮，共 {total} 轮",
+    "breathe.stop": "停止",
+    "breathe.begin": "开始（{count} 轮）",
+
+    // Grounding
+    "ground.title": "5-4-3-2-1 接地练习",
+    "ground.subtitle": "回到当下",
+    "ground.step.see": "注意你能看到的 {count} 样东西",
+    "ground.step.hear": "聆听周围的 {count} 种声音",
+    "ground.step.touch": "感受你能触摸的 {count} 样东西",
+    "ground.step.smell": "注意你能闻到的 {count} 种气味",
+    "ground.step.taste": "注意你能品尝到的 {count} 种味道",
+    "ground.hint.see": "颜色、形状、光影——视野中的任何东西",
+    "ground.hint.hear": "可以闭上眼睛——远处的声音、近处的声音",
+    "ground.hint.touch": "衣服的质感、手下的表面",
+    "ground.hint.smell": "空气、你的饮品、附近的气味",
+    "ground.hint.taste": "喝一口水，感受口中的味道",
+    "ground.next": "下一步",
+    "ground.finish": "完成",
+    "ground.done": "你在这里。你已回到当下。",
+    "ground.doneDesc": "深呼吸一下。你做到了。",
+    "ground.close": "关闭",
+
+    // Journal
+    "journal.title": "日记",
+    "journal.subtitle": "你的文字很重要——让它们自由流淌",
+    "journal.placeholder": "今天心里有什么？一个想法、一个小胜利、一种感受，什么都好...",
+    "journal.saving": "保存中...",
+    "journal.save": "保存",
+    "journal.signIn": "登录以保存日记",
+    "journal.past": "历史记录",
+    "journal.thinking": "思考中...",
+    "journal.edit": "编辑",
+    "journal.delete": "删除",
+    "journal.cancel": "取消",
+    "journal.update": "更新",
+    "journal.takePhoto": "拍照",
+    "journal.uploadPhoto": "上传",
+    "journal.extracting": "正在读取照片...",
+
+    // Goals & Tasks
+    "goals.title": "成长",
+    "goals.subtitle": "不必一次做完所有事——做下一件小事就好，这就够了。",
+    "goals.goals": "路径",
+    "goals.journal": "日记",
+    "goals.review": "回顾",
+    "goals.signIn": "登录以追踪你的路径",
+    "goals.addGoal": "添加新路径",
+    "goals.addTask": "添加一步",
+    "goals.hidePath": "隐藏",
+    "goals.showHidden": "{count} 个隐藏路径",
+    "goals.hideHidden": "收起",
+    "goals.activate": "恢复",
+    "goals.showDeleted": "{count} 个已删除路径",
+    "goals.objectivePlaceholder": "你想在这条路径上达成什么？",
+    "goals.planWithAi": "Healer 规划",
+    "goals.planning": "思考中...",
+    "goals.acceptPlan": "添加这些步骤",
+    "goals.tryAgain": "重试",
+    "goals.aiPlan": "✨ Healer",
+    "goals.planRetry": "Healer 这次没能生成计划——再试一次？",
+    "goals.calendarConnected": "Google 日历已连接",
+    "goals.showCalendar": "本周日程",
+    "goals.hideCalendar": "隐藏日历",
+    "goals.noEvents": "本周暂无日程",
+    "goals.today": "今天",
+    "goals.tomorrow": "明天",
+    "goals.overdue": "已过期",
+    "goals.growContext": "来自你的心声：",
+    "goals.choosePath": "这属于哪条路径？",
+    "goals.newPathName": "或创建新路径...",
+    "goals.createAndPlan": "创建并规划",
+    "goals.disconnect": "断开",
+    "goals.noTasks": "还没有步骤——添加一个吧！",
+    "goals.getStarted": "从一些路径开始吧？",
+    "goals.addPresets": "添加这些",
+    "goals.customGoal": "自定义路径",
+    "goals.goalName": "路径名称",
+    "goals.reviewTitle": "你的一周",
+    "goals.reviewSubtitle": "你走过的路、此刻的你、和前方的光",
+    "goals.thisWeek": "此刻",
+    "goals.lastWeek": "回顾",
+    "goals.ahead": "前方",
+    "goals.stepsCompleted": "已完成",
+    "goals.stepsRemaining": "进行中",
+    "goals.journalEntries": "篇日记",
+    "goals.reviewLoading": "回顾你的一周中...",
+    "goals.refreshReview": "刷新",
+    "tasks.titleField": "下一步是什么？",
+    "tasks.descriptionField": "详情（可选）",
+    "tasks.save": "保存",
+    "tasks.edit": "编辑",
+    "tasks.delete": "删除",
+    "tasks.remove": "移除",
+    "tasks.reschedule": "重新安排",
+    "tasks.cancel": "取消",
+    "tasks.when": "什么时候？",
+    "tasks.once": "一次",
+    "tasks.habit": "习惯",
+    "tasks.gentle": "随时",
+    "tasks.onceDesc": "选择日期和时间",
+    "tasks.habitDesc": "养成习惯",
+    "tasks.gentleDesc": "不着急",
+    "tasks.duration": "多长时间？",
+    "tasks.min": "分钟",
+    "tasks.daily": "每天",
+    "tasks.weekdays": "工作日",
+    "tasks.weekly": "每周",
+    "tasks.atTime": "在",
+    "tasks.thisWeek": "这周",
+    "tasks.soon": "近期",
+    "tasks.noRush": "不急",
+    "tasks.date": "日期",
+    "tasks.time": "时间",
+    "tasks.syncCalendar": "同步到 Google 日历",
+    "tasks.connectCalendar": "连接 Google 日历",
+    "tasks.addToCal": "添加到日历",
+    "tasks.removeFromCal": "从日历移除",
+
+    // Relax
+    "relax.label": "给照片命名",
+    "relax.labelHint": "例如：云朵、我的狗、快乐角落——相同名称会归为一组",
+    "relax.labelPlaceholder": "输入名称...",
+    "relax.uploading": "上传中...",
+    "relax.add": "+ 添加",
+    "relax.restoreAll": "恢复全部",
+    "relax.signIn": "登录以上传你的照片",
+
+    // Calm
+    "calm.breatheRelax": "呼吸与放松",
+    "calm.learn": "了解",
+
+    // Learn
+    "learn.title": "了解你的感受",
+    "learn.subtitle": "知识是一种温柔的力量",
+    "learn.signsLabel": "可能的感受：",
+    "learn.helpLabel": "什么能帮助：",
+    "learn.disclaimer": "这是一般信息，不是医疗建议。如果你正在挣扎，请联系专业人士。",
+
+    "learn.emotionsTitle": "情绪是正常的",
+    "learn.emotionsWhat": "感到悲伤、愤怒、沮丧或焦虑并不意味着你有什么问题。这些情绪是人之常情——它们传达着对你重要的事情。你不可能一直快乐，也不应该试图一直快乐。目标不是消除困难的感受，而是感受它们，但不被困住。",
+    "learn.emotionsSigns": "正常的情绪会来了又走——你为某件事难过，然后它过去了。抑郁不同：它停留不走，它让你麻木，它夺走你对曾经喜欢的事情的兴趣。如果悲伤或愤怒持续数周、在身体里感觉沉重、或让日常生活变得困难——这值得关注。",
+    "learn.emotionsHelp": "让自己去感受，不要评判这种感觉。给它命名：\"我很生气\"或\"我很难过\"——光是这样就能减轻它的强度。动一动身体——走路、伸展、呼吸。和人聊聊。写下来。记住：感受深刻不是缺陷，而是说明你在认真对待生活。危险不是感受情绪——而是当它们不再消退的时候。",
+
+    "learn.anxietyTitle": "了解焦虑",
+    "learn.anxietyWhat": "焦虑是一种生理和神经系统的反应——不是性格缺陷。你的大脑警报系统过度活跃，释放出皮质醇和肾上腺素等压力激素。这是生理反应，不是软弱。理解这一点是找到缓解的第一步。",
+    "learn.anxietySigns": "思绪翻涌、胸口发紧、难以入睡、坐立不安、回避让你担忧的事、胃部紧张、难以集中注意力。",
+    "learn.anxietyHelp": "缓慢呼吸能激活副交感神经系统（试试这里的练习）。运动有助于调节压力激素——哪怕只是短短的散步。与心理治疗师交谈可以获得有效的工具。药物（如SSRIs）在需要时可以帮助重新平衡大脑化学——这没什么丢人的。新鲜空气、阳光和说出你的感受也有帮助。",
+
+    "learn.depressionTitle": "了解抑郁",
+    "learn.depressionWhat": "抑郁症是一种根植于大脑化学的生理疾病——血清素、多巴胺和去甲肾上腺素水平的变化影响你的感受、思考和行动。它不是你能\"振作起来\"就好的悲伤。它像糖尿病或骨折一样真实。这不是你的错，而且是可以治疗的。",
+    "learn.depressionSigns": "情绪方面：持续的低落情绪、失去兴趣、觉得自己没价值、远离他人。身体方面（常被忽视）：疲惫、睡眠或食欲变化、注意力难以集中、视力模糊、头痛、身体酸痛和肌肉紧张、消化问题、头晕、胸闷。这些身体症状是真实的——抑郁影响的是整个身体，不仅仅是情绪。",
+    "learn.depressionHelp": "去看医生或心理治疗师——这是一种值得医疗关注的疾病。药物可以真正帮助恢复大脑的化学平衡——它不是拐杖，而是治疗。在专业帮助的同时：从很小的事开始（穿好衣服就算数），晒太阳呼吸新鲜空气，温和地运动如散步，和一个人保持联系。你值得被帮助，求助是勇敢的。",
+
+    "learn.copingTitle": "简单的事物能治愈",
+    "learn.copingWhat": "有时候最有力量的治愈来自最简单的事物。你的身体知道如何找到平静——它只需要一点帮助来记起。",
+    "learn.copingHelp": "走到外面感受阳光。看一些美丽的东西——一朵花、天空、一棵树。缓慢而深沉地呼吸一分钟。用心喝一杯水。写一句话描述你的感受。听让你感动的音乐。",
+
+    "learn.supportTitle": "支持你爱的人",
+    "learn.supportWhat": "如果你关心的人正在与焦虑或抑郁作斗争，你的陪伴比你知道的更重要。你不需要去修复它——只是在那里就很有力量。",
+    "learn.supportHelp": "倾听而不试图解决。说\"我在这里\"并且认真的。不要轻视他们的感受。邀请他们做小事——散步、喝咖啡。定期关心。也照顾好你自己。",
+
+    "learn.habitsTitle": "每日有益的习惯",
+    "learn.habitsWhat": "抑郁和焦虑不能单靠意志力解决——但日常小习惯可以随着时间改变你的大脑化学。这些不是专业帮助的替代品，而是配合它一起起作用。把它们想象成给神经系统的药。",
+    "learn.habitsSigns": "早晨：醒来30分钟内晒太阳——这能重置你的生物钟并促进血清素分泌。动一动身体哪怕只有10分钟——散步就算数。喝咖啡前先喝水。\n\n白天：感到卡住的时候走到外面。焦虑的时候做3次慢呼吸。吃一些有营养的东西——你的肠道产生90%的血清素。限制刷手机——设个计时器。\n\n晚上：写下一件今天还不错的事。睡前30分钟放下手机。做一次身体扫描或呼吸练习。保持固定的睡眠时间。",
+    "learn.habitsHelp": "从其中一个开始就好。不是全部——只要一个。做3天。然后也许再加一个。进步不是把所有事都做对，而是为自己出现，哪怕是最小的方式。在糟糕的日子里，最低限度就够了：起床、喝水、走出去30秒。这就足够了。这就是真正的进步。\n\n如果有帮助的话，依靠任何给你意义感的东西——信仰、自然、社区，或者只是相信这一刻会过去。你不必独自承受。",
+
+    // Science: How Your Brain Works
+    "learn.brainTitle": "你的大脑如何工作",
+    "learn.brainWhat": "你的大脑有不同的区域协同工作来创造你的体验。杏仁核是你的警报系统——它在你的意识还没反应过来之前就检测到威胁并触发恐惧、焦虑和愤怒。前额叶皮层是你的理性顾问——它负责理性思考、计划和冲动控制。当你压力大或不堪重负时，杏仁核接管了，前额叶皮层安静下来。这就是为什么你无法「靠想」来摆脱恐慌发作。",
+    "learn.brainSigns": "你的神经系统有两种模式：交感神经（战斗或逃跑）和副交感神经（休息和消化）。焦虑就是你的交感神经系统过度活跃。好消息是：你可以通过缓慢呼吸手动切换到副交感神经模式，这会激活迷走神经——你体内最长的神经，从大脑延伸到肠道。\n\n神经可塑性意味着你的大脑会根据你反复做的事情而物理性地改变。每次你练习一个新习惯——呼吸、写日记、甚至只是在反应前暂停——你都在真正地建立新的神经通路。你的大脑在任何年龄都能改变。",
+    "learn.brainHelp": "当焦虑来袭时，记住：那是你的杏仁核在尽职。它没有坏——它在试图保护你。做3次慢呼吸来激活迷走神经，让前额叶皮层重新上线。试试这个应用中的呼吸练习——它们就是为了将你的神经系统从战斗或逃跑模式切换到休息和消化模式。",
+
+    // Science: Brain Chemistry
+    "learn.chemTitle": "大脑化学101",
+    "learn.chemWhat": "你的情绪不只是「在你脑子里」——它是由被称为神经递质的真实化学物质驱动的。了解它们有助于你了解自己，消除你感受的神秘感。",
+    "learn.chemSigns": "血清素——你的情绪稳定器。血清素低=抑郁、焦虑、睡眠差、渴望。提升方法：阳光、运动、富含色氨酸的食物（火鸡、鸡蛋、坚果）和肠道健康（90%在肠道产生）。\n\n多巴胺——你的动力化学物质。它驱动奖励、愉悦和专注。刷手机给你廉价的多巴胺，让你更空虚。健康来源：完成任务、运动、音乐、烹饪、学习。\n\n皮质醇——你的压力激素。短暂的爆发是正常的。但慢性压力让皮质醇持续偏高，损害睡眠、记忆、免疫和情绪。降低方法：运动、自然、呼吸、睡眠、社交。\n\nGABA——你的平静化学物质。它安静神经活动并减少焦虑。提升方法：呼吸练习、瑜伽、冥想。\n\n内啡肽——天然止痛药。在运动、大笑、音乐甚至吃辣食物时释放。",
+    "learn.chemHelp": "你不需要记住所有这些。要点是：阳光、运动、好食物、睡眠、呼吸和人际联系不仅仅是好想法——它们直接改变你的大脑化学。当你情绪低落时，你的大脑可能缺乏血清素。在阳光下走10分钟不是空话——这是一个血清素处方。",
+
+    // Science: Why Anxiety Feels Physical
+    "learn.physicalTitle": "焦虑为什么有身体感觉",
+    "learn.physicalWhat": "心跳加速、胸闷、胃绞痛、手抖、视力模糊、头晕——焦虑不只是担心。它活在你的身体里。这是因为你的大脑和身体通过自主神经系统相连。当你的杏仁核检测到威胁（真实的或想象的），它会触发一系列旨在帮助你生存的身体反应。",
+    "learn.physicalSigns": "焦虑时你身体里发生了什么：\n\n• 心跳加速 → 将血液输送到肌肉以战斗或逃跑\n• 呼吸变浅 → 快速摄入更多氧气\n• 胃部翻搅 → 消化关闭（\"逃离老虎\"时不是优先事项）\n• 肌肉紧张 → 准备战斗或奔跑\n• 视野变窄 → 聚焦于威胁（隧道视觉）\n• 手抖 → 肾上腺素激增\n• 头晕 → 过度换气改变血液CO2水平\n• 胸闷 → 肋间肌紧张\n\n这些症状是你的身体在正常工作——只是对假警报做出反应。",
+    "learn.physicalHelp": "当焦虑感觉是身体性的，与身体合作而不是对抗。慢呼吸（特别是长呼气）告诉迷走神经关掉警报。4-7-8技术有效是因为长呼气激活了副交感神经系统。接地练习（5-4-3-2-1）将注意力从内心恐慌转向外部现实。运动帮助消耗肾上腺素。提醒自己：这是我的身体在保护我。不舒服，但不危险。",
+
+    // Science: Personality & Temperament
+    "learn.personalityTitle": "性格与气质",
+    "learn.personalityWhat": "你的性格不是随机的——它是先天气质和后天经历的组合。了解你的特质可以帮助你停止与自己对抗，开始顺应自己。",
+    "learn.personalitySigns": "五大人格特质（每个人都有这五种，只是程度不同）：\n\n• 开放性 — 好奇心、创造力、热爱新体验\n• 尽责性 — 组织性、自律、可靠\n• 外向性 — 从社交互动vs独处中获得能量\n• 宜人性 — 同理心、合作、信任\n• 神经质 — 体验消极情绪的倾向\n\n内向vs外向不是害羞的问题——是你从哪里获取能量。内向者独处充电；外向者与人相处充电。都没有更好。\n\n高敏感人群（HSP）：约20%的人对刺激的处理更深入。不是障碍——是特质。HSP注意到更多、感受更多、需要更多休息时间。理解后它是一种优势。\n\n依恋风格（来自童年）：安全型（对亲密感到自在）、焦虑型（害怕被抛弃）、回避型（害怕亲密）、混乱型（混合）。这些塑造了成人关系，但可以通过觉知改变。",
+    "learn.personalityHelp": "没有\"正确\"的性格。目标是自我觉知，不是自我改善。如果你是内向的，尊重你对独处的需要——这不是反社会，这是你充电的方式。如果你神经质得分高，你没有坏——你可能只是需要更多情绪调节工具（这个应用可以帮助）。如果你是HSP，保护你的能量。了解你的依恋风格可以改变你的关系。从注意模式开始，而不是评判它们。",
+
+    // Science: The Habit Loop
+    "learn.habitsLoopTitle": "习惯回路",
+    "learn.habitsLoopWhat": "每个习惯——好的或坏的——都遵循相同的大脑回路：提示→行为→奖励。理解这个回路让你对那些感觉自动的行为有了掌控力。拖延、刷手机、压力进食和咬指甲都遵循这个模式。运动、写日记和冥想也是。",
+    "learn.habitsLoopSigns": "回路：\n\n1. 提示 — 触发因素（时间、情绪、地点、前一个动作）。例如：感到压力（提示）\n2. 行为 — 做出的行为。例如：拿起手机（行为）\n3. 奖励 — 大脑得到的。例如：刷手机的多巴胺（奖励）\n\n改变习惯不是对抗回路——而是重新引导。保持相同的提示和奖励，换掉行为：\n• 提示：感到压力 → 行为：3次慢呼吸代替手机 → 奖励：平静的感觉\n• 提示：晚饭后无聊 → 行为：短暂散步代替零食 → 奖励：新鲜空气+运动\n\n关键洞察：意志力被高估了。大脑将重复行为自动化以节省能量。诀窍是让新行为比旧的更容易。从极小开始——\"做一个俯卧撑\"或\"写一句话\"。",
+    "learn.habitsLoopHelp": "选择一个你想改变的习惯。找出提示（什么触发了它？）和奖励（大脑得到了什么？）。然后用稍好一点的行为替换。不要追求完美——追求稍好一点，持续重复。21-66天后（研究数据不同），新的通路变成自动的。你在这个应用中记录的每一步、每一次呼吸练习、每一次情绪打卡——你都在建立一条神经通路。它会变得越来越容易。",
+
+    // Spotify
+    "spotify.title": "Spotify",
+    "spotify.change": "更换",
+    "spotify.remove": "移除",
+    "spotify.paste": "粘贴 Spotify 播放列表、专辑或歌曲链接",
+    "spotify.connect": "连接 Spotify",
+
+    // Summary
+    "summary.today": "今天",
+    "summary.moods": "{count} 个心情",
+    "summary.moods_plural": "{count} 个心情",
+    "summary.sessions": "次练习",
+    "summary.sessions_plural": "次练习",
+    "summary.entries": "篇日记",
+    "summary.entries_plural": "篇日记",
+    "summary.streak": "连续 {count} 天",
+    "summary.week": "本周",
+    "summary.signIn": "登录以追踪你的进步",
+    "summary.about": "关于 Heal",
+    "summary.aboutMood": "拍张照片或选个表情，记录你的感受。追踪每天、每周、每月的情绪模式。",
+    "summary.aboutCalm": "引导呼吸练习、治愈照片和你最爱的 Spotify 音乐——都在一个平静的空间里。",
+    "summary.aboutGrow": "设定温柔的路径，迈出小小的步伐，写下心声，每周收到温暖的进步回顾。",
+    "summary.aboutMe": "查看每日统计、每周活动、连续天数和 Healer 洞察，为自己的坚持喝彩。",
+    "summary.learnMore": "前往平静中的「了解」标签了解更多",
+
+    // In Loving Memory
+    "memory.line1": "你是被爱的。你并不孤单。",
+    "memory.line2": "在每一个安静的时刻，请相信有一种比你更大的力量在守护着你。你值得拥有平安、喜乐和恩典。",
+    "memory.line3": "献给所有心中承受重量的人——你被看见，你已足够，你永远不会被遗忘。",
+    "memory.line4": "有时候，最大的治愈来自最简单的事——走到外面，感受阳光的温暖，静静看一朵花。",
+
+    // Crisis
+    "crisis.needHelp": "需要帮助？",
+    "crisis.title": "危机资源",
+    "crisis.fullTitle": "需要找人倾诉？",
+    "crisis.available": "全天候服务",
+    "crisis.us": "美国",
+    "crisis.china": "中国",
+    "crisis.intl": "国际",
+    "crisis.988": "988 自杀与危机生命热线",
+    "crisis.988action": "拨打或发短信",
+    "crisis.textLine": "危机短信热线",
+    "crisis.textAction": "发送 HELLO 到",
+    "crisis.chinaLine": "全国心理援助热线",
+    "crisis.chinaAction": "拨打",
+    "crisis.intlLine": "查找热线",
+    "crisis.intlAction": "查找你所在国家的支持资源",
+  },
+};
+
+interface I18nContextType {
+  lang: Lang;
+  setLang: (lang: Lang) => void;
+  t: (key: string, params?: Record<string, string | number>) => string;
+}
+
+const I18nContext = createContext<I18nContextType>({
+  lang: "en",
+  setLang: () => {},
+  t: (key) => key,
+});
+
+export function I18nProvider({ children }: { children: ReactNode }) {
+  const [lang, setLangState] = useState<Lang>("en");
+
+  useEffect(() => {
+    const saved = localStorage.getItem("lang") as Lang;
+    if (saved && (saved === "en" || saved === "zh")) {
+      setLangState(saved);
+    }
+  }, []);
+
+  const setLang = (l: Lang) => {
+    setLangState(l);
+    localStorage.setItem("lang", l);
+  };
+
+  const t = (key: string, params?: Record<string, string | number>) => {
+    let text = translations[lang][key] || translations.en[key] || key;
+    if (params) {
+      for (const [k, v] of Object.entries(params)) {
+        text = text.replace(`{${k}}`, String(v));
+      }
+    }
+    return text;
+  };
+
+  return (
+    <I18nContext.Provider value={{ lang, setLang, t }}>
+      {children}
+    </I18nContext.Provider>
+  );
+}
+
+export function useI18n() {
+  return useContext(I18nContext);
+}

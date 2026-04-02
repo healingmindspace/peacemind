@@ -1,0 +1,21 @@
+/* Health — green palette */
+:root {
+  --background: #f0f6ee;
+  --foreground: #2d4a2d;
+  --breathe-duration: 4s;
+
+  --pm-brand: #4a7a4a;
+  --pm-brand-hover: #3d6a3d;
+  --pm-brand-light: #a0c8a0;
+  --pm-brand-bg: #e8f0e6;
+  --pm-text: #2d4a2d;
+  --pm-text-secondary: #3d5a3d;
+  --pm-text-tertiary: #6a8a6a;
+  --pm-text-muted: #a0b8a0;
+  --pm-surface: rgba(255, 255, 255, 0.5);
+  --pm-surface-hover: rgba(255, 255, 255, 0.8);
+  --pm-surface-active: rgba(255, 255, 255, 0.6);
+  --pm-border: #c0d8c0;
+  --pm-accent: #d0e8d0;
+  --pm-accent-light: #e8f0e6;
+}
