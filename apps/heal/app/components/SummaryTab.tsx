@@ -489,8 +489,8 @@ export default function SummaryTab() {
         </div>
       </div>
 
-      {/* My Data */}
-      {user && (
+      {/* My Data — hidden for now */}
+      {false && user && (
         <div className="max-w-sm md:max-w-lg mx-auto mt-10 px-4">
           <div className="bg-pm-surface backdrop-blur-sm rounded-2xl p-5">
             <h3 className="text-sm font-semibold text-pm-text mb-3">{t("data.title")}</h3>
