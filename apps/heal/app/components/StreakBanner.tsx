@@ -5,11 +5,11 @@ import { useAuth } from "@/lib/auth-context";
 import { useApi } from "@/lib/use-api";
 import { useI18n } from "@/lib/i18n";
 
-const COINS_KEY = "pm-coins";
+const SEEDS_KEY = "pm-seeds";
 const LAST_CHECKIN_KEY = "pm-last-checkin";
 const STREAK_KEY = "pm-streak";
 
-const COIN_REWARDS = {
+const SEED_REWARDS = {
   dailyCheckin: 5,
   streak7: 20,
   streak30: 100,
@@ -25,15 +25,15 @@ const MILESTONES = [
   { days: 365, message: { en: "One year. Incredible.", zh: "一整年。不可思议。" } },
 ];
 
-function getCoins(): number {
+function getSeeds(): number {
   if (typeof window === "undefined") return 0;
-  return parseInt(localStorage.getItem(COINS_KEY) || "0", 10);
+  return parseInt(localStorage.getItem(SEEDS_KEY) || "0", 10);
 }
 
-function addCoins(amount: number): number {
-  const current = getCoins();
+function addSeeds(amount: number): number {
+  const current = getSeeds();
   const next = current + amount;
-  localStorage.setItem(COINS_KEY, String(next));
+  localStorage.setItem(SEEDS_KEY, String(next));
   return next;
 }
 
@@ -55,10 +55,10 @@ export default function StreakBanner({ onMoodLogged }: StreakBannerProps) {
   const { apiFetch, isAnonymous } = useApi();
   const { lang } = useI18n();
   const [streak, setStreak] = useState(0);
-  const [coins, setCoins] = useState(0);
+  const [seeds, setSeeds] = useState(0);
   const [milestone, setMilestone] = useState<string | null>(null);
-  const [coinsEarned, setCoinsEarned] = useState(0);
-  const [showCoinAnim, setShowCoinAnim] = useState(false);
+  const [seedsEarned, setSeedsEarned] = useState(0);
+  const [showSeedAnim, setShowSeedAnim] = useState(false);
 
   // Calculate streak from mood history
   useEffect(() => {
@@ -67,7 +67,7 @@ export default function StreakBanner({ onMoodLogged }: StreakBannerProps) {
   }, [user, onMoodLogged]);
 
   useEffect(() => {
-    setCoins(getCoins());
+    setSeeds(getSeeds());
   }, []);
 
   const loadStreak = async () => {
@@ -116,19 +116,19 @@ export default function StreakBanner({ onMoodLogged }: StreakBannerProps) {
 
       // Check if this is a new day's check-in
       if (datesWithMoods.has(todayStr) && stored.lastDate !== todayStr) {
-        // Award daily coins
-        let earned = COIN_REWARDS.dailyCheckin;
+        // Award daily seeds
+        let earned = SEED_REWARDS.dailyCheckin;
 
         // Streak milestone bonuses
-        if (currentStreak === 7) earned += COIN_REWARDS.streak7;
-        if (currentStreak === 30) earned += COIN_REWARDS.streak30;
-        if (currentStreak === 100) earned += COIN_REWARDS.streak100;
+        if (currentStreak === 7) earned += SEED_REWARDS.streak7;
+        if (currentStreak === 30) earned += SEED_REWARDS.streak30;
+        if (currentStreak === 100) earned += SEED_REWARDS.streak100;
 
-        const newTotal = addCoins(earned);
-        setCoins(newTotal);
-        setCoinsEarned(earned);
-        setShowCoinAnim(true);
-        setTimeout(() => setShowCoinAnim(false), 2000);
+        const newTotal = addSeeds(earned);
+        setSeeds(newTotal);
+        setSeedsEarned(earned);
+        setShowSeedAnim(true);
+        setTimeout(() => setShowSeedAnim(false), 2000);
 
         localStorage.setItem(LAST_CHECKIN_KEY, todayStr);
         localStorage.setItem(STREAK_KEY, String(currentStreak));
@@ -167,13 +167,13 @@ export default function StreakBanner({ onMoodLogged }: StreakBannerProps) {
           </div>
         </div>
 
-        {/* Coins */}
+        {/* Seeds */}
         <div className="flex items-center gap-1.5 relative">
-          <span className="text-sm">🪙</span>
-          <span className="text-sm font-semibold text-pm-text">{coins}</span>
-          {showCoinAnim && coinsEarned > 0 && (
+          <span className="text-sm">🌱</span>
+          <span className="text-sm font-semibold text-pm-text">{seeds}</span>
+          {showSeedAnim && seedsEarned > 0 && (
             <span className="absolute -top-4 right-0 text-xs font-bold text-brand animate-bounce">
-              +{coinsEarned}
+              +{seedsEarned}
             </span>
           )}
         </div>
