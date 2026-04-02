@@ -90,6 +90,7 @@ function AppContent() {
           <div className="flex items-center gap-2 flex-wrap">
             <a href="/about" className="text-xs text-pm-text-muted hover:text-brand">About</a>
             <a href="/privacy" className="text-xs text-pm-text-muted hover:text-brand">Privacy</a>
+            <a href="/security" className="text-xs text-pm-text-muted hover:text-brand">Security</a>
             <CrisisResources compact />
             <LangSwitcher />
           </div>
