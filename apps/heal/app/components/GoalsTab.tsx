@@ -12,6 +12,7 @@ import AddTaskForm from "./goals/AddTaskForm";
 import AIPlanPanel from "./goals/AIPlanPanel";
 import GrowIntentPicker from "./goals/GrowIntentPicker";
 import WeeklyReview from "./goals/WeeklyReview";
+import SeedsDisplay from "./SeedsDisplay";
 
 export type { Goal, Task, AiStep, GrowIntent };
 
@@ -458,6 +459,7 @@ export default function GoalsTab({ growIntent, onClearGrowIntent }: { growIntent
 
   return (
     <section className="py-6 px-4">
+      <SeedsDisplay />
       {/* Reminder banner */}
       {reminderCount > 0 && (
         <div className="max-w-sm md:max-w-lg mx-auto mb-4 bg-pm-accent-light/70 rounded-2xl p-3">
