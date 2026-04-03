@@ -13,7 +13,16 @@ type Section = "apps" | "insights" | "discover" | "admin";
 export default function Console() {
   const [activeSection, setActiveSection] = useState<Section>("apps");
   const [isAdmin, setIsAdmin] = useState(false);
+  const [buildInfo, setBuildInfo] = useState("");
   const supabase = useMemo(() => createClient(), []);
+
+  useEffect(() => {
+    const sha = (process.env.NEXT_PUBLIC_COMMIT_SHA || "local").slice(0, 7);
+    const time = process.env.NEXT_PUBLIC_BUILD_TIME
+      ? new Date(process.env.NEXT_PUBLIC_BUILD_TIME).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })
+      : "local";
+    setBuildInfo(`Build: ${sha} · ${time}`);
+  }, []);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -37,7 +46,7 @@ export default function Console() {
       {/* Header */}
       <header className="px-6 py-5 flex items-center justify-between max-w-4xl mx-auto">
         <div>
-          <h1 className="text-xl font-bold text-pm-text">Peacemind</h1>
+          <h1 className="text-xl font-bold text-pm-text" title={buildInfo}>Peacemind</h1>
           <p className="text-xs text-pm-text-tertiary">Your life, understood</p>
         </div>
         <AccountBar />
