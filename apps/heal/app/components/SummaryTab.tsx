@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n";
+import { getSeedHistory, SEED_LABELS, type SeedHistoryEntry } from "@/lib/seeds";
 
 interface DayData {
   date: string;
@@ -25,15 +26,22 @@ export default function SummaryTab() {
   const [deleting, setDeleting] = useState(false);
   const [deleteMsg, setDeleteMsg] = useState<string | null>(null);
   const [seeds, setSeeds] = useState(0);
+  const [seedHistory, setSeedHistory] = useState<SeedHistoryEntry[]>([]);
+  const [showSeedHistory, setShowSeedHistory] = useState(false);
   const { t, lang } = useI18n();
 
   useEffect(() => {
     const stored = parseInt(localStorage.getItem("pm-seeds") || "0", 10);
     setSeeds(stored);
-    // Listen for seed changes from StreakBanner
-    const onStorage = () => setSeeds(parseInt(localStorage.getItem("pm-seeds") || "0", 10));
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
+    setSeedHistory(getSeedHistory());
+    // Listen for seed changes
+    const onSeedsChanged = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      setSeeds(typeof detail === "number" ? detail : parseInt(localStorage.getItem("pm-seeds") || "0", 10));
+      setSeedHistory(getSeedHistory());
+    };
+    window.addEventListener("seeds-changed", onSeedsChanged);
+    return () => window.removeEventListener("seeds-changed", onSeedsChanged);
   }, []);
 
   useEffect(() => {
@@ -404,6 +412,49 @@ export default function SummaryTab() {
                     : "🛍️ Seed shop coming soon — spend seeds on avatar hats and themes"}
                 </p>
               </div>
+
+              {/* History toggle */}
+              <div className="border-t border-pm-border pt-2 mt-2">
+                <button
+                  onClick={() => setShowSeedHistory(!showSeedHistory)}
+                  className="text-xs text-pm-text-muted hover:text-brand cursor-pointer"
+                >
+                  {showSeedHistory
+                    ? (lang === "zh" ? "隐藏历史" : "Hide history")
+                    : (lang === "zh" ? "查看历史" : "View history")}
+                </button>
+              </div>
+
+              {/* Seed history */}
+              {showSeedHistory && seedHistory.length > 0 && (
+                <div className="border-t border-pm-border pt-2 mt-2 max-h-48 overflow-y-auto space-y-1.5">
+                  {seedHistory.map((entry, i) => {
+                    const label = SEED_LABELS[entry.action];
+                    const displayLabel = label
+                      ? (lang === "zh" ? label.zh : label.en)
+                      : entry.action;
+                    const d = new Date(entry.date);
+                    const dateStr = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+                    const timeStr = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+                    return (
+                      <div key={i} className="flex items-center justify-between text-xs">
+                        <div className="flex-1 min-w-0">
+                          <span className="text-pm-text-secondary">{displayLabel}</span>
+                          <span className="text-pm-text-muted ml-2">{dateStr} {timeStr}</span>
+                        </div>
+                        <span className={`font-medium shrink-0 ml-2 ${entry.amount > 0 ? "text-green-600" : "text-red-400"}`}>
+                          {entry.amount > 0 ? "+" : ""}{entry.amount}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              {showSeedHistory && seedHistory.length === 0 && (
+                <p className="text-xs text-pm-text-muted mt-2 italic">
+                  {lang === "zh" ? "还没有记录" : "No history yet"}
+                </p>
+              )}
             </div>
           </div>
         </div>
