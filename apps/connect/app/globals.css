@@ -1,0 +1,35 @@
+@import "tailwindcss";
+@import "@peacemind/theme/base.css";
+
+:root {
+  /* Connect theme — warm, social, inviting */
+  --pm-brand: #c27856;
+  --pm-brand-hover: #a8654a;
+  --pm-brand-light: #e4b89e;
+  --pm-brand-bg: #fdf5f0;
+  --pm-text: #3d2e24;
+  --pm-text-secondary: #6b5547;
+  --pm-text-tertiary: #9a8577;
+  --pm-text-muted: #bfada0;
+  --pm-surface: rgba(255, 255, 255, 0.6);
+  --pm-surface-hover: rgba(255, 255, 255, 0.85);
+  --pm-surface-active: rgba(255, 255, 255, 0.45);
+  --pm-border: #e8ddd5;
+  --pm-accent: #f0e5dc;
+  --pm-accent-light: #fdf5f0;
+}
+
+@theme inline {
+  --color-brand: var(--pm-brand);
+  --color-brand-hover: var(--pm-brand-hover);
+  --color-pm-text: var(--pm-text);
+  --color-pm-text-secondary: var(--pm-text-secondary);
+  --color-pm-text-tertiary: var(--pm-text-tertiary);
+  --color-pm-text-muted: var(--pm-text-muted);
+  --color-pm-surface: var(--pm-surface);
+  --color-pm-surface-hover: var(--pm-surface-hover);
+  --color-pm-surface-active: var(--pm-surface-active);
+  --color-pm-border: var(--pm-border);
+  --color-pm-accent: var(--pm-accent);
+  --color-pm-accent-light: var(--pm-accent-light);
+}

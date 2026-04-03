@@ -9,6 +9,7 @@
     "dev:heal": "turbo dev --filter=heal",
     "dev:health": "turbo dev --filter=health",
     "dev:peacemind": "turbo dev --filter=peacemind-app",
+    "dev:connect": "turbo dev --filter=connect",
     "type-check": "turbo type-check"
   },
   "devDependencies": {

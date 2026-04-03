@@ -29,6 +29,15 @@ const apps: AppCard[] = [
     href: "https://health.peacemind.app",
     active: true,
   },
+  {
+    id: "connect",
+    name: "Connect",
+    icon: "🤝",
+    tagline: "Safe connections, no identity",
+    color: "#c27856",
+    href: "https://connect.peacemind.app",
+    active: true,
+  },
 ];
 
 export default function AppGrid() {
