@@ -17,6 +17,8 @@ export const TABLES = {
   pluginConnections: "plugin_connections",
   userPlugins: "user_plugins",
   pluginConsents: "plugin_consents",
+  seedBalances: "seed_balances",
+  seedHistory: "seed_history",
 } as const;
 
 // Storage buckets

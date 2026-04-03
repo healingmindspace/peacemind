@@ -356,7 +356,7 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
     if (insertedData?.id) {
       setStep("done");
       setMoodLogCount((c) => c + 1);
-      awardSeeds("mood");
+      awardSeeds("mood", accessToken);
       loadHistory(user.id, timeRange);
 
       // Wellness check: detect concerning mood patterns
@@ -452,7 +452,7 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
       }),
     });
     if (res.ok) {
-      deductSeeds("mood");
+      deductSeeds("mood", accessToken);
       loadHistory(user.id, timeRange);
     }
   };
