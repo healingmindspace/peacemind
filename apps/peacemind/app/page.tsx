@@ -7,6 +7,7 @@ import AppGrid from "./components/AppGrid";
 import InsightPanel from "./components/InsightPanel";
 import AccountBar from "./components/AccountBar";
 import AdminDashboard from "./components/admin/AdminDashboard";
+import SeedsBadge from "./components/SeedsBadge";
 
 type Section = "apps" | "insights" | "discover" | "admin";
 
@@ -49,7 +50,10 @@ export default function Console() {
           <h1 className="text-xl font-bold text-pm-text" title={buildInfo}>Peacemind</h1>
           <p className="text-xs text-pm-text-tertiary">Your life, understood</p>
         </div>
-        <AccountBar />
+        <div className="flex items-center gap-3">
+          <SeedsBadge />
+          <AccountBar />
+        </div>
       </header>
 
       {/* Navigation */}
