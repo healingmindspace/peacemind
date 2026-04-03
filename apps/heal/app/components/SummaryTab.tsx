@@ -13,7 +13,7 @@ interface DayData {
 }
 
 export default function SummaryTab() {
-  const { user, accessToken } = useAuth();
+  const { user, accessToken, isAnonymous } = useAuth();
   const [days, setDays] = useState<DayData[]>([]);
   const [streak, setStreak] = useState(0);
   const [insight, setInsight] = useState<string | null>(null);
@@ -62,7 +62,11 @@ export default function SummaryTab() {
     sevenDaysAgo.setHours(0, 0, 0, 0);
     const since = sevenDaysAgo.toISOString();
 
-    const [moodsJson, journalsJson, breathingJson] = await Promise.all([
+    const yearAgo = new Date();
+    yearAgo.setDate(yearAgo.getDate() - 365);
+    const streakSince = yearAgo.toISOString();
+
+    const [moodsJson, journalsJson, breathingJson, allMoodsJson] = await Promise.all([
       fetch("/api/mood", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -77,6 +81,12 @@ export default function SummaryTab() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "list", userId, accessToken, since, limit: 100 }),
+      }).then((r) => r.json()),
+      // Fetch full year of moods for streak calculation
+      fetch("/api/mood", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "list", userId, accessToken, since: streakSince, limit: 200 }),
       }).then((r) => r.json()),
     ]);
 
@@ -120,11 +130,26 @@ export default function SummaryTab() {
     const weekDays = Array.from(dayMap.values());
     setDays(weekDays);
 
+    // Calculate streak from ALL data (up to 1 year)
+    const datesWithActivity = new Set<string>();
+    (allMoodsJson.data || []).forEach((m: { created_at: string }) => {
+      datesWithActivity.add(new Date(m.created_at).toDateString());
+    });
+    (journalsJson.data || []).forEach((j: { created_at: string }) => {
+      datesWithActivity.add(new Date(j.created_at).toDateString());
+    });
+    (breathingJson.data || []).forEach((b: { created_at: string }) => {
+      datesWithActivity.add(new Date(b.created_at).toDateString());
+    });
+
     let s = 0;
-    for (let i = weekDays.length - 1; i >= 0; i--) {
-      const d = weekDays[i];
-      if (d.moods.length > 0 || d.breathCount > 0 || d.journalCount > 0) {
+    for (let i = 0; i < 365; i++) {
+      const checkDate = new Date();
+      checkDate.setDate(now.getDate() - i);
+      if (datesWithActivity.has(checkDate.toDateString())) {
         s++;
+      } else if (i === 0) {
+        continue; // today not logged yet — check from yesterday
       } else {
         break;
       }
@@ -367,7 +392,7 @@ export default function SummaryTab() {
       </div>}
 
       {/* AI Insight */}
-      {user && (
+      {user && !isAnonymous && (
         <div className="max-w-sm md:max-w-lg mx-auto mt-8">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold text-pm-text">
@@ -438,9 +463,25 @@ export default function SummaryTab() {
         </div>
       )}
 
-      {!user && (
-        <div className="text-center mb-6">
-          <p className="text-sm text-pm-text-muted">{t("summary.signIn")}</p>
+      {/* Blurred insight preview for anonymous users */}
+      {isAnonymous && (
+        <div className="max-w-sm md:max-w-lg mx-auto mt-8">
+          <h3 className="text-sm font-semibold text-pm-text mb-3">
+            {lang === "zh" ? "💡 Peacemind 洞察" : "💡 Peacemind Insight"}
+          </h3>
+          <div className="bg-pm-surface backdrop-blur-sm rounded-2xl p-4 relative overflow-hidden">
+            <p className="text-sm text-pm-text-secondary leading-relaxed blur-[6px] select-none" aria-hidden>
+              {lang === "zh"
+                ? "这周你的心情在周三有所好转，似乎和户外活动有关。试试每天花5分钟散步，阳光和新鲜空气可能会帮到你。"
+                : "Your mood improved midweek, which seems connected to time outdoors. Try a 5-minute walk each day — sunlight and fresh air can make a real difference."}
+            </p>
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-pm-surface/60 backdrop-blur-[2px]">
+              <p className="text-sm font-medium text-pm-text mb-2">
+                {lang === "zh" ? "登录解锁你的个人洞察" : "Sign in to unlock your personal insights"}
+              </p>
+              <p className="text-xs text-pm-text-muted">🌱</p>
+            </div>
+          </div>
         </div>
       )}
 
