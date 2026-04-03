@@ -8,6 +8,8 @@ export async function GET(request: Request) {
 
   if (code) {
     const cookieStore = await cookies();
+    const isPeacemind = new URL(request.url).hostname.endsWith("peacemind.app");
+
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -18,7 +20,10 @@ export async function GET(request: Request) {
           },
           setAll(cookiesToSet) {
             cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options);
+              cookieStore.set(name, value, {
+                ...options,
+                ...(isPeacemind ? { domain: ".peacemind.app" } : {}),
+              });
             });
           },
         },
