@@ -58,6 +58,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsAnonymous(true);
       }
       setLoading(false);
+    }).catch(() => {
+      // Auth check failed — fall back to anonymous
+      const deviceId = getDeviceId();
+      setUser({ id: deviceId, user_metadata: {} });
+      setAccessToken(null);
+      setIsAnonymous(true);
+      setLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
