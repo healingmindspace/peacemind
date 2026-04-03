@@ -1,4 +1,5 @@
-import { createBrowserClient } from "@supabase/ssr";
+import { createBrowserClient, type CookieOptionsWithName } from "@supabase/ssr";
+import { type SupabaseClient } from "@supabase/supabase-js";
 
 function getCookieDomain(): string | undefined {
   try {
@@ -12,13 +13,16 @@ function getCookieDomain(): string | undefined {
   return undefined;
 }
 
-export function createClient() {
-  const domain = getCookieDomain();
-  return createBrowserClient(
+const domain = getCookieDomain();
+
+let client: SupabaseClient | null = null;
+
+export function createClient(): SupabaseClient {
+  if (client) return client;
+  client = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      isSingleton: false,
       cookieOptions: {
         ...(domain ? { domain } : {}),
         path: "/",
@@ -27,4 +31,5 @@ export function createClient() {
       },
     }
   );
+  return client;
 }

@@ -15,10 +15,13 @@ function getCookieDomain(): string | undefined {
   return undefined;
 }
 
+const domain = getCookieDomain();
+
+let client: ReturnType<typeof createBrowserClient> | null = null;
+
 export function createClient() {
-  const domain = getCookieDomain();
-  return createBrowserClient(SUPABASE_URL, SUPABASE_KEY, {
-    isSingleton: false,
+  if (client) return client;
+  client = createBrowserClient(SUPABASE_URL, SUPABASE_KEY, {
     cookieOptions: {
       ...(domain ? { domain } : {}),
       path: "/",
@@ -26,4 +29,5 @@ export function createClient() {
       secure: true,
     },
   });
+  return client;
 }
