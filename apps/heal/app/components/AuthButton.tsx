@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n";
 
 export default function AuthButton() {
-  const { user, loading, signInWithGoogle, signInWithEmail, signUp, signOut } = useAuth();
+  const { user, loading, isAnonymous, signInWithGoogle, signInWithEmail, signUp, signOut } = useAuth();
   const [showForm, setShowForm] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [name, setName] = useState("");
@@ -33,7 +33,7 @@ export default function AuthButton() {
 
   if (loading) return null;
 
-  if (user) {
+  if (user && !isAnonymous) {
     return (
       <div className="flex items-center gap-4">
         <span className="text-sm text-pm-text-secondary">
