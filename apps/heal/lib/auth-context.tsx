@@ -72,6 +72,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session.user);
         setAccessToken(session.access_token);
         setIsAnonymous(false);
+        // Redeem invite code if stored
+        const inviteCode = localStorage.getItem("pm-invite-code");
+        if (inviteCode) {
+          localStorage.removeItem("pm-invite-code");
+          fetch("/api/invite", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "redeem", accessToken: session.access_token, code: inviteCode }),
+          }).catch(() => {});
+        }
       } else {
         const deviceId = getDeviceId();
         setUser({ id: deviceId, user_metadata: {} });

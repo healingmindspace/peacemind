@@ -27,6 +27,8 @@ export const SEED_ACTIONS = {
   STREAK_7: "streak7",
   STREAK_30: "streak30",
   STREAK_100: "streak100",
+  INVITE_SENT: "invite_sent",
+  INVITE_WELCOME: "invite_welcome",
 } as const;
 
 export type SeedAction = (typeof SEED_ACTIONS)[keyof typeof SEED_ACTIONS];
@@ -42,6 +44,8 @@ export const SEED_REWARDS: Record<SeedAction, number> = {
   [SEED_ACTIONS.STREAK_7]: 20,
   [SEED_ACTIONS.STREAK_30]: 100,
   [SEED_ACTIONS.STREAK_100]: 500,
+  [SEED_ACTIONS.INVITE_SENT]: 50,
+  [SEED_ACTIONS.INVITE_WELCOME]: 20,
 };
 
 // --- Action labels for history display ---
@@ -55,6 +59,8 @@ export const SEED_LABELS: Record<string, { en: string; zh: string }> = {
   [SEED_ACTIONS.STREAK_7]: { en: "7-day streak bonus", zh: "7天连续奖励" },
   [SEED_ACTIONS.STREAK_30]: { en: "30-day streak bonus", zh: "30天连续奖励" },
   [SEED_ACTIONS.STREAK_100]: { en: "100-day streak bonus", zh: "100天连续奖励" },
+  [SEED_ACTIONS.INVITE_SENT]: { en: "Friend joined via invite", zh: "好友通过邀请加入" },
+  [SEED_ACTIONS.INVITE_WELCOME]: { en: "Welcome bonus (invited)", zh: "欢迎奖励（受邀）" },
   [`delete-${SEED_ACTIONS.MOOD}`]: { en: "Deleted mood", zh: "删除心情" },
   [`delete-${SEED_ACTIONS.JOURNAL}`]: { en: "Deleted journal", zh: "删除日记" },
 };

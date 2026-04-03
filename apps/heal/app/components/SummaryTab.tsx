@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n";
 import { getSeedHistory, SEED_LABELS, type SeedHistoryEntry } from "@/lib/seeds";
+import InviteFriend from "./InviteFriend";
 
 interface DayData {
   date: string;
@@ -459,6 +460,8 @@ export default function SummaryTab() {
           </div>
         </div>
       )}
+
+      <InviteFriend />
 
       {/* Weekly overview */}
       {user && <div className="max-w-sm md:max-w-lg mx-auto">
