@@ -24,7 +24,17 @@ export default function SummaryTab() {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteMsg, setDeleteMsg] = useState<string | null>(null);
+  const [seeds, setSeeds] = useState(0);
   const { t, lang } = useI18n();
+
+  useEffect(() => {
+    const stored = parseInt(localStorage.getItem("pm-seeds") || "0", 10);
+    setSeeds(stored);
+    // Listen for seed changes from StreakBanner
+    const onStorage = () => setSeeds(parseInt(localStorage.getItem("pm-seeds") || "0", 10));
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
 
   useEffect(() => {
     if (user && accessToken) {
@@ -343,14 +353,58 @@ export default function SummaryTab() {
         </div>
       )}
 
-      {/* Streak */}
+      {/* Streak + Seeds */}
       {user && (
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 bg-pm-surface rounded-full px-5 py-2">
-            <span className="text-lg">🔥</span>
-            <span className="text-sm font-semibold text-pm-text">
-              {t("summary.streak", { count: streak })}
-            </span>
+          <div className="inline-flex items-center gap-4 bg-pm-surface rounded-full px-5 py-2">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">{streak >= 7 ? "🔥" : "✨"}</span>
+              <span className="text-sm font-semibold text-pm-text">
+                {t("summary.streak", { count: streak })}
+              </span>
+            </div>
+            <div className="w-px h-4 bg-pm-border" />
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm">🌱</span>
+              <span className="text-sm font-semibold text-pm-text">{seeds}</span>
+              <span className="text-xs text-pm-text-muted">{lang === "zh" ? "种子" : "seeds"}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Seeds details */}
+      {user && seeds > 0 && (
+        <div className="max-w-sm md:max-w-lg mx-auto mb-6">
+          <div className="bg-pm-surface rounded-2xl p-4">
+            <h3 className="text-sm font-semibold text-pm-text mb-3">
+              {lang === "zh" ? "🌱 你的种子" : "🌱 Your Seeds"}
+            </h3>
+            <div className="space-y-2 text-xs text-pm-text-secondary">
+              <div className="flex justify-between">
+                <span>{lang === "zh" ? "每日签到" : "Daily check-ins"}</span>
+                <span className="text-pm-text">+5 {lang === "zh" ? "/ 天" : "/ day"}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>{lang === "zh" ? "7天连续" : "7-day streak"}</span>
+                <span className="text-pm-text">+20 {lang === "zh" ? "额外奖励" : "bonus"}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>{lang === "zh" ? "30天连续" : "30-day streak"}</span>
+                <span className="text-pm-text">+100 {lang === "zh" ? "额外奖励" : "bonus"}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>{lang === "zh" ? "100天连续" : "100-day streak"}</span>
+                <span className="text-pm-text">+500 {lang === "zh" ? "额外奖励" : "bonus"}</span>
+              </div>
+              <div className="border-t border-pm-border pt-2 mt-2">
+                <p className="text-pm-text-muted italic">
+                  {lang === "zh"
+                    ? "🛍️ 种子商店即将上线 — 用种子兑换头像装饰和主题"
+                    : "🛍️ Seed shop coming soon — spend seeds on avatar hats and themes"}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       )}
