@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { uploadPhoto, getSignedUrls } from "@/lib/photos-api";
 import { useI18n } from "@/lib/i18n";
+import { awardSeeds } from "@/lib/seeds";
 import JournalHistory from "./journal/JournalHistory";
 
 interface Goal {
@@ -134,6 +135,7 @@ export default function GratitudeJournal({ goals = [], onNavigateToGrow }: { goa
     const res = await journalApi(insertData);
 
     if (res.id) {
+      awardSeeds("journal");
       setContent("");
       loadHistory(user.id);
 

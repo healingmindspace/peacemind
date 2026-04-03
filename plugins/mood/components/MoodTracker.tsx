@@ -9,6 +9,7 @@ import MoodChart from "./MoodChart";
 import TriggerStep from "./mood/TriggerStep";
 import MoodHistoryList from "./mood/MoodHistoryList";
 import StreakBanner from "@/app/components/StreakBanner";
+import { awardSeeds, deductSeeds } from "@/lib/seeds";
 
 interface MoodEntry {
   id: string;
@@ -355,6 +356,7 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
     if (insertedData?.id) {
       setStep("done");
       setMoodLogCount((c) => c + 1);
+      awardSeeds("mood");
       loadHistory(user.id, timeRange);
 
       // Wellness check: detect concerning mood patterns
@@ -449,7 +451,10 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
         id,
       }),
     });
-    if (res.ok) loadHistory(user.id, timeRange);
+    if (res.ok) {
+      deductSeeds("mood");
+      loadHistory(user.id, timeRange);
+    }
   };
 
   return (

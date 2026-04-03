@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n";
+import { awardSeeds } from "@/lib/seeds";
 
 const STEPS = [
   { sense: "see", emoji: "👀", count: 5 },
@@ -26,6 +27,7 @@ export default function GroundingExercise() {
       setStepIndex(stepIndex + 1);
     } else {
       setDone(true);
+      awardSeeds("grounding");
       // Save session
       if (user && accessToken) {
         fetch("/api/breathing", {

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n";
+import { awardSeeds } from "@/lib/seeds";
 
 
 type Phase = "idle" | "inhale" | "hold" | "exhale" | "hold2";
@@ -107,6 +108,7 @@ export default function BreathingExercise() {
               body: JSON.stringify({ action: "insert", userId: user.id, accessToken, method: methods[methodIndex].name }),
             }).then(() => {
               window.dispatchEvent(new Event("breathe-complete"));
+              awardSeeds("breathing");
             });
           }
         }

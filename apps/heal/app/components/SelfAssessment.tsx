@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n";
+import { awardSeeds } from "@/lib/seeds";
 
 const PHQ9 = {
   type: "phq9" as const,
@@ -138,6 +139,7 @@ export default function SelfAssessment({ suggestedType }: SelfAssessmentProps) {
       loadHistory();
     }
     setResult({ score, type: test.type });
+    awardSeeds("assessment");
     setSaving(false);
   };
 

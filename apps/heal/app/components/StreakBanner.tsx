@@ -4,38 +4,19 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useApi } from "@/lib/use-api";
 import { useI18n } from "@/lib/i18n";
+import { getSeeds, awardSeeds, SEED_REWARDS } from "@/lib/seeds";
 
-const SEEDS_KEY = "pm-seeds";
 const LAST_CHECKIN_KEY = "pm-last-checkin";
 const STREAK_KEY = "pm-streak";
 
-const SEED_REWARDS = {
-  dailyCheckin: 5,
-  streak7: 20,
-  streak30: 100,
-  streak100: 500,
-};
-
 const MILESTONES = [
-  { days: 7, message: { en: "One week of showing up!", zh: "坚持了一周！" } },
+  { days: 7, message: { en: "One week of showing up!", zh: "坚持���一周��" } },
   { days: 14, message: { en: "Two weeks strong!", zh: "两周了，真棒！" } },
   { days: 30, message: { en: "A whole month. That takes real courage.", zh: "整整一个月。这需要真正的勇气。" } },
-  { days: 60, message: { en: "60 days. You're building something beautiful.", zh: "60天。你正在建造美好的东西。" } },
-  { days: 100, message: { en: "100 days. You should be proud.", zh: "100天。你应该为自己骄傲。" } },
+  { days: 60, message: { en: "60 days. You're building something beautiful.", zh: "60天。你正在建��美好的东西。" } },
+  { days: 100, message: { en: "100 days. You should be proud.", zh: "100天。你应该为自��骄傲。" } },
   { days: 365, message: { en: "One year. Incredible.", zh: "一整年。不可思议。" } },
 ];
-
-function getSeeds(): number {
-  if (typeof window === "undefined") return 0;
-  return parseInt(localStorage.getItem(SEEDS_KEY) || "0", 10);
-}
-
-function addSeeds(amount: number): number {
-  const current = getSeeds();
-  const next = current + amount;
-  localStorage.setItem(SEEDS_KEY, String(next));
-  return next;
-}
 
 function getStoredStreak(): { streak: number; lastDate: string } {
   if (typeof window === "undefined") return { streak: 0, lastDate: "" };
@@ -114,25 +95,26 @@ export default function StreakBanner({ onMoodLogged }: StreakBannerProps) {
       const todayStr = today.toDateString();
       const stored = getStoredStreak();
 
-      // Check if this is a new day's check-in
+      // Check if this is a new day's check-in (for streak milestones only)
       if (datesWithMoods.has(todayStr) && stored.lastDate !== todayStr) {
-        // Award daily seeds
-        let earned = SEED_REWARDS.dailyCheckin;
+        let earned = 0;
 
         // Streak milestone bonuses
-        if (currentStreak === 7) earned += SEED_REWARDS.streak7;
-        if (currentStreak === 30) earned += SEED_REWARDS.streak30;
-        if (currentStreak === 100) earned += SEED_REWARDS.streak100;
+        if (currentStreak === 7) { earned += SEED_REWARDS.streak7; awardSeeds("streak7"); }
+        if (currentStreak === 30) { earned += SEED_REWARDS.streak30; awardSeeds("streak30"); }
+        if (currentStreak === 100) { earned += SEED_REWARDS.streak100; awardSeeds("streak100"); }
 
-        const newTotal = addSeeds(earned);
-        setSeeds(newTotal);
-        setSeedsEarned(earned);
-        setShowSeedAnim(true);
-        setTimeout(() => setShowSeedAnim(false), 2000);
+        if (earned > 0) {
+          setSeeds(getSeeds());
+          setSeedsEarned(earned);
+          setShowSeedAnim(true);
+          setTimeout(() => setShowSeedAnim(false), 2000);
+        }
 
         localStorage.setItem(LAST_CHECKIN_KEY, todayStr);
         localStorage.setItem(STREAK_KEY, String(currentStreak));
       }
+      setSeeds(getSeeds());
 
       setStreak(currentStreak);
 
