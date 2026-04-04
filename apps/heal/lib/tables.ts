@@ -23,6 +23,7 @@ export const TABLES = {
   inviteRedemptions: "invite_redemptions",
   friendships: "connect_friendships",
   friendInvites: "connect_friend_invites",
+  savedInsights: "saved_insights",
 } as const;
 
 // Storage buckets

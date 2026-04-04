@@ -49,8 +49,15 @@ export default function SummaryTab() {
     if (user && accessToken) {
       loadWeek(user.id);
       checkUnreadReplies(user.id);
+      loadSavedInsight(insightPeriod);
     }
   }, [user, accessToken]);
+
+  useEffect(() => {
+    if (user && accessToken) {
+      loadSavedInsight(insightPeriod);
+    }
+  }, [insightPeriod]);
 
   useEffect(() => {
     const handleBreath = () => {
@@ -176,6 +183,27 @@ export default function SummaryTab() {
     setStreak(s);
   };
 
+  // Load saved insight from DB (no generation)
+  const loadSavedInsight = async (period: string) => {
+    if (!accessToken) return;
+    try {
+      const res = await fetch("/api/daily-summary", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "get", accessToken, period, lang }),
+      });
+      const data = await res.json();
+      if (data.saved && data.summary) {
+        setInsight(data.summary);
+      } else {
+        setInsight(null);
+      }
+    } catch {
+      setInsight(null);
+    }
+  };
+
+  // Generate (or regenerate) insight and save to DB
   const loadInsight = async (userId: string, period: string) => {
     const periodDays: Record<string, number> = { today: 0, week: 7, month: 30, quarter: 90 };
     const since = new Date();
@@ -183,18 +211,6 @@ export default function SummaryTab() {
       since.setHours(0, 0, 0, 0);
     } else {
       since.setDate(since.getDate() - periodDays[period]);
-    }
-
-    // Check cache
-    const cacheKey = `insight-${period}`;
-    const cached = localStorage.getItem(cacheKey);
-    if (cached) {
-      const parsed = JSON.parse(cached);
-      const todayStr = new Date().toDateString();
-      if (parsed.date === todayStr && parsed.lang === lang) {
-        setInsight(parsed.text);
-        return;
-      }
     }
 
     if (!accessToken) return;
@@ -272,16 +288,11 @@ export default function SummaryTab() {
       const res = await fetch("/api/daily-summary", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ moods: moodData, journals: journalData, paths: pathsData, assessments: assessmentData, lang, period }),
+        body: JSON.stringify({ action: "generate", accessToken, moods: moodData, journals: journalData, paths: pathsData, assessments: assessmentData, lang, period }),
       });
       const data = await res.json();
       if (data.summary) {
         setInsight(data.summary);
-        localStorage.setItem(cacheKey, JSON.stringify({
-          date: new Date().toDateString(),
-          lang,
-          text: data.summary,
-        }));
       }
     } catch {
       // silently fail
@@ -550,10 +561,10 @@ export default function SummaryTab() {
                     : (lang === "zh" ? "🔊 朗读" : "🔊 Read aloud")}
                 </button>
                 <button
-                  onClick={() => { speechSynthesis.cancel(); setSpeaking(false); setInsight(null); localStorage.removeItem(`insight-${insightPeriod}`); loadInsight(user.id, insightPeriod); }}
+                  onClick={() => { speechSynthesis.cancel(); setSpeaking(false); setInsight(null); loadInsight(user.id, insightPeriod); }}
                   className="text-xs text-pm-text-muted hover:text-brand cursor-pointer"
                 >
-                  {lang === "zh" ? "刷新" : "Refresh"}
+                  {lang === "zh" ? "🔄 重新生成" : "🔄 Regenerate"}
                 </button>
               </div>
             </div>
