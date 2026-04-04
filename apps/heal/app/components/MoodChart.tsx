@@ -159,7 +159,7 @@ export default function MoodChart({ history, timeRange, onTimeRangeChange }: Moo
           />
           <Tooltip content={<CustomTooltip />} />
           <Line
-            type="monotone"
+            type="natural"
             dataKey="level"
             stroke="#7c6a9e"
             strokeWidth={3}

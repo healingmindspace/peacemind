@@ -21,6 +21,8 @@ export const TABLES = {
   seedHistory: "seed_history",
   invites: "invites",
   inviteRedemptions: "invite_redemptions",
+  friendships: "connect_friendships",
+  friendInvites: "connect_friend_invites",
 } as const;
 
 // Storage buckets
