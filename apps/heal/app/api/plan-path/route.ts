@@ -32,7 +32,7 @@ export async function POST(request: Request) {
   try {
     const message = await client.messages.create({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 300,
+      max_tokens: 1024,
       system: `You are Peacemind — a gentle, caring companion who believes the simplest things can heal: stepping outside, feeling the sun, noticing something beautiful. Based on the path name and objective:
 
 1. One warm sentence that makes them feel safe starting — no pressure, no urgency
