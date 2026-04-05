@@ -17,7 +17,21 @@ const mockChain = {
 vi.mock("@supabase/supabase-js", () => ({
   createClient: () => ({
     from: () => mockChain,
+    auth: {
+      getUser: () => Promise.resolve({
+        data: { user: { id: "user-123" } },
+        error: null,
+      }),
+    },
   }),
+}));
+
+vi.mock("@/lib/rate-limit", () => ({
+  checkRateLimit: () => true,
+  rateLimitResponse: () =>
+    new Response(JSON.stringify({ error: "Too many requests" }), { status: 429 }),
+  getClientIp: () => "127.0.0.1",
+  RATE_LIMITS: { crud: { limit: 60, windowMs: 60000 } },
 }));
 
 beforeAll(() => {

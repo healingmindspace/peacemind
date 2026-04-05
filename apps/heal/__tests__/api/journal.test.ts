@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeAll } from "vitest";
+import { describe, it, expect, vi, beforeAll, beforeEach } from "vitest";
 
 // Mock Supabase
 const mockSelect = vi.fn();
@@ -6,7 +6,6 @@ const mockInsert = vi.fn();
 const mockUpdate = vi.fn();
 const mockDelete = vi.fn();
 const mockEq = vi.fn();
-const mockGte = vi.fn();
 const mockOrder = vi.fn();
 const mockLimit = vi.fn();
 const mockSingle = vi.fn();
@@ -17,7 +16,6 @@ const mockChain = {
   update: (...args: unknown[]) => { mockUpdate(...args); return mockChain; },
   delete: () => { mockDelete(); return mockChain; },
   eq: (...args: unknown[]) => { mockEq(...args); return mockChain; },
-  gte: (...args: unknown[]) => { mockGte(...args); return mockChain; },
   order: (...args: unknown[]) => { mockOrder(...args); return mockChain; },
   limit: (...args: unknown[]) => { mockLimit(...args); return Promise.resolve({ data: [], error: null }); },
   single: () => { mockSingle(); return Promise.resolve({ data: { id: "test-id" }, error: null }); },
@@ -49,16 +47,27 @@ beforeAll(() => {
   process.env.ENCRYPTION_KEY = "test-key-for-vitest-32chars!!!!!";
 });
 
-describe("/api/mood", () => {
+describe("/api/journal", () => {
   let POST: (request: Request) => Promise<Response>;
 
   beforeAll(async () => {
-    const mod = await import("@/app/api/mood/route");
+    const mod = await import("@/app/api/journal/route");
     POST = mod.POST;
   });
 
+  beforeEach(() => {
+    mockSelect.mockClear();
+    mockInsert.mockClear();
+    mockUpdate.mockClear();
+    mockDelete.mockClear();
+    mockEq.mockClear();
+    mockOrder.mockClear();
+    mockLimit.mockClear();
+    mockSingle.mockClear();
+  });
+
   it("rejects missing params", async () => {
-    const req = new Request("http://localhost/api/mood", {
+    const req = new Request("http://localhost/api/journal", {
       method: "POST",
       body: JSON.stringify({}),
     });
@@ -67,49 +76,71 @@ describe("/api/mood", () => {
   });
 
   it("rejects unknown action", async () => {
-    const req = new Request("http://localhost/api/mood", {
+    const req = new Request("http://localhost/api/journal", {
       method: "POST",
-      body: JSON.stringify({ action: "unknown", userId: "u1", accessToken: "t1" }),
+      body: JSON.stringify({ action: "unknown", accessToken: "t1" }),
     });
     const res = await POST(req);
     expect(res.status).toBe(400);
   });
 
-  it("handles insert action", async () => {
-    const req = new Request("http://localhost/api/mood", {
+  it("list returns entries", async () => {
+    const req = new Request("http://localhost/api/journal", {
+      method: "POST",
+      body: JSON.stringify({ action: "list", accessToken: "t1" }),
+    });
+    const res = await POST(req);
+    const json = await res.json();
+    expect(res.status).toBe(200);
+    expect(json.data).toEqual([]);
+    expect(mockSelect).toHaveBeenCalled();
+    expect(mockOrder).toHaveBeenCalled();
+    expect(mockLimit).toHaveBeenCalled();
+  });
+
+  it("insert creates entry with encrypted content", async () => {
+    const req = new Request("http://localhost/api/journal", {
       method: "POST",
       body: JSON.stringify({
         action: "insert",
-        userId: "u1",
         accessToken: "t1",
-        emoji: "😊",
-        label: "Good",
-        trigger: "Nice weather",
-        helped: "Walk",
+        content: "Today was a good day",
       }),
     });
     const res = await POST(req);
-    const data = await res.json();
-    expect(data.id).toBe("test-id");
+    const json = await res.json();
+    expect(json.id).toBe("test-id");
     expect(mockInsert).toHaveBeenCalled();
+    const insertArg = mockInsert.mock.calls[mockInsert.mock.calls.length - 1][0];
+    expect(insertArg.content.startsWith("enc:")).toBe(true);
+    expect(insertArg.content).not.toBe("Today was a good day");
   });
 
-  it("encrypts trigger and helped on insert", async () => {
-    const req = new Request("http://localhost/api/mood", {
+  it("insert validates required content field", async () => {
+    const req = new Request("http://localhost/api/journal", {
       method: "POST",
       body: JSON.stringify({
         action: "insert",
-        userId: "u1",
         accessToken: "t1",
-        emoji: "😊",
-        label: "Good",
-        trigger: "Work stress",
       }),
     });
-    await POST(req);
-    const insertArg = mockInsert.mock.calls[mockInsert.mock.calls.length - 1][0];
-    // Trigger should be encrypted (starts with "enc:")
-    expect(insertArg.trigger.startsWith("enc:")).toBe(true);
-    expect(insertArg.trigger).not.toBe("Work stress");
+    const res = await POST(req);
+    expect(res.status).toBe(400);
+  });
+
+  it("delete works with valid id", async () => {
+    const req = new Request("http://localhost/api/journal", {
+      method: "POST",
+      body: JSON.stringify({
+        action: "delete",
+        accessToken: "t1",
+        id: "journal-123",
+      }),
+    });
+    const res = await POST(req);
+    const json = await res.json();
+    expect(json.ok).toBe(true);
+    expect(mockDelete).toHaveBeenCalled();
+    expect(mockEq).toHaveBeenCalledWith("id", "journal-123");
   });
 });
