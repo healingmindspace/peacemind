@@ -7,13 +7,21 @@ export async function photosApi(body: Record<string, unknown>) {
   return res.json();
 }
 
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+}
+
 export async function uploadPhoto(accessToken: string, file: File, prefix: string): Promise<string | null> {
   const ext = file.name.split(".").pop() || "jpg";
   const fileName = `${prefix}-${Date.now()}.${ext}`;
 
-  // Convert file to base64
   const buffer = await file.arrayBuffer();
-  const base64Data = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+  const base64Data = arrayBufferToBase64(buffer);
 
   const res = await photosApi({ action: "upload", accessToken, fileName, base64Data, contentType: file.type });
   return res.path || null;
@@ -41,7 +49,7 @@ export async function listPhotos(accessToken: string): Promise<{ name: string }[
 
 export async function uploadPhotoWithName(accessToken: string, file: File, fileName: string): Promise<string | null> {
   const buffer = await file.arrayBuffer();
-  const base64Data = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+  const base64Data = arrayBufferToBase64(buffer);
   const res = await photosApi({ action: "upload", accessToken, fileName, base64Data, contentType: file.type });
   return res.path || null;
 }
