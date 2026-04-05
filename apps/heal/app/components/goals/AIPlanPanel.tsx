@@ -100,10 +100,21 @@ export default function AIPlanPanel({
                   placeholder="Description (optional)"
                   className="w-full text-[10px] text-pm-text-tertiary bg-transparent border-b border-transparent focus:border-pm-border focus:outline-none pl-5"
                 />
-                <p className="text-[10px] text-pm-text-muted pl-5">
-                  {step.scheduleType === "habit" ? `${step.habitFreq} ${t("tasks.atTime")} ${step.habitTime}` : step.scheduleType === "gentle" ? t(`tasks.${step.gentle || "soon"}`) : t("tasks.once")}
-                  {step.duration ? ` · ${step.duration}${t("tasks.min")}` : ""}
-                </p>
+                <div className="flex items-center gap-2 pl-5">
+                  {step.dueDate ? (
+                    <input
+                      type="date"
+                      value={step.dueDate}
+                      onChange={(e) => updateStep(i, "dueDate", e.target.value)}
+                      className="text-[10px] text-pm-text-muted bg-transparent border-b border-transparent focus:border-pm-border focus:outline-none"
+                    />
+                  ) : (
+                    <span className="text-[10px] text-pm-text-muted">
+                      {step.scheduleType === "habit" ? `${step.habitFreq} ${t("tasks.atTime")} ${step.habitTime}` : step.scheduleType === "gentle" ? t(`tasks.${step.gentle || "soon"}`) : t("tasks.once")}
+                    </span>
+                  )}
+                  {step.duration && <span className="text-[10px] text-pm-text-muted">{step.duration}{t("tasks.min")}</span>}
+                </div>
               </div>
             ))}
           </div>

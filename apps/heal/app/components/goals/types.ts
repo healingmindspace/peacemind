@@ -14,6 +14,7 @@ export interface AiStep {
   title: string;
   description?: string;
   scheduleType: "once" | "habit" | "gentle";
+  dueDate?: string;
   habitFreq?: string;
   habitTime?: string;
   duration?: number;

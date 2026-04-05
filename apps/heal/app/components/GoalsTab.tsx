@@ -386,6 +386,7 @@ export default function GoalsTab({ growIntent, onClearGrowIntent }: { growIntent
         body: JSON.stringify({
           action: "insert", userId: user.id, accessToken, goalId,
           title: step.title, description: step.description || null, scheduleType: step.scheduleType,
+          dueDate: step.dueDate || null,
           scheduleRule: step.scheduleType === "habit" ? { freq: step.habitFreq || "daily", time: step.habitTime || "09:00" } : step.scheduleType === "gentle" ? { gentle: step.gentle || "soon" } : null,
           duration: step.duration || null,
         }),
