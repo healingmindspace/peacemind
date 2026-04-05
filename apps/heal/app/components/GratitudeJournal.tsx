@@ -56,8 +56,29 @@ export default function GratitudeJournal({ goals = [], onNavigateToGrow }: { goa
   const [selectedGoal, setSelectedGoal] = useState<string>(""); // goal id or "s:xxx" for suggested
   const [customPath, setCustomPath] = useState("");
   const [pendingPhoto, setPendingPhoto] = useState<File | null>(null);
+  const [extracting, setExtracting] = useState(false);
   const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
   const { t, lang } = useI18n();
+
+  const handlePhoto = async (file: File) => {
+    if (!file || !file.type.startsWith("image/")) return;
+    setExtracting(true);
+    try {
+      const { resizeImage } = await import("@/lib/resize-image");
+      const base64 = await resizeImage(file);
+      const res = await fetch("/api/extract-photo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: base64, lang }),
+      });
+      const data = await res.json();
+      if (data.text) {
+        setContent((prev) => prev ? `${prev}\n\n${data.text}` : data.text);
+      }
+      setPendingPhoto(file);
+    } catch { /* ignore */ }
+    setExtracting(false);
+  };
 
 
 
@@ -301,10 +322,13 @@ export default function GratitudeJournal({ goals = [], onNavigateToGrow }: { goa
                 type="file"
                 accept="image/*"
                 className="hidden"
-                onChange={(e) => { if (e.target.files?.[0]) setPendingPhoto(e.target.files[0]); }}
+                onChange={(e) => { if (e.target.files?.[0]) handlePhoto(e.target.files[0]); }}
               />
             </label>
-            {pendingPhoto && (
+            {extracting && (
+              <span className="text-xs text-pm-text-muted italic">{t("journal.extracting")}</span>
+            )}
+            {!extracting && pendingPhoto && (
               <span className="text-xs text-pm-text-muted">{pendingPhoto.name}</span>
             )}
           </div>
