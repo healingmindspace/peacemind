@@ -57,8 +57,6 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
   const [history, setHistory] = useState<MoodEntry[]>([]);
   const [saving, setSaving] = useState(false);
   const [timeRange, setTimeRange] = useState<TimeRange>("week");
-  const [aiResponse, setAiResponse] = useState<string | null>(null);
-  const [loadingAi, setLoadingAi] = useState(false);
   const [backfillDate, setBackfillDate] = useState<string>("");
   const [extractingPhoto, setExtractingPhoto] = useState(false);
   const [pendingPhoto, setPendingPhoto] = useState<File | null>(null);
@@ -275,7 +273,6 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
     setSelectedTriggers([]);
     setSelectedHelped([]);
     setCustomTrigger("");
-    setAiResponse(null);
     setStep("trigger");
   };
 
@@ -368,37 +365,6 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
         setWellnessNudge(null);
       }
 
-      // Get AI response and save encrypted to DB
-      setLoadingAi(true);
-      const recentForAi = history.slice(0, 10).map((e) => ({
-        emoji: e.emoji,
-        label: e.label,
-        trigger: e.trigger,
-        helped: e.helped,
-      }));
-
-      fetch("/api/mood-respond", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          mood: { emoji: moods[selected].emoji, label: moods[selected].label },
-          trigger: triggerStr || null,
-          helped: helpedLabels || null,
-          recentHistory: recentForAi,
-          lang,
-          moodId: insertedData.id,
-          accessToken,
-        }),
-      })
-        .then((res) => res.ok ? res.json() : null)
-        .then((data) => {
-          if (data?.response) {
-            setAiResponse(data.response);
-            loadHistory(user.id, timeRange);
-          }
-        })
-        .catch(() => {})
-        .finally(() => setLoadingAi(false));
     }
 
     setSaving(false);
@@ -411,7 +377,6 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
     setSelectedHelped([]);
     setCustomTrigger("");
     setCustomHelped("");
-    setAiResponse(null);
     setBackfillDate("");
     setShowDatePicker(false);
     setPendingPhoto(null);
@@ -696,19 +661,9 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
       {step === "done" && selected !== null && (
         <div className="mt-4 max-w-xs mx-auto">
           <p className="text-3xl mb-3">{moods[selected].emoji}</p>
-          {loadingAi ? (
-            <p className="text-xs text-pm-text-muted italic">
-              {lang === "zh" ? "思考中..." : "Thinking..."}
-            </p>
-          ) : aiResponse ? (
-            <div className="bg-pm-surface rounded-2xl p-4">
-              <p className="text-sm text-pm-text-secondary leading-relaxed">{aiResponse}</p>
-            </div>
-          ) : (
-            <p className="text-sm text-pm-text-secondary">
-              {t(moods[selected].responseKey)}
-            </p>
-          )}
+          <p className="text-sm text-pm-text-secondary">
+            {t(moods[selected].responseKey)}
+          </p>
           {/* Layer 1: Grow suggestion for low/struggling moods */}
           {selected !== null && selected >= 3 && buildTriggerString() && onNavigateToGrow && (
             <button
