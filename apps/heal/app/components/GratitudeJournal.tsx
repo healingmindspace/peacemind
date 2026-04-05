@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { uploadPhoto, getSignedUrls } from "@/lib/photos-api";
+import { getSignedUrls } from "@/lib/photos-api";
 import { useI18n } from "@/lib/i18n";
 import { awardSeeds } from "@/lib/seeds";
 import JournalHistory from "./journal/JournalHistory";
@@ -55,30 +55,10 @@ export default function GratitudeJournal({ goals = [], onNavigateToGrow }: { goa
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<string>(""); // goal id or "s:xxx" for suggested
   const [customPath, setCustomPath] = useState("");
-  const [extracting, setExtracting] = useState(false);
-  const [pendingPhoto, setPendingPhoto] = useState<File | null>(null);
   const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
   const { t, lang } = useI18n();
 
-  const handlePhoto = async (file: File) => {
-    if (!file || !file.type.startsWith("image/")) return;
-    setExtracting(true);
-    try {
-      const { resizeImage } = await import("@/lib/resize-image");
-      const base64 = await resizeImage(file);
-      const res = await fetch("/api/extract-photo", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: base64, lang }),
-      });
-      const data = await res.json();
-      if (data.text) {
-        setContent((prev) => prev ? `${prev}\n\n${data.text}` : data.text);
-        setPendingPhoto(file);
-      }
-    } catch { /* ignore */ }
-    setExtracting(false);
-  };
+
 
   useEffect(() => {
     if (user && accessToken) loadHistory(user.id, accessToken);
@@ -115,19 +95,12 @@ export default function GratitudeJournal({ goals = [], onNavigateToGrow }: { goa
       resolvedGoalId = selectedGoal;
     }
 
-    // Upload photo if exists
-    let photoPath: string | null = null;
-    if (pendingPhoto) {
-      photoPath = await uploadPhoto(accessToken, pendingPhoto, `${user.id}/journal`);
-    }
-
     const insertData: Record<string, unknown> = {
       action: "insert",
       userId: user.id,
       content: savedContent,
       accessToken,
       goalId: resolvedGoalId,
-      photoPath,
     };
     if (backfillDate) {
       insertData.createdAt = new Date(backfillDate + "T12:00:00").toISOString();
@@ -135,7 +108,7 @@ export default function GratitudeJournal({ goals = [], onNavigateToGrow }: { goa
     const res = await journalApi(insertData);
 
     if (res.id) {
-      awardSeeds("journal");
+      awardSeeds("journal", accessToken);
       setContent("");
       loadHistory(user.id);
 
@@ -174,7 +147,6 @@ export default function GratitudeJournal({ goals = [], onNavigateToGrow }: { goa
     setShowDatePicker(false);
     setSelectedGoal("");
     setCustomPath("");
-    setPendingPhoto(null);
   };
 
   const updateEntry = async (id: string, newContent: string) => {
@@ -313,30 +285,8 @@ export default function GratitudeJournal({ goals = [], onNavigateToGrow }: { goa
           rows={4}
           className="w-full px-4 py-3 rounded-2xl bg-pm-surface-active backdrop-blur-sm border border-pm-border text-pm-text placeholder-pm-placeholder focus:outline-none focus:ring-2 focus:ring-brand-light resize-none text-sm"
         />
-        {/* Photo input */}
         {user && (
           <div className="flex items-center gap-2 mt-2">
-            <label className="px-3 py-1.5 rounded-full text-xs bg-pm-surface-active text-pm-text-secondary hover:bg-pm-surface-hover cursor-pointer transition-all">
-              📷 {t("journal.takePhoto")}
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => e.target.files?.[0] && handlePhoto(e.target.files[0])}
-              />
-            </label>
-            <label className="px-3 py-1.5 rounded-full text-xs bg-pm-surface-active text-pm-text-secondary hover:bg-pm-surface-hover cursor-pointer transition-all">
-              🖼️ {t("journal.uploadPhoto")}
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => e.target.files?.[0] && handlePhoto(e.target.files[0])}
-              />
-            </label>
-            {extracting && (
-              <span className="text-xs text-pm-text-muted italic">{t("journal.extracting")}</span>
-            )}
           </div>
         )}
         {user && (

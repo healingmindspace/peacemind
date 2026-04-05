@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { uploadPhoto, getSignedUrls, deletePhoto } from "@/lib/photos-api";
+import { getSignedUrls, deletePhoto } from "@/lib/photos-api";
 import { useI18n } from "@/lib/i18n";
 import MoodChart from "./MoodChart";
 import TriggerStep from "./mood/TriggerStep";
@@ -58,9 +58,6 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
   const [saving, setSaving] = useState(false);
   const [timeRange, setTimeRange] = useState<TimeRange>("week");
   const [backfillDate, setBackfillDate] = useState<string>("");
-  const [extractingPhoto, setExtractingPhoto] = useState(false);
-  const [pendingPhoto, setPendingPhoto] = useState<File | null>(null);
-  const [photoSuggestion, setPhotoSuggestion] = useState("");
   const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [wellnessNudge, setWellnessNudge] = useState<"phq9" | "gad7" | null>(null);
@@ -81,40 +78,7 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
     { emoji: "😢", label: "Struggling", labelKey: "mood.struggling", responseKey: "mood.response.struggling" },
   ];
 
-  const handleMoodPhoto = async (file: File) => {
-    if (!file || !file.type.startsWith("image/") || !user) return;
-    setExtractingPhoto(true);
-    try {
-      const { resizeImage } = await import("@/lib/resize-image");
-      const base64 = await resizeImage(file);
-      try {
-        const res = await fetch("/api/extract-mood-photo", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ image: base64, lang }),
-        });
-        const data = await res.json();
-        // Try to match trigger to a preset key
-        if (data.trigger) {
-          const triggerLower = data.trigger.toLowerCase();
-          const presetMatch = TRIGGER_KEYS.find((k) => {
-            const label = t(k).toLowerCase();
-            return triggerLower.includes(label) || label.includes(triggerLower);
-          });
-          if (presetMatch) {
-            setSelectedTriggers([presetMatch]);
-          }
-          // Put details in custom trigger field
-          if (data.details) setCustomTrigger(data.details);
-          else setCustomTrigger(data.trigger);
-        }
-        if (data.suggestion) setPhotoSuggestion(data.suggestion);
-        setPendingPhoto(file);
-        setStep("trigger");
-      } catch { /* ignore */ }
-    } catch { /* resize failed */ }
-    setExtractingPhoto(false);
-  };
+
 
   useEffect(() => {
     if (user && accessToken) { loadHistory(user.id, timeRange); loadSavedOptions(); }
@@ -322,12 +286,6 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
 
     if (!accessToken) { setSaving(false); return; }
 
-    // Upload photo if exists
-    let photoPath: string | null = null;
-    if (pendingPhoto) {
-      photoPath = await uploadPhoto(accessToken, pendingPhoto, `${user.id}/mood`);
-    }
-
     const res = await fetch("/api/mood", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -340,7 +298,6 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
         trigger: triggerStr || null,
         helped: helpedLabels || null,
         createdAt: backfillDate ? new Date(backfillDate + "T12:00:00").toISOString() : undefined,
-        photoPath,
       }),
     });
     const insertedData = await res.json();
@@ -379,8 +336,6 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
     setCustomHelped("");
     setBackfillDate("");
     setShowDatePicker(false);
-    setPendingPhoto(null);
-    setPhotoSuggestion("");
   };
 
   const deleteEntryPhoto = async (entryId: string, photoPath: string) => {
@@ -471,33 +426,6 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
             </button>
           ))}
         </div>
-        {/* Photo mood detection */}
-        {user && (
-          <div className="flex justify-center gap-2 mt-3">
-            <label className="px-3 py-1.5 rounded-full text-xs bg-pm-surface-active text-pm-text-secondary hover:bg-pm-surface-hover cursor-pointer transition-all">
-              📷 {t("mood.photoMood")}
-              <input
-                type="file"
-                accept="image/*"
-                capture="environment"
-                className="hidden"
-                onChange={(e) => e.target.files?.[0] && handleMoodPhoto(e.target.files[0])}
-              />
-            </label>
-            <label className="px-3 py-1.5 rounded-full text-xs bg-pm-surface-active text-pm-text-secondary hover:bg-pm-surface-hover cursor-pointer transition-all">
-              🖼️ {t("mood.uploadMood")}
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => e.target.files?.[0] && handleMoodPhoto(e.target.files[0])}
-              />
-            </label>
-          </div>
-        )}
-        {extractingPhoto && (
-          <p className="text-xs text-pm-text-muted italic mt-2">{t("mood.readingPhoto")}</p>
-        )}
         </>
       )}
 
@@ -567,19 +495,6 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
           )}
 
           <div className="flex flex-wrap gap-2 justify-center mb-2">
-            {/* AI suggestion from photo */}
-            {photoSuggestion && (
-              <button
-                onClick={() => setCustomHelped(photoSuggestion)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer ${
-                  customHelped === photoSuggestion
-                    ? "bg-brand text-white"
-                    : "bg-pm-accent-light text-brand hover:bg-pm-accent"
-                }`}
-              >
-                ✨ {photoSuggestion}
-              </button>
-            )}
             {HELPED_KEYS.map((key) => (
               <button
                 key={key}
