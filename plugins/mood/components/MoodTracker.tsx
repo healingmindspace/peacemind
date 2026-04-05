@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useApi } from "@/lib/use-api";
-import { uploadPhoto, getSignedUrls, deletePhoto } from "@/lib/photos-api";
+import { getSignedUrls, deletePhoto } from "@/lib/photos-api";
 import { useI18n } from "@/lib/i18n";
 import MoodChart from "./MoodChart";
 import TriggerStep from "./mood/TriggerStep";
@@ -61,12 +61,7 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
   const [history, setHistory] = useState<MoodEntry[]>([]);
   const [saving, setSaving] = useState(false);
   const [timeRange, setTimeRange] = useState<TimeRange>("week");
-  const [aiResponse, setAiResponse] = useState<string | null>(null);
-  const [loadingAi, setLoadingAi] = useState(false);
   const [backfillDate, setBackfillDate] = useState<string>("");
-  const [extractingPhoto, setExtractingPhoto] = useState(false);
-  const [pendingPhoto, setPendingPhoto] = useState<File | null>(null);
-  const [photoSuggestion, setPhotoSuggestion] = useState("");
   const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [wellnessNudge, setWellnessNudge] = useState<"phq9" | "gad7" | null>(null);
@@ -88,40 +83,6 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
     { emoji: "😢", label: "Struggling", labelKey: "mood.struggling", responseKey: "mood.response.struggling" },
   ];
 
-  const handleMoodPhoto = async (file: File) => {
-    if (!file || !file.type.startsWith("image/") || !user) return;
-    setExtractingPhoto(true);
-    try {
-      const { resizeImage } = await import("@/lib/resize-image");
-      const base64 = await resizeImage(file);
-      try {
-        const res = await apiFetch("/api/extract-mood-photo", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ image: base64, lang }),
-        });
-        const data = await res.json();
-        // Try to match trigger to a preset key
-        if (data.trigger) {
-          const triggerLower = data.trigger.toLowerCase();
-          const presetMatch = TRIGGER_KEYS.find((k) => {
-            const label = t(k).toLowerCase();
-            return triggerLower.includes(label) || label.includes(triggerLower);
-          });
-          if (presetMatch) {
-            setSelectedTriggers([presetMatch]);
-          }
-          // Put details in custom trigger field
-          if (data.details) setCustomTrigger(data.details);
-          else setCustomTrigger(data.trigger);
-        }
-        if (data.suggestion) setPhotoSuggestion(data.suggestion);
-        setPendingPhoto(file);
-        setStep("trigger");
-      } catch { /* ignore */ }
-    } catch { /* resize failed */ }
-    setExtractingPhoto(false);
-  };
 
   useEffect(() => {
     if (user) { loadHistory(user.id, timeRange); loadSavedOptions(); }
@@ -280,7 +241,6 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
     setSelectedTriggers([]);
     setSelectedHelped([]);
     setCustomTrigger("");
-    setAiResponse(null);
     setStep("trigger");
   };
 
@@ -330,12 +290,6 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
 
     if (!accessToken && !isAnonymous) { setSaving(false); return; }
 
-    // Upload photo if exists (requires account — skip when anonymous)
-    let photoPath: string | null = null;
-    if (pendingPhoto && accessToken && !isAnonymous) {
-      photoPath = await uploadPhoto(accessToken, pendingPhoto, `${user.id}/mood`);
-    }
-
     const res = await apiFetch("/api/mood", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -348,7 +302,6 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
         trigger: triggerStr || null,
         helped: helpedLabels || null,
         createdAt: backfillDate ? new Date(backfillDate + "T12:00:00").toISOString() : undefined,
-        photoPath,
       }),
     });
     const insertedData = await res.json();
@@ -375,37 +328,6 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
         setWellnessNudge(null);
       }
 
-      // Get AI response and save encrypted to DB
-      setLoadingAi(true);
-      const recentForAi = history.slice(0, 10).map((e) => ({
-        emoji: e.emoji,
-        label: e.label,
-        trigger: e.trigger,
-        helped: e.helped,
-      }));
-
-      apiFetch("/api/mood-respond", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          mood: { emoji: moods[selected].emoji, label: moods[selected].label },
-          trigger: triggerStr || null,
-          helped: helpedLabels || null,
-          recentHistory: recentForAi,
-          lang,
-          moodId: insertedData.id,
-          accessToken,
-        }),
-      })
-        .then((res) => res.ok ? res.json() : null)
-        .then((data) => {
-          if (data?.response) {
-            setAiResponse(data.response);
-            loadHistory(user.id, timeRange);
-          }
-        })
-        .catch(() => {})
-        .finally(() => setLoadingAi(false));
     }
 
     setSaving(false);
@@ -418,11 +340,8 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
     setSelectedHelped([]);
     setCustomTrigger("");
     setCustomHelped("");
-    setAiResponse(null);
     setBackfillDate("");
     setShowDatePicker(false);
-    setPendingPhoto(null);
-    setPhotoSuggestion("");
   };
 
   const deleteEntryPhoto = async (entryId: string, photoPath: string) => {
@@ -519,32 +438,6 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
             </button>
           ))}
         </div>
-        {/* Photo mood detection */}
-        {user && (
-          <div className="flex justify-center gap-2 mt-3">
-            <label className="px-3 py-1.5 rounded-full text-xs bg-pm-surface-active text-pm-text-secondary hover:bg-pm-surface-hover cursor-pointer transition-all">
-              📷 {t("mood.photoMood")}
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => e.target.files?.[0] && handleMoodPhoto(e.target.files[0])}
-              />
-            </label>
-            <label className="px-3 py-1.5 rounded-full text-xs bg-pm-surface-active text-pm-text-secondary hover:bg-pm-surface-hover cursor-pointer transition-all">
-              🖼️ {t("mood.uploadMood")}
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => e.target.files?.[0] && handleMoodPhoto(e.target.files[0])}
-              />
-            </label>
-          </div>
-        )}
-        {extractingPhoto && (
-          <p className="text-xs text-pm-text-muted italic mt-2">{t("mood.readingPhoto")}</p>
-        )}
         </>
       )}
 
@@ -614,19 +507,6 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
           )}
 
           <div className="flex flex-wrap gap-2 justify-center mb-2">
-            {/* AI suggestion from photo */}
-            {photoSuggestion && (
-              <button
-                onClick={() => setCustomHelped(photoSuggestion)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer ${
-                  customHelped === photoSuggestion
-                    ? "bg-brand text-white"
-                    : "bg-pm-accent-light text-brand hover:bg-pm-accent"
-                }`}
-              >
-                ✨ {photoSuggestion}
-              </button>
-            )}
             {HELPED_KEYS.map((key) => (
               <button
                 key={key}
@@ -708,19 +588,9 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
       {step === "done" && selected !== null && (
         <div className="mt-4 max-w-xs mx-auto">
           <p className="text-3xl mb-3">{moods[selected].emoji}</p>
-          {loadingAi ? (
-            <p className="text-xs text-pm-text-muted italic">
-              {lang === "zh" ? "思考中..." : "Thinking..."}
-            </p>
-          ) : aiResponse ? (
-            <div className="bg-pm-surface rounded-2xl p-4">
-              <p className="text-sm text-pm-text-secondary leading-relaxed">{aiResponse}</p>
-            </div>
-          ) : (
-            <p className="text-sm text-pm-text-secondary">
-              {t(moods[selected].responseKey)}
-            </p>
-          )}
+          <p className="text-sm text-pm-text-secondary">
+            {t(moods[selected].responseKey)}
+          </p>
           {/* Layer 1: Grow suggestion for low/struggling moods */}
           {selected !== null && selected >= 3 && buildTriggerString() && onNavigateToGrow && (
             <button
