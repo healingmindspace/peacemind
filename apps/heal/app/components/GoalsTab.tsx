@@ -637,6 +637,7 @@ export default function GoalsTab({ growIntent, onClearGrowIntent }: { growIntent
                               onAccept={() => acceptPlan(goal.id)}
                               onRetry={() => setAiPlan(null)}
                               onCancel={() => { setObjectiveGoalId(null); setObjectiveText(""); setAiPlan(null); }}
+                              onUpdateSteps={(steps) => setAiPlan((prev) => prev ? { ...prev, steps } : null)}
                             />
                           ) : (
                             <div className="mt-3 flex justify-between items-center">
