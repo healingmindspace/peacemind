@@ -69,6 +69,7 @@ Respond in this JSON format:
 
 CRITICAL: Output ONLY the JSON object. No markdown, no explanation, no text before or after. Just the JSON.
 - Keep step titles short (under 40 chars). Put details in description.
+- For date-specific steps, include the date in the title (e.g. "Application due — Mar 31", "Black Belt Test — Jun 13 3PM").
 - ${langInstruction}`,
       messages: [{
         role: "user",
