@@ -99,20 +99,25 @@ export async function POST(request: Request) {
 
   // LIST — decrypt content + response
   if (action === "list") {
+    const pageSize = 10;
+    const offset = typeof body.offset === "number" ? body.offset : 0;
     const { data, error } = await supabase
       .from("journals")
       .select("id, content, response, liked, goal_id, photo_path, parent_id, created_at")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
-      .limit(50);
+      .range(offset, offset + pageSize);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-    const decrypted = (data || []).map((entry) => ({
+    const rows = data || [];
+    const hasMore = rows.length > pageSize;
+    const page = hasMore ? rows.slice(0, pageSize) : rows;
+    const decrypted = page.map((entry) => ({
       ...entry,
       content: decrypt(entry.content),
       response: entry.response ? decrypt(entry.response) : null,
     }));
-    return NextResponse.json({ data: decrypted });
+    return NextResponse.json({ data: decrypted, hasMore });
   }
 
   return NextResponse.json({ error: "Unknown action" }, { status: 400 });

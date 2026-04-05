@@ -27,9 +27,12 @@ interface MoodHistoryListProps {
   onDeleteMood: (id: string) => void;
   onDeletePhoto: (entryId: string, photoPath: string) => void;
   onNavigateToGrow?: (intent: GrowIntent) => void;
+  hasMore?: boolean;
+  loadingMore?: boolean;
+  onLoadMore?: () => void;
 }
 
-export default function MoodHistoryList({ history, photoUrls, onDeleteMood, onDeletePhoto, onNavigateToGrow }: MoodHistoryListProps) {
+export default function MoodHistoryList({ history, photoUrls, onDeleteMood, onDeletePhoto, onNavigateToGrow, hasMore, loadingMore, onLoadMore }: MoodHistoryListProps) {
   const { t } = useI18n();
 
   const formatDate = (dateStr: string) => {
@@ -70,6 +73,15 @@ export default function MoodHistoryList({ history, photoUrls, onDeleteMood, onDe
             <button onClick={() => onDeleteMood(entry.id)} className="opacity-40 md:opacity-0 md:group-hover:opacity-100 transition-opacity text-pm-text-muted hover:text-red-400 cursor-pointer text-xs">x</button>
           </div>
         ))}
+        {hasMore && onLoadMore && (
+          <button
+            onClick={onLoadMore}
+            disabled={loadingMore}
+            className="w-full mt-3 py-2 rounded-full text-xs font-medium bg-pm-surface-active text-pm-text-secondary hover:bg-pm-surface-hover cursor-pointer transition-all disabled:opacity-40"
+          >
+            {loadingMore ? "..." : t("mood.loadMore")}
+          </button>
+        )}
       </div>
     </div>
   );

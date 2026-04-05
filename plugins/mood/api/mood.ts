@@ -63,7 +63,9 @@ export async function POST(request: Request) {
 
   // LIST — decrypt trigger + helped + response
   if (action === "list") {
-    const { since, limit } = body;
+    const { since, limit, offset } = body;
+    const pageSize = limit ? Math.min(limit, 200) : 10;
+    const start = typeof offset === "number" ? offset : 0;
     let query = supabase
       .from("moods")
       .select("id, emoji, label, trigger, helped, response, photo_path, created_at")
@@ -71,19 +73,22 @@ export async function POST(request: Request) {
       .order("created_at", { ascending: false });
 
     if (since) query = query.gte("created_at", since);
-    if (limit) query = query.limit(Math.min(limit, 200));
+    query = query.range(start, start + pageSize);
 
     const { data, error } = await query;
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-    const decrypted = (data || []).map((entry) => ({
+    const rows = data || [];
+    const hasMore = rows.length > pageSize;
+    const page = hasMore ? rows.slice(0, pageSize) : rows;
+    const decrypted = page.map((entry) => ({
       ...entry,
       trigger: entry.trigger ? decrypt(entry.trigger) : null,
       helped: entry.helped ? decrypt(entry.helped) : null,
       response: entry.response ? decrypt(entry.response) : null,
     }));
 
-    return NextResponse.json({ data: decrypted });
+    return NextResponse.json({ data: decrypted, hasMore });
   }
 
   return NextResponse.json({ error: "Unknown action" }, { status: 400 });

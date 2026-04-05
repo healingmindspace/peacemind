@@ -59,6 +59,8 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
   const [selectedHelped, setSelectedHelped] = useState<string[]>([]);
   const [customHelped, setCustomHelped] = useState("");
   const [history, setHistory] = useState<MoodEntry[]>([]);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [saving, setSaving] = useState(false);
   const [timeRange, setTimeRange] = useState<TimeRange>("week");
   const [backfillDate, setBackfillDate] = useState<string>("");
@@ -117,11 +119,36 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
         userId,
         accessToken: accessToken,
         since: since.toISOString(),
-        limit: RANGE_LIMITS[range],
+        limit: 10,
+        offset: 0,
       }),
     });
     const json = await res.json();
     if (json.data) setHistory(json.data);
+    setHasMore(json.hasMore ?? false);
+  };
+
+  const loadMore = async () => {
+    if (!user || loadingMore || (!accessToken && !isAnonymous)) return;
+    setLoadingMore(true);
+    const since = new Date();
+    since.setDate(since.getDate() - RANGE_DAYS[timeRange]);
+    const res = await apiFetch("/api/mood", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "list",
+        userId: user.id,
+        accessToken: accessToken,
+        since: since.toISOString(),
+        limit: 10,
+        offset: history.length,
+      }),
+    });
+    const json = await res.json();
+    if (json.data) setHistory((prev) => [...prev, ...json.data]);
+    setHasMore(json.hasMore ?? false);
+    setLoadingMore(false);
   };
 
   const loadSavedOptions = async () => {
@@ -665,6 +692,9 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
           onDeleteMood={deleteMood}
           onDeletePhoto={deleteEntryPhoto}
           onNavigateToGrow={onNavigateToGrow}
+          hasMore={hasMore}
+          loadingMore={loadingMore}
+          onLoadMore={loadMore}
         />
       )}
     </section>

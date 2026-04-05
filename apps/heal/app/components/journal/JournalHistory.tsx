@@ -35,11 +35,15 @@ interface JournalHistoryProps {
   onSaveReply: (parentId: string, content: string) => void;
   onLoadHistory: (userId: string) => void;
   onNavigateToGrow?: (intent: GrowIntent) => void;
+  hasMore?: boolean;
+  loadingMore?: boolean;
+  onLoadMore?: () => void;
 }
 
 export default function JournalHistory({
   history, goals, photoUrls, saving, userId,
   onToggleLike, onUpdateEntry, onDeleteEntry, onSaveReply, onLoadHistory, onNavigateToGrow,
+  hasMore, loadingMore, onLoadMore,
 }: JournalHistoryProps) {
   const { t, lang } = useI18n();
   const { accessToken } = useAuth();
@@ -164,6 +168,15 @@ export default function JournalHistory({
           </div>
         );
       })}
+      {hasMore && onLoadMore && (
+        <button
+          onClick={onLoadMore}
+          disabled={loadingMore}
+          className="w-full mt-4 py-2 rounded-full text-xs font-medium bg-pm-surface-active text-pm-text-secondary hover:bg-pm-surface-hover cursor-pointer transition-all disabled:opacity-40"
+        >
+          {loadingMore ? (lang === "zh" ? "加载中..." : "Loading...") : (lang === "zh" ? "加载更多" : "Load more")}
+        </button>
+      )}
     </div>
   );
 }

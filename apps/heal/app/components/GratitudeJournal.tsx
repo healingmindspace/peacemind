@@ -50,6 +50,8 @@ export default function GratitudeJournal({ goals = [], onNavigateToGrow }: { goa
   const [content, setContent] = useState("");
   const { user, accessToken } = useAuth();
   const [history, setHistory] = useState<JournalEntry[]>([]);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [saving, setSaving] = useState(false);
   const [backfillDate, setBackfillDate] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -90,8 +92,18 @@ export default function GratitudeJournal({ goals = [], onNavigateToGrow }: { goa
   const loadHistory = async (userId: string, token?: string) => {
     const tk = token || accessToken;
     if (!tk) return;
-    const res = await journalApi({ action: "list", userId, accessToken: tk });
+    const res = await journalApi({ action: "list", userId, accessToken: tk, offset: 0 });
     if (res.data) setHistory(res.data);
+    setHasMore(res.hasMore ?? false);
+  };
+
+  const loadMore = async () => {
+    if (!user || !accessToken || loadingMore) return;
+    setLoadingMore(true);
+    const res = await journalApi({ action: "list", userId: user.id, accessToken, offset: history.length });
+    if (res.data) setHistory((prev) => [...prev, ...res.data]);
+    setHasMore(res.hasMore ?? false);
+    setLoadingMore(false);
   };
 
   // Load signed URLs for photos
@@ -392,6 +404,9 @@ export default function GratitudeJournal({ goals = [], onNavigateToGrow }: { goa
             onSaveReply={(parentId, content) => saveReply(parentId, content)}
             onLoadHistory={loadHistory}
             onNavigateToGrow={onNavigateToGrow}
+            hasMore={hasMore}
+            loadingMore={loadingMore}
+            onLoadMore={loadMore}
           />
         )}
       </div>
