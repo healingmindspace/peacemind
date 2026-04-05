@@ -514,6 +514,7 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
               <input
                 type="file"
                 accept="image/*"
+                capture="environment"
                 className="hidden"
                 onChange={(e) => e.target.files?.[0] && handleMoodPhoto(e.target.files[0])}
               />
