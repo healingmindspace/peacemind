@@ -65,6 +65,11 @@ CRITICAL: Output ONLY the JSON object. No markdown, no explanation, no text befo
       }],
     });
 
+    if (message.stop_reason === "max_tokens") {
+      console.error("plan-path: response truncated (max_tokens)");
+      return NextResponse.json({ error: "Plan was too complex — try a simpler objective", code: "truncated" }, { status: 500 });
+    }
+
     let text = message.content[0].type === "text" ? message.content[0].text : "";
 
     // Strip markdown code fences if present
@@ -85,7 +90,11 @@ CRITICAL: Output ONLY the JSON object. No markdown, no explanation, no text befo
       return NextResponse.json({ message: text, steps: [] });
     }
   } catch (err) {
-    console.error("plan-path error:", err);
-    return NextResponse.json({ error: "Failed to generate plan" }, { status: 500 });
+    const errMsg = err instanceof Error ? err.message : String(err);
+    console.error("plan-path error:", errMsg);
+    if (errMsg.includes("rate") || errMsg.includes("429")) {
+      return NextResponse.json({ error: "Too many requests — please wait a moment", code: "rate_limit" }, { status: 429 });
+    }
+    return NextResponse.json({ error: "Something went wrong — please try again", code: "unknown" }, { status: 500 });
   }
 }

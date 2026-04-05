@@ -364,8 +364,14 @@ export default function GoalsTab({ growIntent, onClearGrowIntent }: { growIntent
     try {
       const res = await fetch("/api/plan-path", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ pathName: goal.name, objective: objectiveText.trim(), lang }) });
       const data = await res.json();
-      if (data.steps) setAiPlan(data);
-    } catch { /* ignore */ }
+      if (data.steps) {
+        setAiPlan(data);
+      } else {
+        setAiPlan({ message: data.error || t("goals.planRetry"), steps: [] });
+      }
+    } catch {
+      setAiPlan({ message: t("goals.planRetry"), steps: [] });
+    }
     setPlanLoading(false);
   };
 
