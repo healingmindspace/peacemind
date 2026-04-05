@@ -84,7 +84,8 @@ CRITICAL: Output ONLY the JSON object. No markdown, no explanation, no text befo
       }
       return NextResponse.json({ message: text, steps: [] });
     }
-  } catch {
+  } catch (err) {
+    console.error("plan-path error:", err);
     return NextResponse.json({ error: "Failed to generate plan" }, { status: 500 });
   }
 }

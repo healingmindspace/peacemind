@@ -65,6 +65,7 @@ export default function GratitudeJournal({ goals = [], onNavigateToGrow }: { goa
   const handlePhoto = async (file: File) => {
     if (!file || !file.type.startsWith("image/")) return;
     setExtracting(true);
+    setPendingPhoto(file);
     try {
       const { resizeImage } = await import("@/lib/resize-image");
       const base64 = await resizeImage(file);
@@ -73,12 +74,13 @@ export default function GratitudeJournal({ goals = [], onNavigateToGrow }: { goa
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ image: base64, lang }),
       });
-      const data = await res.json();
-      if (data.text) {
-        setContent((prev) => prev ? `${prev}\n\n${data.text}` : data.text);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.text) {
+          setContent((prev) => prev ? `${prev}\n\n${data.text}` : data.text);
+        }
       }
-      setPendingPhoto(file);
-    } catch { /* ignore */ }
+    } catch { /* extraction failed — photo still attached */ }
     setExtracting(false);
   };
 

@@ -57,7 +57,8 @@ export async function POST(request: Request) {
 
     const text = message.content[0].type === "text" ? message.content[0].text : "";
     return NextResponse.json({ text });
-  } catch {
+  } catch (err) {
+    console.error("extract-photo error:", err);
     return NextResponse.json({ error: "Failed to process image" }, { status: 500 });
   }
 }
