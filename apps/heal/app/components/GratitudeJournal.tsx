@@ -133,7 +133,9 @@ export default function GratitudeJournal({ goals = [], onNavigateToGrow }: { goa
 
     let photoPath: string | null = null;
     if (pendingPhoto) {
-      photoPath = await uploadPhoto(accessToken, pendingPhoto, `${user.id}/journal`);
+      try {
+        photoPath = await uploadPhoto(accessToken, pendingPhoto, `${user.id}/journal`);
+      } catch { /* photo upload failed — save entry without photo */ }
     }
 
     const insertData: Record<string, unknown> = {
@@ -324,10 +326,15 @@ export default function GratitudeJournal({ goals = [], onNavigateToGrow }: { goa
         <textarea
           placeholder={t("journal.placeholder")}
           value={content}
-          onChange={(e) => setContent(e.target.value)}
+          onChange={(e) => setContent(e.target.value.slice(0, 5000))}
           rows={4}
           className="w-full px-4 py-3 rounded-2xl bg-pm-surface-active backdrop-blur-sm border border-pm-border text-pm-text placeholder-pm-placeholder focus:outline-none focus:ring-2 focus:ring-brand-light resize-none text-sm"
         />
+        {content.length > 4000 && (
+          <p className={`text-[10px] text-right ${content.length >= 5000 ? "text-red-400" : "text-pm-text-muted"}`}>
+            {content.length}/5000
+          </p>
+        )}
         {user && (
           <div className="flex items-center gap-2 mt-2">
             <label className="px-3 py-1.5 rounded-full text-xs bg-pm-surface-active text-pm-text-secondary hover:bg-pm-surface-hover cursor-pointer transition-all">
