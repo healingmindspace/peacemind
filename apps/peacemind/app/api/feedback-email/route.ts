@@ -39,7 +39,7 @@ export async function POST(request: Request) {
         Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: process.env.RESEND_FROM_EMAIL || "Peacemind <onboarding@resend.dev>",
+        from: "Peacemind <noreply@peacemind.app>",
         to: email,
         subject: `Re: ${subject || "Your feedback"} — Peacemind`,
         html: `
