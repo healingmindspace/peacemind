@@ -98,7 +98,7 @@ export default function AdminDashboard() {
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
   const [adminTab, setAdminTab] = useState<"stats" | "feedback" | "info">("stats");
-  const [feedbackFilter, setFeedbackFilter] = useState<"all" | "anonymous" | "authenticated">("all");
+  const [feedbackFilter, setFeedbackFilter] = useState<"all" | "anonymous" | "authenticated" | "unreplied">("all");
 
   const supabase = createClient();
 
@@ -487,11 +487,13 @@ export default function AdminDashboard() {
             {adminTab === "feedback" && <>
             {/* Feedback */}
             {stats.feedbackList.length > 0 && (() => {
-              const filtered = feedbackFilter === "all" ? stats.feedbackList
-                : feedbackFilter === "anonymous" ? stats.feedbackList.filter((fb) => !fb.user_id)
-                : stats.feedbackList.filter((fb) => fb.user_id);
               const anonCount = stats.feedbackList.filter((fb) => !fb.user_id).length;
               const authCount = stats.feedbackList.filter((fb) => fb.user_id).length;
+              const unrepliedCount = stats.feedbackList.filter((fb) => !fb.reply).length;
+              const filtered = feedbackFilter === "all" ? stats.feedbackList
+                : feedbackFilter === "anonymous" ? stats.feedbackList.filter((fb) => !fb.user_id)
+                : feedbackFilter === "unreplied" ? stats.feedbackList.filter((fb) => !fb.reply)
+                : stats.feedbackList.filter((fb) => fb.user_id);
               return (
               <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-4 mt-8">
                 <div className="flex items-center justify-between mb-3">
@@ -500,7 +502,7 @@ export default function AdminDashboard() {
                   </h2>
                 </div>
                 <div className="flex gap-1 mb-3">
-                  {([["all", `All (${stats.feedbackList.length})`], ["anonymous", `Anonymous (${anonCount})`], ["authenticated", `Users (${authCount})`]] as const).map(([key, label]) => (
+                  {([["all", `All (${stats.feedbackList.length})`], ["unreplied", `Unreplied (${unrepliedCount})`], ["anonymous", `Anonymous (${anonCount})`], ["authenticated", `Users (${authCount})`]] as const).map(([key, label]) => (
                     <button
                       key={key}
                       onClick={() => setFeedbackFilter(key)}
