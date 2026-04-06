@@ -39,6 +39,7 @@ export async function POST(request: Request) {
       },
       body: JSON.stringify({
         from: "Peacemind <noreply@peacemind.app>",
+        reply_to: "healingmindspace@proton.me",
         to: email,
         subject: `Re: ${subject || "Your feedback"} — Peacemind`,
         html: `
