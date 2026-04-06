@@ -16,6 +16,7 @@ interface FeedbackEntry {
 export default function AboutPage() {
   const [subject, setSubject] = useState("");
   const [feedback, setFeedback] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
   const [feedbackSent, setFeedbackSent] = useState(false);
   const [lastFeedbackId, setLastFeedbackId] = useState("");
   const [sending, setSending] = useState(false);
@@ -50,17 +51,25 @@ export default function AboutPage() {
   const sendFeedback = async () => {
     if (!feedback.trim()) return;
     setSending(true);
-    const { data } = await supabase.from("feedback").insert({
-      user_id: user?.id || null,
-      user_email: user?.email || null,
-      subject: subject.trim() || null,
-      message: feedback.trim(),
-    }).select("id").single();
+    const session = await supabase.auth.getSession();
+    const accessToken = session.data.session?.access_token || null;
+    const res = await fetch("/api/feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message: feedback.trim(),
+        subject: subject.trim() || null,
+        email: contactEmail.trim() || null,
+        accessToken,
+      }),
+    });
+    const data = res.ok ? await res.json() : null;
     setSending(false);
     setSubject("");
     setFeedback("");
+    setContactEmail("");
     setFeedbackSent(true);
-    if (data) setLastFeedbackId(data.id.slice(0, 8));
+    if (data?.id) setLastFeedbackId(data.id.slice(0, 8));
     if (user) loadMyFeedback(user.id);
     setTimeout(() => setFeedbackSent(false), 5000);
   };
@@ -185,8 +194,17 @@ export default function AboutPage() {
                 value={feedback}
                 onChange={(e) => setFeedback(e.target.value)}
                 rows={4}
-                className="w-full px-4 py-3 rounded-xl bg-white/60 border border-[#d8cfe8] text-[#3d3155] placeholder-[#b0a3c4] focus:outline-none focus:ring-2 focus:ring-[#c4b5e0] resize-none text-sm mb-3"
+                className="w-full px-4 py-3 rounded-xl bg-white/60 border border-[#d8cfe8] text-[#3d3155] placeholder-[#b0a3c4] focus:outline-none focus:ring-2 focus:ring-[#c4b5e0] resize-none text-sm mb-2"
               />
+              {!user && (
+                <input
+                  type="email"
+                  placeholder={zh ? "邮箱（可选，用于回复）" : "Email (optional, for replies)"}
+                  value={contactEmail}
+                  onChange={(e) => setContactEmail(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl bg-white/60 border border-[#d8cfe8] text-[#3d3155] placeholder-[#b0a3c4] focus:outline-none focus:ring-2 focus:ring-[#c4b5e0] text-sm mb-3"
+                />
+              )}
               <button
                 onClick={sendFeedback}
                 disabled={sending || !feedback.trim()}
