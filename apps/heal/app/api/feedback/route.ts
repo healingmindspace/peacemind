@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 import { getSupabase, getAuthenticatedUserId } from "@/lib/api-utils";
 import { checkRateLimit, rateLimitResponse, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
 
@@ -25,19 +26,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Message too long" }, { status: 400 });
   }
 
-  // Use admin client for anonymous submissions, user client for authenticated
-  const supabase = getSupabase(accessToken || process.env.SUPABASE_SERVICE_KEY || "");
-
   let userId: string | null = null;
   let userEmail: string | null = email?.trim() || null;
 
   if (accessToken) {
-    userId = await getAuthenticatedUserId(supabase);
+    const userSupabase = getSupabase(accessToken);
+    userId = await getAuthenticatedUserId(userSupabase);
     if (userId && !userEmail) {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await userSupabase.auth.getUser();
       userEmail = user?.email || null;
     }
   }
+
+  // Use service role client to bypass RLS (feedback accepts anonymous submissions)
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_KEY!,
+  );
 
   const { data, error } = await supabase
     .from("feedback")
