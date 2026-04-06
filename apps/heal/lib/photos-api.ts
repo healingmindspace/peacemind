@@ -16,14 +16,42 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
   return btoa(binary);
 }
 
+async function resizeForUpload(file: File, maxWidth = 1200, quality = 0.8): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let w = img.width;
+        let h = img.height;
+        if (w > maxWidth) {
+          h = (h * maxWidth) / w;
+          w = maxWidth;
+        }
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) { reject(new Error("No canvas context")); return; }
+        ctx.drawImage(img, 0, 0, w, h);
+        // Return just the base64 data without the data URL prefix
+        const dataUrl = canvas.toDataURL("image/jpeg", quality);
+        resolve(dataUrl.split(",")[1]);
+      };
+      img.onerror = reject;
+      img.src = reader.result as string;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 export async function uploadPhoto(accessToken: string, file: File, prefix: string): Promise<string | null> {
-  const ext = file.name.split(".").pop() || "jpg";
-  const fileName = `${prefix}-${Date.now()}.${ext}`;
+  const fileName = `${prefix}-${Date.now()}.jpg`;
 
-  const buffer = await file.arrayBuffer();
-  const base64Data = arrayBufferToBase64(buffer);
+  const base64Data = await resizeForUpload(file);
 
-  const res = await photosApi({ action: "upload", accessToken, fileName, base64Data, contentType: file.type });
+  const res = await photosApi({ action: "upload", accessToken, fileName, base64Data, contentType: "image/jpeg" });
   return res.path || null;
 }
 
