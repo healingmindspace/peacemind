@@ -305,7 +305,6 @@ export default function AdminDashboard() {
               {tab === "stats" ? "📊 Stats" : tab === "feedback" ? "💬 Feedback" : "⚙️ Info"}
             </button>
           ))}
-          <a href="/admin/feedback" className="px-4 py-1.5 rounded-full text-xs font-medium bg-white/50 text-[#5a4a7a] hover:bg-white/70">📬 Feedback Page</a>
         </div>
 
         {stats ? (
@@ -492,7 +491,7 @@ export default function AdminDashboard() {
                   <h2 className="text-sm font-semibold text-[#3d3155]">
                     User Feedback ({stats.feedbackList.length})
                   </h2>
-                  <a href="/admin/feedback" className="text-xs text-[#7c6a9e] hover:text-[#5a4a7a] font-medium">
+                  <a onClick={() => setAdminTab("feedback")} className="text-xs text-[#7c6a9e] hover:text-[#5a4a7a] font-medium cursor-pointer">
                     View all →
                   </a>
                 </div>
