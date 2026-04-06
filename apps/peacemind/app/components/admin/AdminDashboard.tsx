@@ -104,14 +104,26 @@ export default function AdminDashboard() {
 
   const sendReply = async (feedbackId: string) => {
     if (!replyText.trim()) return;
-    const session = await supabase.auth.getSession();
-    const accessToken = session.data.session?.access_token;
-    if (!accessToken) return;
-    await fetch("https://heal.peacemind.app/api/feedback-reply", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ accessToken, feedbackId, reply: replyText.trim() }),
-    });
+    // Save reply to DB
+    await supabase
+      .from("feedback")
+      .update({ reply: replyText.trim(), replied_at: new Date().toISOString() })
+      .eq("id", feedbackId);
+
+    // Send email notification via heal API (fire and forget)
+    const fb = stats?.feedbackList.find((f) => f.id === feedbackId);
+    if (fb?.user_email) {
+      const session = await supabase.auth.getSession();
+      const accessToken = session.data.session?.access_token;
+      if (accessToken) {
+        fetch("/api/feedback-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ accessToken, email: fb.user_email, subject: fb.subject, message: fb.message, reply: replyText.trim() }),
+        }).catch(() => {});
+      }
+    }
+
     setReplyingTo(null);
     setReplyText("");
     loadStats();
