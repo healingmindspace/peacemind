@@ -98,6 +98,7 @@ export default function AdminDashboard() {
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
   const [adminTab, setAdminTab] = useState<"stats" | "feedback" | "info">("stats");
+  const [feedbackFilter, setFeedbackFilter] = useState<"all" | "anonymous" | "authenticated">("all");
 
   const supabase = createClient();
 
@@ -485,18 +486,36 @@ export default function AdminDashboard() {
             {/* === FEEDBACK TAB === */}
             {adminTab === "feedback" && <>
             {/* Feedback */}
-            {stats.feedbackList.length > 0 && (
+            {stats.feedbackList.length > 0 && (() => {
+              const filtered = feedbackFilter === "all" ? stats.feedbackList
+                : feedbackFilter === "anonymous" ? stats.feedbackList.filter((fb) => !fb.user_id)
+                : stats.feedbackList.filter((fb) => fb.user_id);
+              const anonCount = stats.feedbackList.filter((fb) => !fb.user_id).length;
+              const authCount = stats.feedbackList.filter((fb) => fb.user_id).length;
+              return (
               <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-4 mt-8">
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center justify-between mb-3">
                   <h2 className="text-sm font-semibold text-[#3d3155]">
                     User Feedback ({stats.feedbackList.length})
                   </h2>
-                  <a onClick={() => setAdminTab("feedback")} className="text-xs text-[#7c6a9e] hover:text-[#5a4a7a] font-medium cursor-pointer">
-                    View all →
-                  </a>
+                </div>
+                <div className="flex gap-1 mb-3">
+                  {([["all", `All (${stats.feedbackList.length})`], ["anonymous", `Anonymous (${anonCount})`], ["authenticated", `Users (${authCount})`]] as const).map(([key, label]) => (
+                    <button
+                      key={key}
+                      onClick={() => setFeedbackFilter(key)}
+                      className={`px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer transition-colors ${
+                        feedbackFilter === key
+                          ? "bg-[#7c6a9e] text-white"
+                          : "bg-white/50 text-[#5a4a7a] hover:bg-white/70"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
                 </div>
                 <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {stats.feedbackList.map((fb) => (
+                  {filtered.map((fb) => (
                     <div key={fb.id} className="bg-white/40 rounded-xl p-3">
                       {fb.subject && (
                         <p className="text-xs font-semibold text-[#7c6a9e] mb-1">{fb.subject}</p>
@@ -561,7 +580,8 @@ export default function AdminDashboard() {
                   ))}
                 </div>
               </div>
-            )}
+              );
+            })()}
 
             </>}
 
