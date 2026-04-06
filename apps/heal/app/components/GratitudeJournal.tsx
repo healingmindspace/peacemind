@@ -62,13 +62,17 @@ export default function GratitudeJournal({ goals = [], onNavigateToGrow }: { goa
   const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
   const { t, lang } = useI18n();
 
-  const handlePhoto = async (file: File) => {
+  const handlePhoto = (file: File) => {
     if (!file || !file.type.startsWith("image/")) return;
-    setExtracting(true);
     setPendingPhoto(file);
+  };
+
+  const extractTextFromPhoto = async () => {
+    if (!pendingPhoto) return;
+    setExtracting(true);
     try {
       const { resizeImage } = await import("@/lib/resize-image");
-      const base64 = await resizeImage(file);
+      const base64 = await resizeImage(pendingPhoto);
       const res = await fetch("/api/extract-photo", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -80,7 +84,7 @@ export default function GratitudeJournal({ goals = [], onNavigateToGrow }: { goa
           setContent((prev) => prev ? `${prev}\n\n${data.text}` : data.text);
         }
       }
-    } catch { /* extraction failed — photo still attached */ }
+    } catch { /* extraction failed */ }
     setExtracting(false);
   };
 
@@ -336,7 +340,7 @@ export default function GratitudeJournal({ goals = [], onNavigateToGrow }: { goa
           </p>
         )}
         {user && (
-          <div className="flex items-center gap-2 mt-2">
+          <div className="flex items-center gap-2 mt-2 flex-wrap">
             <label className="px-3 py-1.5 rounded-full text-xs bg-pm-surface-active text-pm-text-secondary hover:bg-pm-surface-hover cursor-pointer transition-all">
               🖼️ {t("journal.uploadPhoto")}
               <input
@@ -346,6 +350,22 @@ export default function GratitudeJournal({ goals = [], onNavigateToGrow }: { goa
                 onChange={(e) => { if (e.target.files?.[0]) handlePhoto(e.target.files[0]); }}
               />
             </label>
+            {pendingPhoto && !extracting && (
+              <button
+                onClick={extractTextFromPhoto}
+                className="px-3 py-1.5 rounded-full text-xs bg-pm-accent-light text-brand hover:bg-pm-accent cursor-pointer transition-all"
+              >
+                ✨ {lang === "zh" ? "提取文字" : "Extract text"}
+              </button>
+            )}
+            {content.trim() && (
+              <button
+                onClick={() => setContent("")}
+                className="px-3 py-1.5 rounded-full text-xs bg-pm-surface-active text-pm-text-muted hover:text-red-400 cursor-pointer transition-all"
+              >
+                {lang === "zh" ? "清除文字" : "Clear text"}
+              </button>
+            )}
             {extracting && (
               <span className="text-xs text-pm-text-muted italic">{t("journal.extracting")}</span>
             )}
