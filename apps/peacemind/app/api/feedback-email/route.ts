@@ -32,14 +32,14 @@ export async function POST(request: Request) {
   }
 
   try {
-    await fetch("https://api.resend.com/emails", {
+    const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "Peacemind <noreply@peacemind.app>",
+        from: process.env.RESEND_FROM_EMAIL || "Peacemind <onboarding@resend.dev>",
         to: email,
         subject: `Re: ${subject || "Your feedback"} — Peacemind`,
         html: `
@@ -59,8 +59,14 @@ export async function POST(request: Request) {
         `,
       }),
     });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      console.error("Resend error:", errData);
+      return NextResponse.json({ error: "Email failed", details: errData }, { status: 500 });
+    }
     return NextResponse.json({ ok: true });
-  } catch {
+  } catch (err) {
+    console.error("feedback-email error:", err);
     return NextResponse.json({ error: "Failed to send email" }, { status: 500 });
   }
 }
