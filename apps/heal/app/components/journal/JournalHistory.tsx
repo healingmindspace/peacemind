@@ -97,7 +97,7 @@ export default function JournalHistory({
                 )}
                 {entry.photo_path && photoUrls[entry.photo_path] && (
                   <div className="mb-2 relative inline-block">
-                    <img src={photoUrls[entry.photo_path]} alt="" className="w-20 h-20 rounded-xl object-cover" />
+                    <img src={photoUrls[entry.photo_path]} alt="" className="w-20 h-20 rounded-xl object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
                     <button
                       onClick={async () => { if (accessToken) { await deletePhoto(accessToken, entry.photo_path!); onLoadHistory(userId); } }}
                       className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-pm-surface-hover text-[10px] text-pm-text-muted hover:text-red-400 cursor-pointer flex items-center justify-center"

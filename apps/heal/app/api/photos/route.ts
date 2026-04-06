@@ -32,7 +32,7 @@ export async function POST(request: Request) {
     if (!path || !String(path).startsWith(userId + "/")) {
       return NextResponse.json({ error: "Invalid path" }, { status: 400 });
     }
-    const { data, error } = await supabase.storage.from("photos").createSignedUrl(path, 3600);
+    const { data, error } = await supabase.storage.from("photos").createSignedUrl(path, 86400);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ signedUrl: data.signedUrl });
   }
@@ -42,10 +42,13 @@ export async function POST(request: Request) {
     const { paths } = body;
     if (!Array.isArray(paths)) return NextResponse.json({ error: "Invalid paths" }, { status: 400 });
     const validPaths = paths.filter((p: string) => String(p).startsWith(userId + "/")).slice(0, 50);
+    if (validPaths.length === 0) return NextResponse.json({ urls: {} });
+    const { data } = await supabase.storage.from("photos").createSignedUrls(validPaths, 86400);
     const urls: Record<string, string> = {};
-    for (const path of validPaths) {
-      const { data } = await supabase.storage.from("photos").createSignedUrl(path, 3600);
-      if (data?.signedUrl) urls[path] = data.signedUrl;
+    if (data) {
+      for (const item of data) {
+        if (item.signedUrl && item.path) urls[item.path] = item.signedUrl;
+      }
     }
     return NextResponse.json({ urls });
   }
