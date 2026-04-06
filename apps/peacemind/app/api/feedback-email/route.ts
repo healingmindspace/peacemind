@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-
-const ADMIN_EMAIL = "jzhang@healingmindspace.com";
+import { ADMIN_EMAIL } from "@/lib/admin";
 
 export async function POST(request: Request) {
   let body;

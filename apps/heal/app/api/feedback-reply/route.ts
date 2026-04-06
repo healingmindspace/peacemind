@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSupabase, getAuthenticatedUserId } from "@/lib/api-utils";
 
-const ADMIN_EMAIL = "jzhang@healingmindspace.com";
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "healingmindspace@proton.me";
 
 export async function POST(request: Request) {
   let body;
