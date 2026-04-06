@@ -575,6 +575,10 @@ export default function AdminDashboard() {
               </h2>
               <div className="space-y-3 text-xs text-[#5a4a7a] border-l-2 border-[#c4b5e0] pl-4">
                 <div>
+                  <p className="font-semibold text-[#3d3155]">Apr 4–5 — Seeds Fix, Photo Overhaul, Pagination, Tests, AI Planner</p>
+                  <p>🌱 Seeds: DB is now source of truth for authenticated users — fixed cross-browser count drift. Server-first award/deduct, loadSeedsFromServer on init. 📷 Photo: removed camera from mood &amp; journal (kept upload in journal). Text extraction now opt-in (Extract text button). Photos resized before upload (1200px) to stay under Vercel limit. Signed URLs extended to 24h with batch API. Broken thumbnails hidden gracefully. 📝 Journal: pagination (10/page with Load more). Content capped at 5000 chars with counter. Clear text button. Photo upload resilient to failures. 😊 Mood: removed AI response, removed photo. Pagination (10/page). Plugin MoodTracker synced with app version. ✨ AI Planner: max_tokens 300→1024. Date-specific objectives create dated tasks. Steps editable before accepting (title, description, remove). Better error messages (truncated, rate limit). Dates in step titles. 🧪 Tests: 30 new tests (journal 6, seeds 15, invite 9). Fixed auth mocks in all existing tests. 70/71 passing. 🔧 Tech: chunked base64 conversion (fixed crash for large files), error logging on AI endpoints.</p>
+                </div>
+                <div>
                   <p className="font-semibold text-[#3d3155]">Apr 1 — Major Feature Day</p>
                   <p>🌿 5-4-3-2-1 grounding exercise. 🧠 PHQ-9/GAD-7 self-assessment (free, no login needed) with wellness nudge. 📅 Decoupled from Google Calendar — built-in scheduling. Custom mood tags (DB-backed, deletable). Crisis resources: China + international. &quot;Emotions Are Normal&quot; + &quot;Daily Habits&quot; learn topics. Healer Insight integrates assessment scores. Path achieve/archive. Review on-demand. 🏗️ API-first architecture: AuthProvider + useAuth(), /api/photos route, removed direct Supabase from 10+ components.</p>
                 </div>
