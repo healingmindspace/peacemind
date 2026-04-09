@@ -86,6 +86,7 @@ interface Stats {
   dailyVisitors: DailyActive[];
   ipBreakdown: { ip: string; totalVisits: number; lastSeen: string; device: string; country: string | null; region: string | null }[];
   locationBreakdown: { country: string; region: string | null; count: number }[];
+  dailyLocationBreakdown: { day: string; locations: { country: string; region: string | null; count: number }[] }[];
   mobileCount: number;
   desktopCount: number;
   feedbackList: { id: string; subject: string | null; message: string; reply: string | null; user_id: string | null; user_email: string | null; created_at: string }[];
@@ -260,6 +261,29 @@ export default function AdminDashboard() {
     });
     const locationBreakdown = Array.from(locMap.values()).sort((a, b) => b.count - a.count);
 
+    // Daily location breakdown (last 7 days)
+    const dailyLocMap = new Map<string, Map<string, { country: string; region: string | null; count: number }>>();
+    for (let i = 0; i < 7; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      dailyLocMap.set(d.toISOString().split("T")[0], new Map());
+    }
+    allVisitRows.data?.forEach((v) => {
+      if (!v.country || !v.date) return;
+      const dayMap = dailyLocMap.get(v.date);
+      if (!dayMap) return;
+      const key = `${v.country}|${v.region || ""}`;
+      const existing = dayMap.get(key);
+      if (existing) existing.count++;
+      else dayMap.set(key, { country: v.country, region: v.region || null, count: 1 });
+    });
+    const dailyLocationBreakdown = Array.from(dailyLocMap.entries())
+      .map(([day, locs]) => ({
+        day: new Date(day + "T00:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }),
+        locations: Array.from(locs.values()).sort((a, b) => b.count - a.count),
+      }))
+      .filter((d) => d.locations.length > 0);
+
     setStats({
       totalUsers: totalSet.size,
       activeUsers7d: activeSet.size,
@@ -273,6 +297,7 @@ export default function AdminDashboard() {
       dailyVisitors,
       ipBreakdown,
       locationBreakdown,
+      dailyLocationBreakdown,
       mobileCount,
       desktopCount,
       feedbackList: feedbackData || [],
@@ -394,6 +419,33 @@ export default function AdminDashboard() {
                   ))}
                 </div>
               </div>
+            )}
+
+            {/* Daily visitors by location */}
+            {stats.dailyLocationBreakdown.length > 0 && (
+              <details className="bg-white/50 backdrop-blur-sm rounded-2xl p-4 mb-8">
+                <summary className="text-sm font-semibold text-[#3d3155] cursor-pointer">
+                  📍 Visitors by Location (7 days)
+                </summary>
+                <div className="mt-3 space-y-4">
+                  {stats.dailyLocationBreakdown.map((d) => (
+                    <div key={d.day}>
+                      <p className="text-xs font-semibold text-[#5a4a7a] mb-1">{d.day}</p>
+                      <div className="space-y-1">
+                        {d.locations.map((loc) => (
+                          <div key={`${d.day}-${loc.country}-${loc.region}`} className="flex items-center gap-2">
+                            <span className="text-xs w-5 text-center">{loc.country === "US" ? "🇺🇸" : loc.country === "CN" ? "🇨🇳" : loc.country === "JP" ? "🇯🇵" : loc.country === "KR" ? "🇰🇷" : loc.country === "GB" ? "🇬🇧" : loc.country === "CA" ? "🇨🇦" : loc.country === "AU" ? "🇦🇺" : loc.country === "DE" ? "🇩🇪" : loc.country === "FR" ? "🇫🇷" : loc.country === "IN" ? "🇮🇳" : "🌐"}</span>
+                            <span className="text-xs text-[#5a4a7a] flex-1 truncate">
+                              {loc.country}{loc.region ? `, ${loc.region}` : ""}
+                            </span>
+                            <span className="text-xs text-[#3d3155] font-medium">{loc.count}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </details>
             )}
 
             {/* Daily active users */}
