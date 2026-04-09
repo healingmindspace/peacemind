@@ -43,7 +43,6 @@ export const PRESET_GOALS = [
   { name: "Work", nameZh: "工作", icon: "💼" },
   { name: "Life", nameZh: "生活", icon: "🌱" },
   { name: "Exercise", nameZh: "运动", icon: "💪" },
-  { name: "Blackbelt", nameZh: "黑带", icon: "🥋" },
 ];
 
 export interface GrowIntent {
