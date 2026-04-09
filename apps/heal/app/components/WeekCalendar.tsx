@@ -78,9 +78,17 @@ export default function WeekCalendar({ tasks, onRemove }: WeekCalendarProps) {
     return map;
   }, [tasks, days]);
 
+  // Overdue tasks (past due_date, not completed)
+  const overdueTasks = useMemo(() => {
+    const todayStr = new Date().toDateString();
+    return tasks.filter((t) =>
+      !t.completed && t.due_date && new Date(t.due_date).toDateString() !== todayStr && new Date(t.due_date) < new Date()
+    );
+  }, [tasks]);
+
   const isToday = (d: Date) => d.toDateString() === new Date().toDateString();
   const isTomorrow = (d: Date) => d.toDateString() === new Date(Date.now() + 86400000).toDateString();
-  const hasAnyEvents = Array.from(tasksByDay.values()).some((v) => v.length > 0);
+  const hasAnyEvents = Array.from(tasksByDay.values()).some((v) => v.length > 0) || overdueTasks.length > 0;
 
   if (!hasAnyEvents) {
     return (
@@ -92,6 +100,31 @@ export default function WeekCalendar({ tasks, onRemove }: WeekCalendarProps) {
 
   return (
     <div className="bg-pm-surface rounded-2xl p-3 space-y-2">
+      {overdueTasks.length > 0 && (
+        <div>
+          <p className="text-[10px] font-semibold mb-1 text-red-400">Overdue</p>
+          <div className="space-y-1">
+            {overdueTasks.map((task) => (
+              <div key={`overdue-${task.id}`} className="group flex items-center gap-2">
+                <span className="text-[10px] text-red-300 w-14 text-right flex-shrink-0">
+                  {new Date(task.due_date!).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                </span>
+                <div className="flex-1 px-2 py-1 rounded-lg text-xs truncate bg-red-50 text-red-400 border border-red-200">
+                  {task.goal_icon && <span>{task.goal_icon} </span>}{task.title}
+                </div>
+                {onRemove && (
+                  <button
+                    onClick={() => onRemove(task.id)}
+                    className="text-xs text-pm-text-muted hover:text-red-400 cursor-pointer px-1 flex-shrink-0"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       {days.map((day) => {
         const entries = tasksByDay.get(day.toDateString()) || [];
         if (entries.length === 0) return null;
