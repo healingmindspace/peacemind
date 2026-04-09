@@ -133,7 +133,7 @@ export default function JournalHistory({
                         onClick={() => setAssociatingId(associatingId === entry.id ? null : entry.id)}
                         className="text-xs text-pm-text-muted hover:text-brand cursor-pointer"
                       >
-                        🔗
+                        🔗 {lang === "zh" ? "路径" : "Path"}
                       </button>
                     )}
                     <button onClick={() => { setEditingId(entry.id); setEditContent(entry.content); }} className="text-xs text-pm-text-muted hover:text-brand cursor-pointer">{t("journal.edit")}</button>
