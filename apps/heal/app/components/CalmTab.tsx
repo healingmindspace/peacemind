@@ -157,6 +157,14 @@ function LearnSection() {
       signs: t("learn.habitsLoopSigns"),
       help: t("learn.habitsLoopHelp"),
     },
+    {
+      id: "tracking",
+      icon: "📊",
+      title: t("learn.trackingTitle"),
+      what: t("learn.trackingWhat"),
+      signs: t("learn.trackingSigns"),
+      help: t("learn.trackingHelp"),
+    },
   ];
 
   return (

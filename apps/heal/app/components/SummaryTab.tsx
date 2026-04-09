@@ -626,6 +626,7 @@ export default function SummaryTab() {
             <p className="mt-1">🌧️ <strong>{t("learn.depressionTitle")}</strong> — {t("learn.depressionWhat").split(".").slice(0, 2).join(".") + "."}</p>
             <p className="mt-1">🌿 <strong>{t("learn.copingTitle")}</strong> — {t("learn.copingWhat").split(".").slice(0, 2).join(".") + "."}</p>
             <p className="mt-1">🤝 <strong>{t("learn.supportTitle")}</strong> — {t("learn.supportWhat").split(".").slice(0, 2).join(".") + "."}</p>
+            <p className="mt-1">📊 <strong>{t("learn.trackingTitle")}</strong> — {t("learn.trackingWhat").split(".").slice(0, 2).join(".") + "."}</p>
           </div>
           <p className="text-[10px] text-pm-text-muted mt-3 italic">{t("summary.learnMore")}</p>
         </div>
