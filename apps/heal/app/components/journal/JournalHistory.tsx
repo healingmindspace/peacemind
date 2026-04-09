@@ -122,7 +122,7 @@ export default function JournalHistory({
                   </div>
                   <div className="flex gap-3">
                     {onNavigateToGrow && (
-                      <button onClick={() => onNavigateToGrow({ trigger: entry.content, source: "journal-history" })} className="text-xs text-pm-text-muted hover:text-brand cursor-pointer">🌱</button>
+                      <button onClick={() => onNavigateToGrow({ trigger: entry.content, source: "journal-history" })} className="text-xs text-pm-text-muted hover:text-brand cursor-pointer">🌱 {lang === "zh" ? "新路径" : "New path"}</button>
                     )}
                     <button onClick={() => { setEditingId(entry.id); setEditContent(entry.content); }} className="text-xs text-pm-text-muted hover:text-brand cursor-pointer">{t("journal.edit")}</button>
                     <button onClick={() => onDeleteEntry(entry.id)} className="text-xs text-pm-text-muted hover:text-red-400 cursor-pointer">{t("journal.delete")}</button>
