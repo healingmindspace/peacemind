@@ -218,6 +218,12 @@ export default function GratitudeJournal({ goals = [], onNavigateToGrow }: { goa
     setPendingPhoto(null);
   };
 
+  const associatePath = async (entryId: string, goalId: string) => {
+    if (!user || !accessToken) return;
+    await journalApi({ action: "update_goal", userId: user.id, accessToken, id: entryId, goalId });
+    setHistory((prev) => prev.map((e) => e.id === entryId ? { ...e, goal_id: goalId } : e));
+  };
+
   const updateEntry = async (id: string, newContent: string) => {
     if (!user || !newContent.trim() || !accessToken) return;
     const savedEdit = newContent.trim();
@@ -492,6 +498,7 @@ export default function GratitudeJournal({ goals = [], onNavigateToGrow }: { goa
             onSaveReply={(parentId, content) => saveReply(parentId, content)}
             onLoadHistory={loadHistory}
             onNavigateToGrow={onNavigateToGrow}
+            onAssociatePath={associatePath}
             hasMore={hasMore}
             loadingMore={loadingMore}
             onLoadMore={loadMore}

@@ -35,6 +35,7 @@ interface JournalHistoryProps {
   onSaveReply: (parentId: string, content: string) => void;
   onLoadHistory: (userId: string) => void;
   onNavigateToGrow?: (intent: GrowIntent) => void;
+  onAssociatePath?: (entryId: string, goalId: string) => void;
   hasMore?: boolean;
   loadingMore?: boolean;
   onLoadMore?: () => void;
@@ -42,7 +43,7 @@ interface JournalHistoryProps {
 
 export default function JournalHistory({
   history, goals, photoUrls, saving, userId,
-  onToggleLike, onUpdateEntry, onDeleteEntry, onSaveReply, onLoadHistory, onNavigateToGrow,
+  onToggleLike, onUpdateEntry, onDeleteEntry, onSaveReply, onLoadHistory, onNavigateToGrow, onAssociatePath,
   hasMore, loadingMore, onLoadMore,
 }: JournalHistoryProps) {
   const { t, lang } = useI18n();
@@ -51,6 +52,7 @@ export default function JournalHistory({
   const [editContent, setEditContent] = useState("");
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState("");
+  const [associatingId, setAssociatingId] = useState<string | null>(null);
 
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr);
@@ -120,14 +122,44 @@ export default function JournalHistory({
                     <span className="text-xs text-pm-text-muted">{formatDate(entry.created_at)}</span>
                     <button onClick={() => onToggleLike(entry.id, entry.liked)} className="cursor-pointer transition-transform text-sm" style={{ color: entry.liked ? "#e8b4c8" : "#d8cfe8" }}>♥</button>
                   </div>
-                  <div className="flex gap-3">
-                    {onNavigateToGrow && (
-                      <button onClick={() => onNavigateToGrow({ trigger: entry.content, source: "journal-history" })} className="text-xs text-pm-text-muted hover:text-brand cursor-pointer">🌱 {lang === "zh" ? "新路径" : "New path"}</button>
+                  <div className="flex gap-3 flex-wrap">
+                    {entry.goal_id && onNavigateToGrow && (() => {
+                      const goal = goals.find((g) => g.id === entry.goal_id);
+                      return goal ? (
+                        <button onClick={() => onNavigateToGrow({ trigger: entry.content, source: "journal-history" })} className="text-xs text-brand cursor-pointer">
+                          {goal.icon} {goal.name}
+                        </button>
+                      ) : null;
+                    })()}
+                    {onAssociatePath && (
+                      <button
+                        onClick={() => setAssociatingId(associatingId === entry.id ? null : entry.id)}
+                        className="text-xs text-pm-text-muted hover:text-brand cursor-pointer"
+                      >
+                        🔗 {lang === "zh" ? "关联路径" : "Path"}
+                      </button>
                     )}
                     <button onClick={() => { setEditingId(entry.id); setEditContent(entry.content); }} className="text-xs text-pm-text-muted hover:text-brand cursor-pointer">{t("journal.edit")}</button>
                     <button onClick={() => onDeleteEntry(entry.id)} className="text-xs text-pm-text-muted hover:text-red-400 cursor-pointer">{t("journal.delete")}</button>
                     <button onClick={() => { setReplyingTo(replyingTo === entry.id ? null : entry.id); setReplyContent(""); }} className="text-xs text-pm-text-muted hover:text-brand cursor-pointer">{t("journal.update")}</button>
                   </div>
+                  {associatingId === entry.id && onAssociatePath && (
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      {goals.map((g) => (
+                        <button
+                          key={g.id}
+                          onClick={() => { onAssociatePath(entry.id, g.id); setAssociatingId(null); }}
+                          className={`px-2.5 py-1 rounded-full text-xs cursor-pointer transition-all ${
+                            entry.goal_id === g.id
+                              ? "bg-brand text-white"
+                              : "bg-pm-surface-active text-pm-text-secondary hover:bg-pm-surface-hover"
+                          }`}
+                        >
+                          {g.icon} {g.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </>
             )}

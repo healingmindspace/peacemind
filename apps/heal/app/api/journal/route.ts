@@ -75,6 +75,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   }
 
+  // UPDATE GOAL (associate entry with a path)
+  if (action === "update_goal") {
+    const { error } = await supabase
+      .from("journals")
+      .update({ goal_id: body.goalId || null })
+      .eq("id", id)
+      .eq("user_id", userId);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: true });
+  }
+
   // UPDATE LIKED
   if (action === "update_liked") {
     const { error } = await supabase
