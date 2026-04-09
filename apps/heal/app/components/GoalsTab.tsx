@@ -759,7 +759,7 @@ export default function GoalsTab({ growIntent, onClearGrowIntent }: { growIntent
       )}
 
       {/* Journal sub-tab */}
-      {subTab === "journal" && <GratitudeJournal goals={goals} onNavigateToGrow={(intent) => { setSubTab("goals"); setGrowPickerText(intent.trigger); }} onGoalsChanged={() => { if (user) loadGoals(user.id); }} />}
+      {subTab === "journal" && <GratitudeJournal goals={activeGoals} onNavigateToGrow={(intent) => { setSubTab("goals"); setGrowPickerText(intent.trigger); }} onGoalsChanged={() => { if (user) loadGoals(user.id); }} />}
 
       {/* Review sub-tab */}
       {subTab === "review" && user && <WeeklyReview user={user} />}
