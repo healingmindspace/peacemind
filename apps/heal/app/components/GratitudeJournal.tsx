@@ -46,7 +46,7 @@ interface GrowIntent {
   source: "mood-done" | "mood-history" | "journal-history";
 }
 
-export default function GratitudeJournal({ goals = [], onNavigateToGrow }: { goals?: Goal[]; onNavigateToGrow?: (intent: GrowIntent) => void }) {
+export default function GratitudeJournal({ goals = [], onNavigateToGrow, onGoalsChanged }: { goals?: Goal[]; onNavigateToGrow?: (intent: GrowIntent) => void; onGoalsChanged?: () => void }) {
   const [content, setContent] = useState("");
   const { user, accessToken } = useAuth();
   const [history, setHistory] = useState<JournalEntry[]>([]);
@@ -102,7 +102,7 @@ export default function GratitudeJournal({ goals = [], onNavigateToGrow }: { goa
       setSelectedGoal(data.id);
       setCustomPath("");
       setShowNewPath(false);
-      // Reload goals via parent — for now just select the new one
+      onGoalsChanged?.();
     }
   };
 
