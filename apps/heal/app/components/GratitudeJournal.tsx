@@ -57,6 +57,7 @@ export default function GratitudeJournal({ goals = [], onNavigateToGrow }: { goa
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<string>(""); // goal id or "s:xxx" for suggested
   const [customPath, setCustomPath] = useState("");
+  const [showNewPath, setShowNewPath] = useState(false);
   const [pendingPhoto, setPendingPhoto] = useState<File | null>(null);
   const [extracting, setExtracting] = useState(false);
   const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
@@ -86,6 +87,22 @@ export default function GratitudeJournal({ goals = [], onNavigateToGrow }: { goa
       }
     } catch { /* extraction failed */ }
     setExtracting(false);
+  };
+
+  const createPathFromJournal = async () => {
+    if (!user || !accessToken || !customPath.trim()) return;
+    const res = await fetch("/api/goals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "insert", userId: user.id, accessToken, name: customPath.trim(), icon: "🌿" }),
+    });
+    const data = await res.json();
+    if (data.id) {
+      setSelectedGoal(data.id);
+      setCustomPath("");
+      setShowNewPath(false);
+      // Reload goals via parent — for now just select the new one
+    }
   };
 
 
@@ -406,6 +423,42 @@ export default function GratitudeJournal({ goals = [], onNavigateToGrow }: { goa
                   {s.icon} {lang === "zh" ? s.nameZh : s.name}
                 </button>
               ))}
+            {/* New path input */}
+            {customPath !== null && (
+              showNewPath ? (
+                <div className="flex gap-1 items-center">
+                  <input
+                    type="text"
+                    value={customPath}
+                    onChange={(e) => setCustomPath(e.target.value)}
+                    placeholder={lang === "zh" ? "新路径名称" : "New path name"}
+                    className="px-2.5 py-1 rounded-full text-xs border border-pm-border focus:outline-none focus:border-brand bg-pm-surface-active w-28"
+                    autoFocus
+                    onKeyDown={(e) => { if (e.key === "Enter" && customPath.trim()) createPathFromJournal(); }}
+                  />
+                  <button
+                    onClick={createPathFromJournal}
+                    disabled={!customPath.trim() || saving}
+                    className="px-2.5 py-1 rounded-full text-xs bg-brand text-white cursor-pointer disabled:opacity-40"
+                  >
+                    {lang === "zh" ? "创建" : "Create"}
+                  </button>
+                  <button
+                    onClick={() => { setShowNewPath(false); setCustomPath(""); }}
+                    className="text-xs text-pm-text-muted cursor-pointer"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowNewPath(true)}
+                  className="px-3 py-1 rounded-full text-xs cursor-pointer border border-dashed border-pm-border text-pm-text-muted hover:border-brand hover:text-brand transition-all"
+                >
+                  + {lang === "zh" ? "新路径" : "New path"}
+                </button>
+              )
+            )}
           </div>
         )}
         <button
