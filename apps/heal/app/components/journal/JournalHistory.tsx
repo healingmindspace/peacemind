@@ -125,7 +125,7 @@ export default function JournalHistory({
                   <div className="flex gap-3 flex-wrap">
                     {onNavigateToGrow && (
                       <button onClick={() => onNavigateToGrow({ trigger: entry.content, source: "journal-history" })} className="text-xs text-pm-text-muted hover:text-brand cursor-pointer">
-                        🌱 {lang === "zh" ? "规划" : "Plan"}
+                        🌱 {lang === "zh" ? "规划" : "plan"}
                       </button>
                     )}
                     {onAssociatePath && (
