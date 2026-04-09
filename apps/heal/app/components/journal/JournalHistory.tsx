@@ -123,20 +123,18 @@ export default function JournalHistory({
                     <button onClick={() => onToggleLike(entry.id, entry.liked)} className="cursor-pointer transition-transform text-sm" style={{ color: entry.liked ? "#e8b4c8" : "#d8cfe8" }}>♥</button>
                   </div>
                   <div className="flex gap-3 flex-wrap">
-                    {entry.goal_id && onNavigateToGrow && (() => {
-                      const goal = goals.find((g) => g.id === entry.goal_id);
-                      return goal ? (
-                        <button onClick={() => onNavigateToGrow({ trigger: entry.content, source: "journal-history" })} className="text-xs text-brand cursor-pointer">
-                          {goal.icon} {goal.name}
-                        </button>
-                      ) : null;
-                    })()}
+                    {onNavigateToGrow && (
+                      <button onClick={() => onNavigateToGrow({ trigger: entry.content, source: "journal-history" })} className="text-xs text-pm-text-muted hover:text-brand cursor-pointer">
+                        🌱 {lang === "zh" ? "规划" : "Plan"}
+                      </button>
+                    )}
                     {onAssociatePath && (
                       <button
                         onClick={() => setAssociatingId(associatingId === entry.id ? null : entry.id)}
                         className="text-xs text-pm-text-muted hover:text-brand cursor-pointer"
                       >
                         🔗 {lang === "zh" ? "关联路径" : "Path"}
+                        {entry.goal_id && (() => { const g = goals.find((g) => g.id === entry.goal_id); return g ? ` (${g.icon} ${g.name})` : ""; })()}
                       </button>
                     )}
                     <button onClick={() => { setEditingId(entry.id); setEditContent(entry.content); }} className="text-xs text-pm-text-muted hover:text-brand cursor-pointer">{t("journal.edit")}</button>
