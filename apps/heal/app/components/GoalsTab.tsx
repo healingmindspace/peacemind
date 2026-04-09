@@ -488,6 +488,7 @@ export default function GoalsTab({ growIntent, onClearGrowIntent }: { growIntent
                     <span className="text-xs">⏰</span>
                     <p className="flex-1 text-xs text-red-500 font-medium truncate">{goal ? `${goal.icon} ` : ""}{task.title}</p>
                     <span className="text-[10px] text-red-400">{t("goals.overdue")}</span>
+                    <button onClick={() => deleteTask(task.id)} className="text-xs text-pm-text-muted hover:text-red-400 cursor-pointer px-1">✕</button>
                   </div>
                 );
               })}
