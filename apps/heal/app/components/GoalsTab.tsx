@@ -323,7 +323,7 @@ export default function GoalsTab({ growIntent, onClearGrowIntent }: { growIntent
   const unscheduleTask = async (taskId: string) => {
     if (!user) return;
     if (!accessToken) return;
-    await fetch("/api/tasks", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "update", userId: user.id, accessToken, id: taskId, dueDate: null }) });
+    await fetch("/api/tasks", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "update", userId: user.id, accessToken, id: taskId, dueDate: null, scheduleType: "once", scheduleRule: null }) });
     await loadTasks(user.id);
   };
 
