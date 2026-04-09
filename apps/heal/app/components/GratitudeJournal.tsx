@@ -393,7 +393,7 @@ export default function GratitudeJournal({ goals = [], onNavigateToGrow }: { goa
         )}
         {user && (
           <div className="flex flex-wrap justify-center gap-1.5 mt-3">
-            {/* User's goals first */}
+            <p className="w-full text-[10px] text-pm-text-muted text-center mb-0.5">{lang === "zh" ? "关联路径" : "Associate with path"}</p>
             {goals.map((g) => (
               <button
                 key={g.id}
@@ -455,7 +455,7 @@ export default function GratitudeJournal({ goals = [], onNavigateToGrow }: { goa
                   onClick={() => setShowNewPath(true)}
                   className="px-3 py-1 rounded-full text-xs cursor-pointer border border-dashed border-pm-border text-pm-text-muted hover:border-brand hover:text-brand transition-all"
                 >
-                  + {lang === "zh" ? "新路径" : "New path"}
+                  + {lang === "zh" ? "新建路径" : "Create new"}
                 </button>
               )
             )}
