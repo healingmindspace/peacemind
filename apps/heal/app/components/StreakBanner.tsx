@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useApi } from "@/lib/use-api";
 import { useI18n } from "@/lib/i18n";
-import { getSeeds, awardSeeds, SEED_REWARDS } from "@/lib/seeds";
+import { awardSeeds, SEED_REWARDS } from "@/lib/seeds";
 
 const LAST_CHECKIN_KEY = "pm-last-checkin";
 const STREAK_KEY = "pm-streak";
@@ -32,7 +32,7 @@ interface StreakBannerProps {
 }
 
 export default function StreakBanner({ onMoodLogged }: StreakBannerProps) {
-  const { user } = useAuth();
+  const { user, accessToken } = useAuth();
   const { apiFetch, isAnonymous } = useApi();
   const { lang } = useI18n();
   const [streak, setStreak] = useState(0);
@@ -48,8 +48,18 @@ export default function StreakBanner({ onMoodLogged }: StreakBannerProps) {
   }, [user, onMoodLogged]);
 
   useEffect(() => {
-    setSeeds(getSeeds());
-  }, []);
+    if (accessToken) {
+      import("@/lib/seeds").then(({ loadSeedsFromServer }) =>
+        loadSeedsFromServer(accessToken).then(({ balance }) => setSeeds(balance))
+      );
+    }
+    const onSeedsChanged = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (typeof detail === "number") setSeeds(detail);
+    };
+    window.addEventListener("seeds-changed", onSeedsChanged);
+    return () => window.removeEventListener("seeds-changed", onSeedsChanged);
+  }, [accessToken]);
 
   const loadStreak = async () => {
     const since = new Date();
@@ -100,12 +110,11 @@ export default function StreakBanner({ onMoodLogged }: StreakBannerProps) {
         let earned = 0;
 
         // Streak milestone bonuses
-        if (currentStreak === 7) { earned += SEED_REWARDS.streak7; awardSeeds("streak7"); }
-        if (currentStreak === 30) { earned += SEED_REWARDS.streak30; awardSeeds("streak30"); }
-        if (currentStreak === 100) { earned += SEED_REWARDS.streak100; awardSeeds("streak100"); }
+        if (currentStreak === 7) { earned += SEED_REWARDS.streak7; await awardSeeds("streak7", accessToken); }
+        if (currentStreak === 30) { earned += SEED_REWARDS.streak30; await awardSeeds("streak30", accessToken); }
+        if (currentStreak === 100) { earned += SEED_REWARDS.streak100; await awardSeeds("streak100", accessToken); }
 
         if (earned > 0) {
-          setSeeds(getSeeds());
           setSeedsEarned(earned);
           setShowSeedAnim(true);
           setTimeout(() => setShowSeedAnim(false), 2000);
@@ -114,8 +123,6 @@ export default function StreakBanner({ onMoodLogged }: StreakBannerProps) {
         localStorage.setItem(LAST_CHECKIN_KEY, todayStr);
         localStorage.setItem(STREAK_KEY, String(currentStreak));
       }
-      setSeeds(getSeeds());
-
       setStreak(currentStreak);
 
       // Check for milestone message

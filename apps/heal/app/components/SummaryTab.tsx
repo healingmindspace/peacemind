@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n";
-import { getSeedHistory, SEED_LABELS, type SeedHistoryEntry } from "@/lib/seeds";
+import { getSeedHistory, loadSeedsFromServer, SEED_LABELS, type SeedHistoryEntry } from "@/lib/seeds";
 import InviteFriend from "./InviteFriend";
 
 interface DayData {
@@ -32,13 +32,10 @@ export default function SummaryTab() {
   const { t, lang } = useI18n();
 
   useEffect(() => {
-    const stored = parseInt(localStorage.getItem("pm-seeds") || "0", 10);
-    setSeeds(stored);
-    setSeedHistory(getSeedHistory());
-    // Listen for seed changes
+    // Listen for seed changes (from awardSeeds/deductSeeds)
     const onSeedsChanged = (e: Event) => {
       const detail = (e as CustomEvent).detail;
-      setSeeds(typeof detail === "number" ? detail : parseInt(localStorage.getItem("pm-seeds") || "0", 10));
+      if (typeof detail === "number") setSeeds(detail);
       setSeedHistory(getSeedHistory());
     };
     window.addEventListener("seeds-changed", onSeedsChanged);
@@ -47,6 +44,10 @@ export default function SummaryTab() {
 
   useEffect(() => {
     if (user && accessToken) {
+      loadSeedsFromServer(accessToken).then(({ balance, history }) => {
+        setSeeds(balance);
+        setSeedHistory(history);
+      });
       loadWeek(user.id);
       checkUnreadReplies(user.id);
       loadSavedInsight(insightPeriod);

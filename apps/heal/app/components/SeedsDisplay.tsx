@@ -1,18 +1,24 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getSeeds } from "@/lib/seeds";
+import { getSeeds, loadSeedsFromServer } from "@/lib/seeds";
+import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n";
 
 export default function SeedsDisplay() {
   const [seeds, setSeeds] = useState(0);
+  const { accessToken, isAnonymous } = useAuth();
   const { lang } = useI18n();
 
   useEffect(() => {
-    setSeeds(getSeeds());
+    if (accessToken && !isAnonymous) {
+      loadSeedsFromServer(accessToken).then(({ balance }) => setSeeds(balance));
+    } else {
+      setSeeds(getSeeds());
+    }
     const onChanged = (e: Event) => {
       const detail = (e as CustomEvent).detail;
-      setSeeds(typeof detail === "number" ? detail : getSeeds());
+      if (typeof detail === "number") setSeeds(detail);
     };
     window.addEventListener("seeds-changed", onChanged);
     return () => window.removeEventListener("seeds-changed", onChanged);
