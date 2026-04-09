@@ -118,7 +118,7 @@ export default function WeekCalendar({ tasks, onRemove }: WeekCalendarProps) {
                   {onRemove && (
                     <button
                       onClick={() => onRemove(task.id)}
-                      className="text-[10px] text-pm-text-muted hover:text-red-400 cursor-pointer opacity-40 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex-shrink-0"
+                      className="text-xs text-pm-text-muted hover:text-red-400 cursor-pointer px-1 flex-shrink-0"
                     >
                       ✕
                     </button>
