@@ -52,6 +52,7 @@ export default function GratitudeJournal({ goals = [], onNavigateToGrow }: { goa
   const [history, setHistory] = useState<JournalEntry[]>([]);
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [loadingHistory, setLoadingHistory] = useState(true);
   const [saving, setSaving] = useState(false);
   const [backfillDate, setBackfillDate] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -115,9 +116,11 @@ export default function GratitudeJournal({ goals = [], onNavigateToGrow }: { goa
   const loadHistory = async (userId: string, token?: string) => {
     const tk = token || accessToken;
     if (!tk) return;
+    setLoadingHistory(true);
     const res = await journalApi({ action: "list", userId, accessToken: tk, offset: 0 });
     if (res.data) setHistory(res.data);
     setHasMore(res.hasMore ?? false);
+    setLoadingHistory(false);
   };
 
   const loadMore = async () => {
@@ -473,6 +476,9 @@ export default function GratitudeJournal({ goals = [], onNavigateToGrow }: { goa
           <p className="mt-3 text-xs text-pm-text-muted">{t("journal.signIn")}</p>
         )}
 
+        {user && loadingHistory && history.length === 0 && (
+          <p className="text-xs text-pm-text-muted italic text-center mt-4">{lang === "zh" ? "加载中..." : "Loading..."}</p>
+        )}
         {user && history.length > 0 && (
           <JournalHistory
             history={history}
