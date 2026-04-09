@@ -133,8 +133,7 @@ export default function JournalHistory({
                         onClick={() => setAssociatingId(associatingId === entry.id ? null : entry.id)}
                         className="text-xs text-pm-text-muted hover:text-brand cursor-pointer"
                       >
-                        🔗 {lang === "zh" ? "关联路径" : "Path"}
-                        {entry.goal_id && (() => { const g = goals.find((g) => g.id === entry.goal_id); return g ? ` (${g.icon} ${g.name})` : ""; })()}
+                        🔗
                       </button>
                     )}
                     <button onClick={() => { setEditingId(entry.id); setEditContent(entry.content); }} className="text-xs text-pm-text-muted hover:text-brand cursor-pointer">{t("journal.edit")}</button>
