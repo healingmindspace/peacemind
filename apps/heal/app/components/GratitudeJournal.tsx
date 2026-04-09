@@ -402,7 +402,6 @@ export default function GratitudeJournal({ goals = [], onNavigateToGrow, onGoals
         )}
         {user && (
           <div className="flex flex-wrap justify-center gap-1.5 mt-3">
-            <p className="w-full text-[10px] text-pm-text-muted text-center mb-0.5">{lang === "zh" ? "关联路径" : "Associate with path"}</p>
             {goals.map((g) => (
               <button
                 key={g.id}
