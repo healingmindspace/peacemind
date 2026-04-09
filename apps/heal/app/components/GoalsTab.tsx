@@ -334,6 +334,15 @@ export default function GoalsTab({ growIntent, onClearGrowIntent }: { growIntent
     await loadTasks(user.id);
   };
 
+  const removeAllTasks = async (goalId: string) => {
+    if (!user || !accessToken) return;
+    const goalTasks = tasks.filter((t) => t.goal_id === goalId);
+    for (const task of goalTasks) {
+      await fetch("/api/tasks", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "delete", userId: user.id, accessToken, id: task.id }) });
+    }
+    await loadTasks(user.id);
+  };
+
   const startEdit = (task: Task) => {
     setEditingTask(task.id);
     setEditTitle(task.title);
@@ -648,6 +657,9 @@ export default function GoalsTab({ growIntent, onClearGrowIntent }: { growIntent
                               </div>
                               <div className="flex gap-2">
                                 <button onClick={() => achieveGoal(goal.id)} className="text-[10px] text-[#8a9e6a] hover:text-[#6a8a4a] cursor-pointer">🎉 {lang === "zh" ? "达成" : "Achieve"}</button>
+                                {tasks.filter((t) => t.goal_id === goal.id).length > 0 && (
+                                  <button onClick={() => removeAllTasks(goal.id)} className="text-[10px] text-pm-text-muted hover:text-red-400 cursor-pointer">{lang === "zh" ? "清除步骤" : "Clear steps"}</button>
+                                )}
                                 <button onClick={() => toggleGoalActive(goal.id, false)} className="text-[10px] text-pm-text-muted hover:text-brand cursor-pointer">{t("goals.hidePath")}</button>
                                 <button onClick={() => deleteGoal(goal.id)} className="text-[10px] text-pm-text-muted hover:text-red-400 cursor-pointer">{lang === "zh" ? "归档" : "Archive"}</button>
                               </div>
