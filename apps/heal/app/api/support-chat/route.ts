@@ -469,7 +469,24 @@ export async function POST(request: Request) {
 
     console.log("Agent response:", { textResponse: textResponse?.slice(0, 100), actions: actions.map(a => a.tool), stopReason: response.stop_reason });
 
-    // Log usage
+    // Classify topic from message + tools
+    const msgLower = message.trim().toLowerCase();
+    let topic = "general";
+    if (actions.some((a) => a.tool === "log_mood")) topic = "mood";
+    else if (actions.some((a) => a.tool === "write_journal")) topic = "journal";
+    else if (actions.some((a) => a.tool === "get_calendar" || a.tool === "create_task")) topic = "calendar";
+    else if (actions.some((a) => a.tool === "get_review" || a.tool === "get_insight")) topic = "review";
+    else if (actions.some((a) => a.tool === "get_weather")) topic = "weather";
+    else if (actions.some((a) => a.tool === "save_feedback")) topic = "feedback";
+    else if (msgLower.match(/mood|feeling|happy|sad|anxious|stressed|tired/)) topic = "mood";
+    else if (msgLower.match(/journal|write|diary/)) topic = "journal";
+    else if (msgLower.match(/calendar|schedule|task|remind|appointment/)) topic = "calendar";
+    else if (msgLower.match(/review|how am i|progress|insight|pattern/)) topic = "review";
+    else if (msgLower.match(/weather|temperature|rain/)) topic = "weather";
+    else if (msgLower.match(/anxiety|depression|breath|grounding|phq|gad/)) topic = "wellness";
+    else if (msgLower.match(/how do|what is|help|seed|feature/)) topic = "help";
+
+    // Log usage with topic
     if (process.env.SUPABASE_SERVICE_KEY) {
       try {
         const adminDb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!);
@@ -477,6 +494,8 @@ export async function POST(request: Request) {
           user_id: userId,
           action: "chat",
           tool_used: actions.length > 0 ? actions.map((a) => a.tool).join(",") : null,
+          topic,
+          message: message.trim().slice(0, 200),
           ip,
         });
       } catch { /* don't block response */ }

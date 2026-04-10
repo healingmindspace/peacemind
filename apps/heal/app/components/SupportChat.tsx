@@ -16,10 +16,24 @@ export default function SupportChat() {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [listening, setListening] = useState(false);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const { lang } = useI18n();
   const { accessToken } = useAuth();
+
+  // Load personalized suggestions when chat opens
+  useEffect(() => {
+    if (!open || suggestions.length > 0) return;
+    fetch("/api/agent-suggestions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ accessToken, lang }),
+    })
+      .then((r) => r.json())
+      .then((data) => { if (Array.isArray(data)) setSuggestions(data); })
+      .catch(() => {});
+  }, [open]);
 
   // Speech-to-text
   const startListening = () => {
@@ -119,9 +133,9 @@ export default function SupportChat() {
                   {lang === "zh" ? "你好！有什么可以帮你的？" : "Hi! How can I help you?"}
                 </p>
                 <div className="flex flex-wrap gap-1.5 justify-center mt-3">
-                  {(lang === "zh"
-                    ? ["今天有什么安排？", "我今天心情不错", "帮我写日记", "这周报告", "添加日程", "今天天气怎样？", "怎么记录心情？", "什么是焦虑？"]
-                    : ["What's on my calendar?", "I'm feeling good today", "Write a journal for me", "Weekly review", "Add a task", "What's the weather?", "How do I log mood?", "What is anxiety?"]
+                  {(suggestions.length > 0 ? suggestions : (lang === "zh"
+                    ? ["今天有什么安排？", "我今天心情不错", "帮我写日记", "这周报告"]
+                    : ["What's on my calendar?", "I'm feeling good today", "Write a journal for me", "Weekly review"])
                   ).map((q) => (
                     <button
                       key={q}
