@@ -196,7 +196,7 @@ export async function POST(request: Request) {
           if (input.content && input.content.trim().length > 2) {
             const supabase = getSupabase(accessToken);
             const encrypted = encrypt(input.content.trim());
-            await supabase.from("journals").insert({ user_id: userId, content: encrypted });
+            await supabase.from("journals").insert({ user_id: userId, content: encrypted, response: encrypt("via Peacemind Assistant") });
             // Award seeds
             await fetch(new URL("/api/seeds", request.url).toString(), {
               method: "POST",
