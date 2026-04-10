@@ -738,6 +738,10 @@ export default function AdminDashboard() {
               </h2>
               <div className="space-y-3 text-xs text-[#5a4a7a] border-l-2 border-[#c4b5e0] pl-4">
                 <div>
+                  <p className="font-semibold text-[#3d3155]">Apr 9–10 — Support Agent, Calendar Month View, User Feedback</p>
+                  <p>🤖 Customer service agent: floating 💬 chat widget on every page. Claude Haiku with tool use — logs mood (with trigger/helped), writes journal, gets review/insight, saves feedback. Bilingual. Prompt caching + token optimization (800→150 tokens anon). Agent usage tracking with 7-day chart in admin. 📅 Month view calendar (Helen&apos;s feedback). 🔗 Associate journal entries with paths + create new path from journal (Jessica&apos;s feedback). Overdue tasks with delete button. Clear all steps under a path. Only active paths shown in journal. Removed Blackbelt preset. Science of Self-Tracking education topic. Supabase CLI migrations set up for both repos.</p>
+                </div>
+                <div>
                   <p className="font-semibold text-[#3d3155]">Apr 6 — Anonymous Feedback, Email Replies, Admin Filters</p>
                   <p>💬 Anonymous feedback: server-side API route, no login required, optional email for replies. Rate limited (5/hr). Service role client bypasses RLS. 📬 Email replies via Resend: admin replies send HTML email from noreply@peacemind.app with reply-to Proton Mail. Domain verified. 🔍 Admin feedback filters: All, Unreplied, Anonymous, Users — each with counts. Removed dead /admin/feedback links. 🔧 Fixed CORS (same-origin email API), admin email mismatch (proton.me not healingmindspace.com), npm lock sync for @peacemind/connect.</p>
                 </div>

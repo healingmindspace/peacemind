@@ -630,6 +630,19 @@ export default function SummaryTab() {
           </div>
           <p className="text-[10px] text-pm-text-muted mt-3 italic">{t("summary.learnMore")}</p>
         </div>
+
+        {/* Support agent */}
+        <div className="bg-pm-surface backdrop-blur-sm rounded-2xl p-4 text-center mt-4">
+          <p className="text-sm">💬</p>
+          <h3 className="text-sm font-semibold text-pm-text mt-1">
+            {lang === "zh" ? "Peacemind 助手" : "Peacemind Assistant"}
+          </h3>
+          <p className="text-xs text-pm-text-secondary mt-1 leading-relaxed">
+            {lang === "zh"
+              ? "点击右下角 💬 按钮，随时提问、记录心情、写日记或查看你的健康报告。"
+              : "Tap the 💬 button anytime to ask questions, log your mood, write a journal entry, or get a wellness review."}
+          </p>
+        </div>
       </div>
 
       {/* In Loving Memory */}
