@@ -65,7 +65,7 @@ export default function SupportChat() {
 
       {/* Chat panel */}
       {open && (
-        <div className="fixed bottom-16 left-3 right-3 max-h-[70vh] md:inset-auto md:bottom-6 md:right-6 md:left-auto md:w-80 md:max-h-[28rem] rounded-2xl border border-pm-border shadow-xl flex flex-col z-50 overflow-hidden" style={{ backgroundColor: "#f8f4fc" }}>
+        <div className="fixed bottom-16 right-3 w-72 max-h-[70vh] md:bottom-6 md:right-6 md:w-80 md:max-h-[28rem] rounded-2xl border border-pm-border shadow-xl flex flex-col z-50 overflow-hidden" style={{ backgroundColor: "#f8f4fc" }}>
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-pm-border bg-brand text-white rounded-t-2xl">
             <span className="text-sm font-semibold">{lang === "zh" ? "🌱 Peacemind 助手" : "🌱 Peacemind Help"}</span>
