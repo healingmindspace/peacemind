@@ -14,6 +14,7 @@ import SummaryTab from "./components/SummaryTab";
 import LangSwitcher from "./components/LangSwitcher";
 import ClaimBanner from "./components/ClaimBanner";
 import SupportChat from "./components/SupportChat";
+import { InitProvider } from "@/lib/init-context";
 
 type Tab = "mood" | "calm" | "goals" | "summary";
 
@@ -164,8 +165,10 @@ export default function Home() {
   return (
     <I18nProvider>
       <AuthProvider>
-        <AppContent />
-        <SupportChat />
+        <InitProvider>
+          <AppContent />
+          <SupportChat />
+        </InitProvider>
       </AuthProvider>
     </I18nProvider>
   );

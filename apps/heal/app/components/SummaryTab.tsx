@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n";
-import { getSeedHistory, loadSeedsFromServer, SEED_LABELS, type SeedHistoryEntry } from "@/lib/seeds";
+import { SEED_LABELS, type SeedHistoryEntry } from "@/lib/seeds";
+import { useInit } from "@/lib/init-context";
 import InviteFriend from "./InviteFriend";
 
 interface DayData {
@@ -30,29 +31,33 @@ export default function SummaryTab() {
   const [seedHistory, setSeedHistory] = useState<SeedHistoryEntry[]>([]);
   const [showSeedHistory, setShowSeedHistory] = useState(false);
   const { t, lang } = useI18n();
+  const initData = useInit();
+
+  // Load from init context
+  useEffect(() => {
+    if (!initData.loading) {
+      setSeeds(initData.seeds.balance);
+      setSeedHistory(initData.seeds.history);
+      setUnreadReplies(initData.unreadReplies);
+    }
+  }, [initData.loading, initData.seeds.balance]);
 
   useEffect(() => {
     // Listen for seed changes (from awardSeeds/deductSeeds)
     const onSeedsChanged = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       if (typeof detail === "number") setSeeds(detail);
-      setSeedHistory(getSeedHistory());
     };
     window.addEventListener("seeds-changed", onSeedsChanged);
     return () => window.removeEventListener("seeds-changed", onSeedsChanged);
   }, []);
 
   useEffect(() => {
-    if (user && accessToken) {
-      loadSeedsFromServer(accessToken).then(({ balance, history }) => {
-        setSeeds(balance);
-        setSeedHistory(history);
-      });
+    if (user && accessToken && !initData.loading) {
       loadWeek(user.id);
-      checkUnreadReplies(user.id);
       loadSavedInsight(insightPeriod);
     }
-  }, [user, accessToken]);
+  }, [user, accessToken, initData.loading]);
 
   useEffect(() => {
     if (user && accessToken) {
@@ -68,54 +73,17 @@ export default function SummaryTab() {
     return () => window.removeEventListener("breathe-complete", handleBreath);
   }, [user]);
 
-  const checkUnreadReplies = async (userId: string) => {
-    if (!accessToken) return;
-    const lastSeen = localStorage.getItem("feedback-last-seen") || "2000-01-01";
-    const res = await fetch("/api/feedback-check", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId, accessToken, lastSeen }),
-    });
-    const data = await res.json();
-    setUnreadReplies(data.unreadCount || 0);
-  };
-
-  const loadWeek = async (userId: string) => {
-    if (!accessToken) return;
-
+  const loadWeek = async (_userId: string) => {
+    // Use init data instead of individual API calls
     const now = new Date();
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(now.getDate() - 6);
     sevenDaysAgo.setHours(0, 0, 0, 0);
-    const since = sevenDaysAgo.toISOString();
 
-    const yearAgo = new Date();
-    yearAgo.setDate(yearAgo.getDate() - 365);
-    const streakSince = yearAgo.toISOString();
-
-    const [moodsJson, journalsJson, breathingJson, allMoodsJson] = await Promise.all([
-      fetch("/api/mood", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "list", userId, accessToken, since, limit: 100 }),
-      }).then((r) => r.json()),
-      fetch("/api/journal", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "list", userId, accessToken }),
-      }).then((r) => r.json()),
-      fetch("/api/breathing", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "list", userId, accessToken, since, limit: 100 }),
-      }).then((r) => r.json()),
-      // Fetch full year of moods for streak calculation
-      fetch("/api/mood", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "list", userId, accessToken, since: streakSince, limit: 200 }),
-      }).then((r) => r.json()),
-    ]);
+    const moodsJson = { data: initData.weekMoods };
+    const journalsJson = { data: initData.journals.data };
+    const breathingJson = { data: initData.breathing };
+    const allMoodsJson = { data: initData.streakDates.map((d: string) => ({ created_at: d })) };
 
     const dayMap = new Map<string, DayData>();
     const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
