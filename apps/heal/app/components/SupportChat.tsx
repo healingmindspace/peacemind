@@ -15,9 +15,39 @@ export default function SupportChat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
+  const [listening, setListening] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { lang } = useI18n();
   const { accessToken } = useAuth();
+
+  // Speech-to-text
+  const startListening = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+    const recognition = new SpeechRecognition();
+    recognition.lang = lang === "zh" ? "zh-CN" : "en-US";
+    recognition.interimResults = false;
+    recognition.onstart = () => setListening(true);
+    recognition.onresult = (e: any) => {
+      const text = e.results[0][0].transcript;
+      setInput(text);
+      setListening(false);
+    };
+    recognition.onerror = () => setListening(false);
+    recognition.onend = () => setListening(false);
+    recognition.start();
+  };
+
+  // Text-to-speech (browser built-in)
+  const speak = (text: string) => {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = lang === "zh" ? "zh-CN" : "en-US";
+    utterance.rate = 0.9;
+    utterance.pitch = 1.0;
+    window.speechSynthesis.speak(utterance);
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -105,6 +135,9 @@ export default function SupportChat() {
                     : "bg-pm-surface-active text-pm-text rounded-bl-sm"
                 }`}>
                   {msg.content}
+                  {msg.role === "assistant" && (
+                    <button onClick={() => speak(msg.content)} className="mt-1 text-[9px] text-pm-text-muted hover:text-brand cursor-pointer">🔊</button>
+                  )}
                   {msg.actions && msg.actions.length > 0 && (
                     <div className="flex gap-1 mt-1">
                       {msg.actions.map((a) => (
@@ -126,12 +159,20 @@ export default function SupportChat() {
           </div>
 
           {/* Input */}
-          <form onSubmit={send} className="flex items-center gap-2 px-3 py-2 border-t border-pm-border">
+          <form onSubmit={send} className="flex items-center gap-1.5 px-3 py-2 border-t border-pm-border">
+            <button
+              type="button"
+              onClick={startListening}
+              disabled={listening || sending}
+              className={`px-2 py-1.5 rounded-full text-xs cursor-pointer transition-all ${listening ? "bg-red-400 text-white animate-pulse" : "bg-pm-surface-active text-pm-text-muted hover:text-brand"}`}
+            >
+              🎤
+            </button>
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder={lang === "zh" ? "问一个问题..." : "Ask a question..."}
+              placeholder={listening ? (lang === "zh" ? "正在听..." : "Listening...") : (lang === "zh" ? "问一个问题..." : "Ask a question...")}
               disabled={sending}
               className="flex-1 px-3 py-1.5 rounded-full border border-pm-border focus:outline-none focus:border-brand text-xs bg-pm-surface disabled:opacity-50"
               autoFocus
