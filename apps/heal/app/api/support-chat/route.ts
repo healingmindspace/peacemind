@@ -436,10 +436,16 @@ export async function POST(request: Request) {
       }
     }
 
-    // For other actions: use summary directly
-    if (actions.length > 0 && !textResponse) {
-      textResponse = actions.map((a) => a.result).join(". ");
+    // For actions (except review which has its own follow-up): use action result directly
+    const nonReviewActions = actions.filter((a) => a.tool !== "get_review" && a.tool !== "get_insight");
+    if (nonReviewActions.length > 0) {
+      const actionText = nonReviewActions.map((a) => a.result).join("\n\n");
+      textResponse = textResponse ? `${textResponse}\n\n${actionText}` : actionText;
+    } else if (actions.length > 0 && !textResponse) {
+      textResponse = actions.map((a) => a.result).join("\n\n");
     }
+
+    console.log("Agent response:", { textResponse: textResponse?.slice(0, 100), actions: actions.map(a => a.tool), stopReason: response.stop_reason });
 
     // Log usage
     if (process.env.SUPABASE_SERVICE_KEY) {
