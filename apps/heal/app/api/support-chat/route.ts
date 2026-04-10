@@ -316,6 +316,19 @@ export async function POST(request: Request) {
       if (!textResponse) textResponse = actionSummary;
     }
 
+    // Log usage
+    if (process.env.SUPABASE_SERVICE_KEY) {
+      try {
+        const adminDb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!);
+        await adminDb.from("agent_usage").insert({
+          user_id: userId,
+          action: "chat",
+          tool_used: actions.length > 0 ? actions.map((a) => a.tool).join(",") : null,
+          ip,
+        });
+      } catch { /* don't block response */ }
+    }
+
     return NextResponse.json({
       response: textResponse || "I'm here to help! What would you like to do?",
       actions: actions.map((a) => a.tool),

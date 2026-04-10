@@ -90,6 +90,7 @@ interface Stats {
   mobileCount: number;
   desktopCount: number;
   feedbackList: { id: string; subject: string | null; message: string; reply: string | null; user_id: string | null; user_email: string | null; created_at: string }[];
+  agentUsage: { total: number; today: number; uniqueUsers: number; topTools: { tool: string; count: number }[] };
 }
 
 export default function AdminDashboard() {
@@ -301,6 +302,17 @@ export default function AdminDashboard() {
       mobileCount,
       desktopCount,
       feedbackList: feedbackData || [],
+      agentUsage: await (async () => {
+        const todayStr = new Date().toISOString().split("T")[0];
+        const { data: allUsage } = await supabase.from("agent_usage").select("user_id, tool_used, created_at").order("created_at", { ascending: false }).limit(500);
+        const rows = allUsage || [];
+        const todayRows = rows.filter((r) => r.created_at?.startsWith(todayStr));
+        const uniqueUsers = new Set(rows.filter((r) => r.user_id).map((r) => r.user_id)).size;
+        const toolCounts: Record<string, number> = {};
+        rows.forEach((r) => { if (r.tool_used) r.tool_used.split(",").forEach((t: string) => { toolCounts[t] = (toolCounts[t] || 0) + 1; }); });
+        const topTools = Object.entries(toolCounts).sort((a, b) => b[1] - a[1]).map(([tool, count]) => ({ tool, count }));
+        return { total: rows.length, today: todayRows.length, uniqueUsers, topTools };
+      })(),
     });
   };
 
@@ -375,6 +387,37 @@ export default function AdminDashboard() {
                 <p className="text-3xl font-bold text-[#3d3155]">{stats.totalBreathing}</p>
                 <p className="text-xs text-[#8a7da0] mt-1">Breathing Sessions</p>
               </div>
+            </div>
+
+            {/* Agent usage */}
+            <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-4 mb-4">
+              <h2 className="text-sm font-semibold text-[#3d3155] mb-3">🤖 Agent Usage</h2>
+              <div className="grid grid-cols-3 gap-3 mb-3">
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-[#3d3155]">{stats.agentUsage.total}</p>
+                  <p className="text-xs text-[#8a7da0]">Total chats</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-[#3d3155]">{stats.agentUsage.today}</p>
+                  <p className="text-xs text-[#8a7da0]">Today</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-[#3d3155]">{stats.agentUsage.uniqueUsers}</p>
+                  <p className="text-xs text-[#8a7da0]">Unique users</p>
+                </div>
+              </div>
+              {stats.agentUsage.topTools.length > 0 && (
+                <div>
+                  <p className="text-xs text-[#8a7da0] mb-1">Tools used</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {stats.agentUsage.topTools.map((t) => (
+                      <span key={t.tool} className="text-xs px-2 py-0.5 rounded-full bg-[#e8dff0] text-[#5a4a7a]">
+                        {t.tool} ({t.count})
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Visitor metrics */}
