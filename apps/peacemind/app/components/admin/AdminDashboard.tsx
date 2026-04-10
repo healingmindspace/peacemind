@@ -90,7 +90,7 @@ interface Stats {
   mobileCount: number;
   desktopCount: number;
   feedbackList: { id: string; subject: string | null; message: string; reply: string | null; user_id: string | null; user_email: string | null; created_at: string }[];
-  agentUsage: { total: number; today: number; uniqueUsers: number; topTools: { tool: string; count: number }[]; daily: { day: string; count: number }[] };
+  agentUsage: { total: number; today: number; uniqueUsers: number; topTools: { tool: string; count: number }[]; daily: { day: string; count: number }[]; perUser: { userId: string; count: number }[] };
 }
 
 export default function AdminDashboard() {
@@ -322,7 +322,13 @@ export default function AdminDashboard() {
           day: new Date(day + "T00:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }),
           count,
         }));
-        return { total: rows.length, today: todayRows.length, uniqueUsers, topTools, daily };
+        // Per-user breakdown
+        const userCounts: Record<string, number> = {};
+        rows.forEach((r) => { if (r.user_id) userCounts[r.user_id] = (userCounts[r.user_id] || 0) + 1; });
+        const anonCount = rows.filter((r) => !r.user_id).length;
+        const perUser = Object.entries(userCounts).sort((a, b) => b[1] - a[1]).map(([userId, count]) => ({ userId, count }));
+        if (anonCount > 0) perUser.push({ userId: "anonymous", count: anonCount });
+        return { total: rows.length, today: todayRows.length, uniqueUsers, topTools, daily, perUser };
       })(),
     });
   };
@@ -449,6 +455,25 @@ export default function AdminDashboard() {
                   ))}
                 </div>
               </div>
+              {/* Per-user breakdown */}
+              {stats.agentUsage.perUser.length > 0 && (
+                <div className="mt-3">
+                  <p className="text-xs text-[#8a7da0] mb-1">Per user</p>
+                  <div className="space-y-1">
+                    {stats.agentUsage.perUser.map((u) => (
+                      <div key={u.userId} className="flex items-center gap-2">
+                        <span className="text-xs text-[#5a4a7a] flex-1 truncate font-mono">
+                          {u.userId === "anonymous" ? "🌐 anonymous" : u.userId.slice(0, 8) + "..."}
+                        </span>
+                        <div className="w-20 bg-[#e8dff0] rounded-full h-2.5 overflow-hidden">
+                          <div className="bg-[#7c6a9e] h-full rounded-full" style={{ width: `${Math.min(100, (u.count / Math.max(...stats.agentUsage.perUser.map((x) => x.count), 1)) * 100)}%` }} />
+                        </div>
+                        <span className="text-xs text-[#3d3155] font-medium w-6 text-right">{u.count}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Visitor metrics */}
