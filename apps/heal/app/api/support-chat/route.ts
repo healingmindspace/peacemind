@@ -27,10 +27,10 @@ const TOOLS: Anthropic.Tool[] = [
       properties: {
         emoji: { type: "string", description: "One of: 😊 😌 😐 😔 😢 😰 😤 😴" },
         label: { type: "string", description: "One of: Good, Calm, Okay, Low, Sad, Anxious, Frustrated, Tired" },
-        trigger: { type: "string", description: "What triggered this mood" },
-        helped: { type: "string", description: "What helped or what they're grateful for" },
+        trigger: { type: "string", description: "What triggered this mood (extract from message if mentioned)" },
+        helped: { type: "string", description: "What helped or what they're grateful for (extract from message if mentioned)" },
       },
-      required: ["emoji", "label", "trigger", "helped"],
+      required: ["emoji", "label"],
     },
   },
   {
@@ -97,9 +97,9 @@ Features: Mood (😊), Calm (🍃 breathing/grounding/assessments), Grow (🌱 g
 
 Wellness: Anxiety = breathing calms vagus nerve. Depression = brain chemistry, small steps help. PHQ-9: 0-27. GAD-7: 0-21.
 
-ACTION RULES — NEVER call a tool without required info:
-- log_mood: Ask mood, then trigger, then what helped. Call only with all three.
-- write_journal: Ask what to write. Call only with real content.
+ACTION RULES:
+- log_mood: Extract mood, trigger, and what helped from the user's message. If they say "I'm happy because work went well and exercise helped", call immediately with all three. Only ask follow-up if the mood is unclear. Trigger and helped are optional — log with what you have.
+- write_journal: Ask what to write if not provided. Call with real content.
 - get_review/get_insight: Ask period (today/week/month) if unclear.
 - save_feedback: Call directly for bugs or feature requests.
 
