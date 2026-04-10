@@ -251,7 +251,44 @@ export async function POST(request: Request) {
       }
     }
 
-    // Use action summary directly — no follow-up call
+    // For reviews/insights: follow-up call to get AI summary, then save
+    const reviewAction = actions.find((a) => a.tool === "get_review" || a.tool === "get_insight");
+    if (reviewAction && userId && accessToken && response.stop_reason === "tool_use") {
+      try {
+        const toolBlock = response.content.find((b) => b.type === "tool_use" && (b.name === "get_review" || b.name === "get_insight")) as Anthropic.ToolUseBlock | undefined;
+        if (toolBlock) {
+          const followUp = await client.messages.create({
+            model: "claude-haiku-4-5-20251001",
+            max_tokens: 300,
+            system: AUTH_PROMPT,
+            messages: [
+              ...messages,
+              { role: "assistant", content: response.content },
+              { role: "user", content: [{ type: "tool_result", tool_use_id: toolBlock.id, content: reviewAction.result }] },
+            ],
+          });
+          const followUpText = followUp.content.find((b) => b.type === "text");
+          if (followUpText?.text) {
+            textResponse = followUpText.text;
+            // Save to saved_insights table
+            const supabase = getSupabase(accessToken);
+            const today = new Date().toISOString().split("T")[0];
+            await supabase.from("saved_insights").insert({
+              id: `review_${userId}_${today}`,
+              user_id: userId,
+              content: textResponse,
+              period: "week",
+              data_date: today,
+              lang: "en",
+            });
+          }
+        }
+      } catch {
+        // Fall through to action summary
+      }
+    }
+
+    // For other actions: use summary directly
     if (actions.length > 0 && !textResponse) {
       textResponse = actions.map((a) => a.result).join(". ");
     }
