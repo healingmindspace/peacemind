@@ -69,6 +69,7 @@ export default function SupportChat() {
 
     const userMsg = input.trim();
     setInput("");
+    if (listening) { recognitionRef.current?.stop(); setListening(false); }
     setMessages((prev) => [...prev, { role: "user", content: userMsg }]);
     setSending(true);
 
