@@ -142,7 +142,7 @@ export default function SupportChat() {
                     <div className="flex gap-1 mt-1">
                       {msg.actions.map((a) => (
                         <span key={a} className="text-[9px] px-1.5 py-0.5 rounded-full bg-brand/20 text-brand">
-                          {a === "log_mood" ? "✅ mood logged" : a === "write_journal" ? "✅ journal saved" : a === "get_review" ? "📊 review" : a === "get_insight" ? "💡 insight" : a === "save_feedback" ? "💬 feedback saved" : a}
+                          {a === "log_mood" ? "✅ mood" : a === "write_journal" ? "✅ journal" : a === "get_review" ? "📊 review" : a === "get_insight" ? "💡 insight" : a === "get_calendar" ? "📅 calendar" : a === "get_weather" ? "🌤️ weather" : a === "save_feedback" ? "💬 feedback" : a}
                         </span>
                       ))}
                     </div>

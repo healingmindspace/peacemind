@@ -67,6 +67,28 @@ const TOOLS: Anthropic.Tool[] = [
     },
   },
   {
+    name: "get_calendar",
+    description: "Get calendar items/tasks for today or this week. Use when user asks 'what's on my calendar?', 'what do I have today?', 'my tasks this week', 'what's scheduled?'.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        period: { type: "string", enum: ["today", "week"], description: "today or week" },
+      },
+      required: ["period"],
+    },
+  },
+  {
+    name: "get_weather",
+    description: "Get current weather. Use when user asks about weather, temperature, or if they should bring an umbrella.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        location: { type: "string", description: "City name or zip code. Ask if not provided." },
+      },
+      required: ["location"],
+    },
+  },
+  {
     name: "save_feedback",
     description: "Save user feedback, bug report, or feature request.",
     input_schema: {
@@ -236,6 +258,74 @@ export async function POST(request: Request) {
           if (helped.length > 0) result += ` Helped: ${helped.slice(0, 3).join(", ")}.`;
           result += " Give a brief, warm insight and one suggestion.";
           actions.push({ tool: block.name, result });
+        }
+
+        if (block.name === "get_calendar" && userId && accessToken) {
+          const supabase = getSupabase(accessToken);
+          const now = new Date();
+          const endDate = new Date();
+          if (input.period === "week") endDate.setDate(now.getDate() + 7);
+          else endDate.setDate(now.getDate() + 1);
+
+          const { data: taskData } = await supabase
+            .from("tasks")
+            .select("title, due_date, schedule_type, schedule_rule, duration, completed")
+            .eq("user_id", userId)
+            .eq("completed", false);
+
+          const items: string[] = [];
+          const todayStr = now.toDateString();
+
+          for (const t of (taskData || [])) {
+            // One-time tasks with due date
+            if (t.due_date) {
+              const d = new Date(t.due_date);
+              if (input.period === "today" && d.toDateString() === todayStr) {
+                items.push(`${t.title} at ${d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`);
+              } else if (input.period === "week" && d >= now && d <= endDate) {
+                items.push(`${t.title} — ${d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })} ${d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`);
+              }
+            }
+            // Habits
+            if (t.schedule_type === "habit" && t.schedule_rule) {
+              const freq = (t.schedule_rule as { freq?: string }).freq;
+              const time = (t.schedule_rule as { time?: string }).time || "";
+              if (freq === "daily" || (freq === "weekdays" && now.getDay() >= 1 && now.getDay() <= 5)) {
+                items.push(`${t.title} (${freq}${time ? ` at ${time}` : ""}${t.duration ? ` · ${t.duration}m` : ""})`);
+              }
+            }
+          }
+
+          result = items.length > 0
+            ? `${input.period === "today" ? "Today" : "This week"}'s schedule:\n${items.map((i, idx) => `${idx + 1}. ${i}`).join("\n")}`
+            : `No items ${input.period === "today" ? "today" : "this week"}.`;
+          actions.push({ tool: "get_calendar", result });
+        }
+
+        if (block.name === "get_weather") {
+          try {
+            const loc = encodeURIComponent(input.location);
+            const res = await fetch(`https://wttr.in/${loc}?format=j1`);
+            if (res.ok) {
+              const data = await res.json();
+              const current = data.current_condition?.[0];
+              if (current) {
+                const tempC = current.temp_C;
+                const tempF = current.temp_F;
+                const desc = current.weatherDesc?.[0]?.value || "";
+                const humidity = current.humidity;
+                const feelsLikeF = current.FeelsLikeF;
+                result = `${input.location}: ${desc}, ${tempF}°F (${tempC}°C), feels like ${feelsLikeF}°F, humidity ${humidity}%`;
+              } else {
+                result = "Couldn't get weather data.";
+              }
+            } else {
+              result = "Couldn't get weather for that location.";
+            }
+          } catch {
+            result = "Weather service unavailable.";
+          }
+          actions.push({ tool: "get_weather", result });
         }
 
         if (block.name === "save_feedback") {
