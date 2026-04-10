@@ -306,54 +306,35 @@ export async function POST(request: Request) {
 
         if (block.name === "get_calendar" && userId && accessToken) {
           const supabase = getSupabase(accessToken);
-          const todayDate = new Date().toISOString().split("T")[0];
 
           const { data: taskData, error: taskError } = await supabase
             .from("tasks")
             .select("title, due_date, schedule_type, schedule_rule, duration, completed")
             .eq("user_id", userId);
 
-          if (taskError) { result = `Error: ${taskError.message}`; actions.push({ tool: "get_calendar", result }); break; }
-
-          // Filter out completed
-          const activeTasks = (taskData || []).filter((t) => !t.completed);
-
-          const decryptedTasks = activeTasks.map((t) => ({ ...t, title: t.title ? decrypt(t.title) : t.title }));
-
-          const scheduled: string[] = [];
-          const habits: string[] = [];
-
-          for (const t of decryptedTasks) {
-            if (t.due_date) {
-              const dueDate = t.due_date.split("T")[0];
-              if (input.period === "today" && dueDate === todayDate) {
-                scheduled.push(t.title);
-              } else if (input.period === "week" || input.period === "month") {
-                const due = new Date(t.due_date);
-                const rangeEnd = new Date();
-                rangeEnd.setDate(rangeEnd.getDate() + (input.period === "month" ? 30 : 7));
-                if (due <= rangeEnd) {
-                  const dayLabel = new Date(t.due_date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
-                  scheduled.push(`${t.title} (${dayLabel})`);
-                }
+          if (taskError) {
+            result = `Error fetching tasks: ${taskError.message}`;
+            actions.push({ tool: "get_calendar", result });
+          } else {
+            const all = (taskData || []).filter((t) => !t.completed);
+            const items = all.map((t) => {
+              const title = t.title ? decrypt(t.title) : "(no title)";
+              if (t.due_date) {
+                const d = new Date(t.due_date);
+                return `📅 ${title} — ${d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}`;
               }
-            }
-            if (t.schedule_type === "habit" && t.schedule_rule) {
-              const freq = (t.schedule_rule as { freq?: string }).freq;
-              const time = (t.schedule_rule as { time?: string }).time || "";
-              habits.push(`${t.title} — ${freq || "recurring"}${time ? ` at ${time}` : ""}${t.duration ? ` · ${t.duration}m` : ""}`);
-            }
+              if (t.schedule_type === "habit") {
+                const rule = t.schedule_rule as { freq?: string; time?: string } | null;
+                return `🔄 ${title} — ${rule?.freq || "recurring"}${rule?.time ? ` at ${rule.time}` : ""}`;
+              }
+              return `• ${title}`;
+            });
+
+            result = items.length > 0
+              ? `Your tasks (${items.length}):\n${items.join("\n")}`
+              : "No active tasks.";
+            actions.push({ tool: "get_calendar", result });
           }
-
-          const parts: string[] = [];
-          if (scheduled.length > 0) parts.push(`Scheduled:\n${scheduled.map((s, i) => `${i + 1}. ${s}`).join("\n")}`);
-          if (habits.length > 0) parts.push(`Habits:\n${habits.map((h, i) => `${i + 1}. ${h}`).join("\n")}`);
-
-          const periodLabel = input.period === "today" ? "Today" : input.period === "week" ? "This week" : "This month";
-          result = parts.length > 0
-            ? `${periodLabel}:\n${parts.join("\n\n")}`
-            : `No items for ${periodLabel.toLowerCase()}. You have ${decryptedTasks.length} total tasks (${decryptedTasks.filter(t => t.due_date).length} with dates, ${decryptedTasks.filter(t => t.schedule_type === "habit").length} habits, ${decryptedTasks.filter(t => t.completed).length} completed).`;
-          actions.push({ tool: "get_calendar", result });
         }
 
         if (block.name === "get_weather") {
