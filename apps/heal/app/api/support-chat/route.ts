@@ -68,11 +68,11 @@ const TOOLS: Anthropic.Tool[] = [
   },
   {
     name: "get_calendar",
-    description: "Get calendar items/tasks for today or this week. Use when user asks 'what's on my calendar?', 'what do I have today?', 'my tasks this week', 'what's scheduled?'.",
+    description: "Get calendar items/tasks. Use when user asks about schedule, calendar, tasks, or what's coming up. 'today' = today only. 'week' = next 7 days. 'month' = next 30 days.",
     input_schema: {
       type: "object" as const,
       properties: {
-        period: { type: "string", enum: ["today", "week"], description: "today or week" },
+        period: { type: "string", enum: ["today", "week", "month"], description: "today, week, or month" },
       },
       required: ["period"],
     },
@@ -262,10 +262,7 @@ export async function POST(request: Request) {
 
         if (block.name === "get_calendar" && userId && accessToken) {
           const supabase = getSupabase(accessToken);
-          const now = new Date();
-          const endDate = new Date();
-          if (input.period === "week") endDate.setDate(now.getDate() + 7);
-          else endDate.setDate(now.getDate() + 1);
+          const todayDate = new Date().toISOString().split("T")[0];
 
           const { data: taskData } = await supabase
             .from("tasks")
@@ -273,35 +270,41 @@ export async function POST(request: Request) {
             .eq("user_id", userId)
             .eq("completed", false);
 
-          const items: string[] = [];
-          const todayStr = now.toDateString();
-
-          // Decrypt task titles
           const decryptedTasks = (taskData || []).map((t) => ({ ...t, title: t.title ? decrypt(t.title) : t.title }));
 
+          const scheduled: string[] = [];
+          const habits: string[] = [];
+
           for (const t of decryptedTasks) {
-            // One-time tasks with due date
             if (t.due_date) {
-              const d = new Date(t.due_date);
-              if (input.period === "today" && d.toDateString() === todayStr) {
-                items.push(`${t.title} at ${d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`);
-              } else if (input.period === "week" && d >= now && d <= endDate) {
-                items.push(`${t.title} — ${d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })} ${d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`);
+              const dueDate = t.due_date.split("T")[0];
+              if (input.period === "today" && dueDate === todayDate) {
+                scheduled.push(t.title);
+              } else if (input.period === "week" || input.period === "month") {
+                const due = new Date(t.due_date);
+                const rangeEnd = new Date();
+                rangeEnd.setDate(rangeEnd.getDate() + (input.period === "month" ? 30 : 7));
+                if (due <= rangeEnd) {
+                  const dayLabel = new Date(t.due_date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+                  scheduled.push(`${t.title} (${dayLabel})`);
+                }
               }
             }
-            // Habits
             if (t.schedule_type === "habit" && t.schedule_rule) {
               const freq = (t.schedule_rule as { freq?: string }).freq;
               const time = (t.schedule_rule as { time?: string }).time || "";
-              if (freq === "daily" || (freq === "weekdays" && now.getDay() >= 1 && now.getDay() <= 5)) {
-                items.push(`${t.title} (${freq}${time ? ` at ${time}` : ""}${t.duration ? ` · ${t.duration}m` : ""})`);
-              }
+              habits.push(`${t.title} — ${freq || "recurring"}${time ? ` at ${time}` : ""}${t.duration ? ` · ${t.duration}m` : ""}`);
             }
           }
 
-          result = items.length > 0
-            ? `${input.period === "today" ? "Today" : "This week"}'s schedule:\n${items.map((i, idx) => `${idx + 1}. ${i}`).join("\n")}`
-            : `No items ${input.period === "today" ? "today" : "this week"}.`;
+          const parts: string[] = [];
+          if (scheduled.length > 0) parts.push(`Scheduled:\n${scheduled.map((s, i) => `${i + 1}. ${s}`).join("\n")}`);
+          if (habits.length > 0) parts.push(`Habits:\n${habits.map((h, i) => `${i + 1}. ${h}`).join("\n")}`);
+
+          const periodLabel = input.period === "today" ? "Today" : input.period === "week" ? "This week" : "This month";
+          result = parts.length > 0
+            ? `${periodLabel}:\n${parts.join("\n\n")}`
+            : `No items for ${periodLabel.toLowerCase()}. ${decryptedTasks.length > 0 ? `(${decryptedTasks.length} total tasks, none scheduled for ${input.period})` : ""}`;
           actions.push({ tool: "get_calendar", result });
         }
 

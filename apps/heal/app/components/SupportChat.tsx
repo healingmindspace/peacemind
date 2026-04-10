@@ -32,6 +32,7 @@ export default function SupportChat() {
     let finalText = "";
     recognition.onstart = () => setListening(true);
     recognition.onresult = (e: any) => {
+      if (!recognitionRef.current) return;
       let interim = "";
       for (let i = 0; i < e.results.length; i++) {
         if (e.results[i].isFinal) {
