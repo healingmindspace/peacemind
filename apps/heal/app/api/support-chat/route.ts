@@ -27,9 +27,10 @@ const TOOLS: Anthropic.Tool[] = [
       properties: {
         emoji: { type: "string", description: "One of: 😊 😌 😐 😔 😢 😰 😤 😴" },
         label: { type: "string", description: "One of: Good, Calm, Okay, Low, Sad, Anxious, Frustrated, Tired" },
-        trigger: { type: "string", description: "What triggered this mood (optional)" },
+        trigger: { type: "string", description: "What triggered this mood" },
+        helped: { type: "string", description: "What helped or what they're grateful for" },
       },
-      required: ["emoji", "label"],
+      required: ["emoji", "label", "trigger", "helped"],
     },
   },
   {
@@ -90,7 +91,7 @@ You have tools to help users directly:
 
 IMPORTANT RULES FOR ACTIONS:
 - NEVER call a tool if you are missing required information. Always ask the user first.
-- For log_mood: Ask "How are you feeling?" if the user doesn't specify a mood. Only call when you know the emoji/label.
+- For log_mood: Ask "How are you feeling?" if the user doesn't specify a mood. Before logging, ALWAYS ask "What triggered this feeling?" and "What helped or what are you grateful for?" — then include trigger and helped in the tool call. Only call the tool after you have all three: mood, trigger, and what helped.
 - For write_journal: Ask "What would you like to write about?" first. Only call when the user provides actual content (more than a few words).
 - For get_review: Ask "For today, this week, or this month?" if the period isn't clear.
 - For get_insight: Ask "For this week or this month?" if the period isn't clear.
@@ -192,8 +193,9 @@ export async function POST(request: Request) {
             label: mood.label,
           };
           if (input.trigger) insertData.trigger = encrypt(input.trigger);
+          if (input.helped) insertData.helped = encrypt(input.helped);
           await supabase.from("moods").insert(insertData);
-          result = `Logged mood: ${mood.emoji} ${mood.label}`;
+          result = `Logged mood: ${mood.emoji} ${mood.label}${input.trigger ? ` | Trigger: ${input.trigger}` : ""}${input.helped ? ` | Helped: ${input.helped}` : ""}`;
           actions.push({ tool: "log_mood", result });
         }
 
