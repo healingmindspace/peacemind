@@ -198,52 +198,32 @@ export async function POST(request: Request) {
           actions.push({ tool: "write_journal", result });
         }
 
-        if (block.name === "get_review" && userId && accessToken) {
+        if ((block.name === "get_review" || block.name === "get_insight") && userId && accessToken) {
           const supabase = getSupabase(accessToken);
           const since = new Date();
-          if (input.period === "week") since.setDate(since.getDate() - 7);
-          else if (input.period === "month") since.setDate(since.getDate() - 30);
+          if (input.period === "month") since.setDate(since.getDate() - 30);
+          else if (input.period === "week") since.setDate(since.getDate() - 7);
           else since.setHours(0, 0, 0, 0);
 
           const [moodRes, journalRes] = await Promise.all([
-            supabase.from("moods").select("emoji, label, created_at").eq("user_id", userId).gte("created_at", since.toISOString()).order("created_at", { ascending: false }).limit(20),
-            supabase.from("journals").select("id").eq("user_id", userId).gte("created_at", since.toISOString()),
+            supabase.from("moods").select("emoji, label, trigger, helped, created_at").eq("user_id", userId).gte("created_at", since.toISOString()).order("created_at", { ascending: false }).limit(30),
+            supabase.from("journals").select("id, created_at").eq("user_id", userId).gte("created_at", since.toISOString()),
           ]);
 
           const moods = moodRes.data || [];
           const journalCount = journalRes.data?.length || 0;
-          const moodSummary = moods.map((m) => m.emoji).join(" ");
-          const moodCounts: Record<string, number> = {};
-          moods.forEach((m) => { moodCounts[`${m.emoji} ${m.label}`] = (moodCounts[`${m.emoji} ${m.label}`] || 0) + 1; });
-          const topMoods = Object.entries(moodCounts).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k, v]) => `${k} (${v}x)`).join(", ");
-          result = `${input.period} review: ${moods.length} mood entries, ${journalCount} journal entries. Top moods: ${topMoods || "none yet"}. Recent: ${moodSummary || "no moods logged"}`;
-          actions.push({ tool: "get_review", result });
-        }
-
-        if (block.name === "get_insight" && userId && accessToken) {
-          const supabase = getSupabase(accessToken);
-          const since = new Date();
-          if (input.period === "month") since.setDate(since.getDate() - 30);
-          else since.setDate(since.getDate() - 7);
-
-          const [moodRes, journalRes] = await Promise.all([
-            supabase.from("moods").select("emoji, label, trigger, helped, created_at").eq("user_id", userId).gte("created_at", since.toISOString()).order("created_at", { ascending: false }).limit(30),
-            supabase.from("journals").select("content, created_at").eq("user_id", userId).gte("created_at", since.toISOString()).order("created_at", { ascending: false }).limit(10),
-          ]);
-
-          const moods = moodRes.data || [];
-          const journals = journalRes.data || [];
           const moodCounts: Record<string, number> = {};
           moods.forEach((m) => { moodCounts[m.label] = (moodCounts[m.label] || 0) + 1; });
 
-          // Build insight context for the AI to interpret
-          result = `User data for ${input.period} insight:\n`;
-          result += `Moods (${moods.length}): ${Object.entries(moodCounts).map(([k, v]) => `${k}: ${v}`).join(", ")}\n`;
-          if (moods.some((m) => m.trigger)) result += `Triggers mentioned: ${moods.filter((m) => m.trigger).map((m) => m.trigger).join(", ")}\n`;
-          if (moods.some((m) => m.helped)) result += `What helped: ${moods.filter((m) => m.helped).map((m) => m.helped).join(", ")}\n`;
-          result += `Journal entries: ${journals.length}\n`;
-          result += "Please provide a warm, personalized insight about their patterns and a gentle suggestion.";
-          actions.push({ tool: "get_insight", result });
+          const topMoods = Object.entries(moodCounts).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k, v]) => `${k} (${v})`).join(", ");
+          const triggers = [...new Set(moods.filter((m) => m.trigger).map((m) => m.trigger))];
+          const helped = [...new Set(moods.filter((m) => m.helped).map((m) => m.helped))];
+
+          result = `${input.period}: ${moods.length} moods, ${journalCount} journals. Top: ${topMoods || "none"}.`;
+          if (triggers.length > 0) result += ` Triggers: ${triggers.slice(0, 3).join(", ")}.`;
+          if (helped.length > 0) result += ` Helped: ${helped.slice(0, 3).join(", ")}.`;
+          result += " Give a brief, warm insight and one suggestion.";
+          actions.push({ tool: block.name, result });
         }
 
         if (block.name === "save_feedback") {
