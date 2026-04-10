@@ -184,7 +184,7 @@ export async function POST(request: Request) {
         }
 
         if (block.name === "write_journal" && userId && accessToken) {
-          if (input.content && input.content.trim().length > 5) {
+          if (input.content && input.content.trim().length > 2) {
             const supabase = getSupabase(accessToken);
             const encrypted = encrypt(input.content.trim());
             await supabase.from("journals").insert({ user_id: userId, content: encrypted });
@@ -255,6 +255,16 @@ export async function POST(request: Request) {
           result = "Feedback saved — thank you!";
           actions.push({ tool: "save_feedback", result });
         }
+
+        // Catch-all: tool was called but no handler matched (e.g., user not logged in)
+        if (!result) {
+          if (!userId) {
+            result = "You need to be signed in to use this feature. Please sign in first.";
+          } else {
+            result = "I couldn't complete that action. Please try again.";
+          }
+          actions.push({ tool: block.name, result });
+        }
       }
     }
 
@@ -291,7 +301,7 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({
-      response: textResponse,
+      response: textResponse || "I'm here to help! What would you like to do?",
       actions: actions.map((a) => a.tool),
     });
   } catch (err) {
