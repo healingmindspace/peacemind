@@ -17,6 +17,7 @@ export default function SupportChat() {
   const [sending, setSending] = useState(false);
   const [listening, setListening] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<any>(null);
   const { lang } = useI18n();
   const { accessToken } = useAuth();
 
@@ -26,15 +27,24 @@ export default function SupportChat() {
     if (!SpeechRecognition) return;
     const recognition = new SpeechRecognition();
     recognition.lang = lang === "zh" ? "zh-CN" : "en-US";
-    recognition.interimResults = false;
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    let finalText = "";
     recognition.onstart = () => setListening(true);
     recognition.onresult = (e: any) => {
-      const text = e.results[0][0].transcript;
-      setInput(text);
-      setListening(false);
+      let interim = "";
+      for (let i = 0; i < e.results.length; i++) {
+        if (e.results[i].isFinal) {
+          finalText += e.results[i][0].transcript;
+        } else {
+          interim += e.results[i][0].transcript;
+        }
+      }
+      setInput(finalText + interim);
     };
     recognition.onerror = () => setListening(false);
     recognition.onend = () => setListening(false);
+    recognitionRef.current = recognition;
     recognition.start();
   };
 
@@ -162,8 +172,8 @@ export default function SupportChat() {
           <form onSubmit={send} className="flex items-center gap-1.5 px-3 py-2 border-t border-pm-border">
             <button
               type="button"
-              onClick={startListening}
-              disabled={listening || sending}
+              onClick={() => { if (listening) { recognitionRef.current?.stop(); setListening(false); } else { startListening(); } }}
+              disabled={sending}
               className={`px-2 py-1.5 rounded-full text-xs cursor-pointer transition-all ${listening ? "bg-red-400 text-white animate-pulse" : "bg-pm-surface-active text-pm-text-muted hover:text-brand"}`}
             >
               🎤
