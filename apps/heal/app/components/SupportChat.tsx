@@ -68,8 +68,8 @@ export default function SupportChat() {
     if (!input.trim() || sending) return;
 
     const userMsg = input.trim();
+    if (listening) { recognitionRef.current?.stop(); recognitionRef.current = null; setListening(false); }
     setInput("");
-    if (listening) { recognitionRef.current?.stop(); setListening(false); }
     setMessages((prev) => [...prev, { role: "user", content: userMsg }]);
     setSending(true);
 
