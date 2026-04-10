@@ -182,7 +182,13 @@ export async function POST(request: Request) {
           if (input.trigger) insertData.trigger = encrypt(input.trigger);
           if (input.helped) insertData.helped = encrypt(input.helped);
           await supabase.from("moods").insert(insertData);
-          result = `Logged mood: ${mood.emoji} ${mood.label}${input.trigger ? ` | Trigger: ${input.trigger}` : ""}${input.helped ? ` | Helped: ${input.helped}` : ""}`;
+          // Award seeds
+          await fetch(new URL("/api/seeds", request.url).toString(), {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "award", accessToken, seedAction: "mood", amount: 5 }),
+          }).catch(() => {});
+          result = `Logged mood: ${mood.emoji} ${mood.label}${input.trigger ? ` | Trigger: ${input.trigger}` : ""}${input.helped ? ` | Helped: ${input.helped}` : ""} (+5 seeds 🌱)`;
           actions.push({ tool: "log_mood", result });
         }
 
@@ -191,7 +197,13 @@ export async function POST(request: Request) {
             const supabase = getSupabase(accessToken);
             const encrypted = encrypt(input.content.trim());
             await supabase.from("journals").insert({ user_id: userId, content: encrypted });
-            result = "Journal entry saved";
+            // Award seeds
+            await fetch(new URL("/api/seeds", request.url).toString(), {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ action: "award", accessToken, seedAction: "journal", amount: 5 }),
+            }).catch(() => {});
+            result = "Journal entry saved (+5 seeds 🌱)";
           } else {
             result = "Need content to write — ask the user what they want to journal about";
           }
