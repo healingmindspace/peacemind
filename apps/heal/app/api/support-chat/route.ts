@@ -264,13 +264,17 @@ export async function POST(request: Request) {
           const supabase = getSupabase(accessToken);
           const todayDate = new Date().toISOString().split("T")[0];
 
-          const { data: taskData } = await supabase
+          const { data: taskData, error: taskError } = await supabase
             .from("tasks")
             .select("title, due_date, schedule_type, schedule_rule, duration, completed")
-            .eq("user_id", userId)
-            .eq("completed", false);
+            .eq("user_id", userId);
 
-          const decryptedTasks = (taskData || []).map((t) => ({ ...t, title: t.title ? decrypt(t.title) : t.title }));
+          if (taskError) { result = `Error: ${taskError.message}`; actions.push({ tool: "get_calendar", result }); break; }
+
+          // Filter out completed
+          const activeTasks = (taskData || []).filter((t) => !t.completed);
+
+          const decryptedTasks = activeTasks.map((t) => ({ ...t, title: t.title ? decrypt(t.title) : t.title }));
 
           const scheduled: string[] = [];
           const habits: string[] = [];
@@ -304,7 +308,7 @@ export async function POST(request: Request) {
           const periodLabel = input.period === "today" ? "Today" : input.period === "week" ? "This week" : "This month";
           result = parts.length > 0
             ? `${periodLabel}:\n${parts.join("\n\n")}`
-            : `No items for ${periodLabel.toLowerCase()}. ${decryptedTasks.length > 0 ? `(${decryptedTasks.length} total tasks, none scheduled for ${input.period})` : ""}`;
+            : `No items for ${periodLabel.toLowerCase()}. You have ${decryptedTasks.length} total tasks (${decryptedTasks.filter(t => t.due_date).length} with dates, ${decryptedTasks.filter(t => t.schedule_type === "habit").length} habits, ${decryptedTasks.filter(t => t.completed).length} completed).`;
           actions.push({ tool: "get_calendar", result });
         }
 
