@@ -145,7 +145,9 @@ ACTION RULES:
 - get_review/get_insight: Ask period (today/week/month) if unclear.
 - save_feedback: Call directly for bugs or feature requests.
 
-Keep answers to 2-3 sentences.`;
+Keep answers to 2-3 sentences.
+After helping the user (completing an action or answering 2-3 questions), gently ask: "Is there anything else I can help with? I'd also love to hear your feedback — just tell me what you think!"
+If they share feedback, use the save_feedback tool to save it.`;
 
 export async function POST(request: Request) {
   const ip = getClientIp(request);
