@@ -180,15 +180,26 @@ export default function SupportChat() {
             >
               🎤
             </button>
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder={listening ? (lang === "zh" ? "正在听..." : "Listening...") : (lang === "zh" ? "问一个问题..." : "Ask a question...")}
-              disabled={sending}
-              className="flex-1 px-3 py-1.5 rounded-full border border-pm-border focus:outline-none focus:border-brand text-xs bg-pm-surface disabled:opacity-50"
+            <div className="flex-1 relative">
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder={listening ? (lang === "zh" ? "正在听..." : "Listening...") : (lang === "zh" ? "问一个问题..." : "Ask a question...")}
+                disabled={sending}
+                className="w-full px-3 py-1.5 pr-7 rounded-full border border-pm-border focus:outline-none focus:border-brand text-xs bg-pm-surface disabled:opacity-50"
               autoFocus
-            />
+              />
+              {input && (
+                <button
+                  type="button"
+                  onClick={() => { setInput(""); if (listening) { recognitionRef.current?.stop(); recognitionRef.current = null; setListening(false); } }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-pm-text-muted hover:text-red-400 cursor-pointer"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
             <button
               type="submit"
               disabled={!input.trim() || sending}
