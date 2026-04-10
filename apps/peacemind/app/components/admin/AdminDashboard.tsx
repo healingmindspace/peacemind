@@ -90,7 +90,7 @@ interface Stats {
   mobileCount: number;
   desktopCount: number;
   feedbackList: { id: string; subject: string | null; message: string; reply: string | null; user_id: string | null; user_email: string | null; created_at: string }[];
-  agentUsage: { total: number; today: number; uniqueUsers: number; topTools: { tool: string; count: number }[] };
+  agentUsage: { total: number; today: number; uniqueUsers: number; topTools: { tool: string; count: number }[]; daily: { day: string; count: number }[] };
 }
 
 export default function AdminDashboard() {
@@ -311,7 +311,18 @@ export default function AdminDashboard() {
         const toolCounts: Record<string, number> = {};
         rows.forEach((r) => { if (r.tool_used) r.tool_used.split(",").forEach((t: string) => { toolCounts[t] = (toolCounts[t] || 0) + 1; }); });
         const topTools = Object.entries(toolCounts).sort((a, b) => b[1] - a[1]).map(([tool, count]) => ({ tool, count }));
-        return { total: rows.length, today: todayRows.length, uniqueUsers, topTools };
+        // Daily breakdown (last 7 days)
+        const dailyMap = new Map<string, number>();
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date(); d.setDate(d.getDate() - i);
+          dailyMap.set(d.toISOString().split("T")[0], 0);
+        }
+        rows.forEach((r) => { const day = r.created_at?.split("T")[0]; if (day && dailyMap.has(day)) dailyMap.set(day, (dailyMap.get(day) || 0) + 1); });
+        const daily = Array.from(dailyMap.entries()).map(([day, count]) => ({
+          day: new Date(day + "T00:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }),
+          count,
+        }));
+        return { total: rows.length, today: todayRows.length, uniqueUsers, topTools, daily };
       })(),
     });
   };
@@ -407,7 +418,7 @@ export default function AdminDashboard() {
                 </div>
               </div>
               {stats.agentUsage.topTools.length > 0 && (
-                <div>
+                <div className="mb-3">
                   <p className="text-xs text-[#8a7da0] mb-1">Tools used</p>
                   <div className="flex flex-wrap gap-1.5">
                     {stats.agentUsage.topTools.map((t) => (
@@ -418,6 +429,26 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               )}
+              {/* Daily usage chart */}
+              <div>
+                <p className="text-xs text-[#8a7da0] mb-2">Last 7 days</p>
+                <div className="space-y-1">
+                  {stats.agentUsage.daily.map((d) => (
+                    <div key={d.day} className="flex items-center gap-3">
+                      <span className="text-xs text-[#8a7da0] w-24">{d.day}</span>
+                      <div className="flex-1 bg-[#e8dff0] rounded-full h-4 overflow-hidden">
+                        {d.count > 0 && (
+                          <div
+                            className="bg-[#7c6a9e] h-full rounded-full"
+                            style={{ width: `${Math.min(100, (d.count / Math.max(...stats.agentUsage.daily.map((x) => x.count), 1)) * 100)}%` }}
+                          />
+                        )}
+                      </div>
+                      <span className="text-xs text-[#3d3155] font-medium w-6 text-right">{d.count}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
 
             {/* Visitor metrics */}
