@@ -29,19 +29,14 @@ export default function SupportChat() {
     recognition.lang = lang === "zh" ? "zh-CN" : "en-US";
     recognition.continuous = true;
     recognition.interimResults = true;
-    let finalText = "";
     recognition.onstart = () => setListening(true);
     recognition.onresult = (e: any) => {
       if (!recognitionRef.current) return;
-      let interim = "";
+      let text = "";
       for (let i = 0; i < e.results.length; i++) {
-        if (e.results[i].isFinal) {
-          finalText += e.results[i][0].transcript;
-        } else {
-          interim += e.results[i][0].transcript;
-        }
+        text += e.results[i][0].transcript;
       }
-      setInput(finalText + interim);
+      setInput(text);
     };
     recognition.onerror = () => setListening(false);
     recognition.onend = () => setListening(false);
