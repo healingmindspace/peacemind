@@ -2,9 +2,11 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useI18n } from "@/lib/i18n";
+import { useAuth } from "@/lib/auth-context";
 
 interface Message {
   role: "user" | "assistant";
+  actions?: string[];
   content: string;
 }
 
@@ -15,6 +17,7 @@ export default function SupportChat() {
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { lang } = useI18n();
+  const { accessToken } = useAuth();
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -36,11 +39,12 @@ export default function SupportChat() {
         body: JSON.stringify({
           message: userMsg,
           history: messages.slice(-10),
+          accessToken,
         }),
       });
       if (res.ok) {
         const data = await res.json();
-        setMessages((prev) => [...prev, { role: "assistant", content: data.response }]);
+        setMessages((prev) => [...prev, { role: "assistant", content: data.response, actions: data.actions }]);
       }
     } catch { /* ignore */ }
     setSending(false);
@@ -99,6 +103,15 @@ export default function SupportChat() {
                     : "bg-pm-surface-active text-pm-text rounded-bl-sm"
                 }`}>
                   {msg.content}
+                  {msg.actions && msg.actions.length > 0 && (
+                    <div className="flex gap-1 mt-1">
+                      {msg.actions.map((a) => (
+                        <span key={a} className="text-[9px] px-1.5 py-0.5 rounded-full bg-brand/20 text-brand">
+                          {a === "log_mood" ? "✅ mood logged" : a === "write_journal" ? "✅ journal saved" : a === "get_review" ? "📊 review" : a === "save_feedback" ? "💬 feedback saved" : a}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
