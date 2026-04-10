@@ -251,10 +251,21 @@ export async function POST(request: Request) {
       }
     }
 
-    // For reviews/insights: follow-up call to get AI summary, then save
+    // For reviews/insights: check for existing saved review first, then AI call if none
     const reviewAction = actions.find((a) => a.tool === "get_review" || a.tool === "get_insight");
     if (reviewAction && userId && accessToken && response.stop_reason === "tool_use") {
       try {
+        const today = new Date().toISOString().split("T")[0];
+        const supabaseCheck = getSupabase(accessToken);
+        const { data: existing } = await supabaseCheck
+          .from("saved_insights")
+          .select("content")
+          .eq("id", `review_${userId}_${today}`)
+          .single();
+
+        if (existing?.content) {
+          textResponse = existing.content;
+        } else {
         const toolBlock = response.content.find((b) => b.type === "tool_use" && (b.name === "get_review" || b.name === "get_insight")) as Anthropic.ToolUseBlock | undefined;
         if (toolBlock) {
           const followUp = await client.messages.create({
@@ -272,7 +283,6 @@ export async function POST(request: Request) {
             textResponse = followUpText.text;
             // Save to saved_insights table
             const supabase = getSupabase(accessToken);
-            const today = new Date().toISOString().split("T")[0];
             await supabase.from("saved_insights").insert({
               id: `review_${userId}_${today}`,
               user_id: userId,
@@ -283,6 +293,7 @@ export async function POST(request: Request) {
             });
           }
         }
+        } // close else (no existing review)
       } catch {
         // Fall through to action summary
       }
