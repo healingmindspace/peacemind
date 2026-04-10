@@ -112,7 +112,7 @@ export default function JournalHistory({
                     <p className="text-xs text-pm-text-secondary italic">{entry.response}</p>
                   </div>
                 )}
-                {!entry.response && (
+                {!entry.response && (Date.now() - new Date(entry.created_at).getTime() < 2 * 60 * 1000) && (
                   <div className="mt-2 pl-3 border-l-2 border-pm-accent">
                     <p className="text-xs text-pm-text-muted italic">{t("journal.thinking")}</p>
                   </div>
