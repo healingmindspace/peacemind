@@ -143,10 +143,24 @@ export async function POST(request: Request) {
     userId = await getAuthenticatedUserId(supabase);
   }
 
-  const messages: Anthropic.MessageParam[] = [
-    ...(Array.isArray(history) ? history.slice(-10) : []),
-    { role: "user" as const, content: message.trim() },
-  ];
+  const rawHistory = Array.isArray(history) ? history.slice(-10) : [];
+  // Filter out empty messages and ensure valid alternation
+  const cleanHistory: Anthropic.MessageParam[] = [];
+  for (const msg of rawHistory) {
+    if (msg.content && typeof msg.content === "string" && msg.content.trim()) {
+      cleanHistory.push({ role: msg.role as "user" | "assistant", content: msg.content.trim() });
+    }
+  }
+  // Ensure messages alternate user/assistant — merge consecutive same-role
+  const messages: Anthropic.MessageParam[] = [];
+  for (const msg of [...cleanHistory, { role: "user" as const, content: message.trim() }]) {
+    const last = messages[messages.length - 1];
+    if (last && last.role === msg.role) {
+      last.content = `${last.content}\n${msg.content}`;
+    } else {
+      messages.push({ ...msg });
+    }
+  }
 
   try {
     const response = await client.messages.create({

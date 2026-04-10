@@ -46,7 +46,9 @@ export default function SupportChat() {
         const data = await res.json();
         setMessages((prev) => [...prev, { role: "assistant", content: data.response, actions: data.actions }]);
       }
-    } catch { /* ignore */ }
+    } catch {
+      setMessages((prev) => [...prev, { role: "assistant", content: lang === "zh" ? "抱歉，出了点问题。请再试一次。" : "Sorry, something went wrong. Please try again." }]);
+    }
     setSending(false);
   };
 
