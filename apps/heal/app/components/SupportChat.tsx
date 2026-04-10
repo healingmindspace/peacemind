@@ -120,8 +120,8 @@ export default function SupportChat() {
                 </p>
                 <div className="flex flex-wrap gap-1.5 justify-center mt-3">
                   {(lang === "zh"
-                    ? ["我今天心情不错", "帮我写日记", "这周报告", "怎么记录心情？", "什么是焦虑？", "数据安全吗？", "种子怎么用？", "呼吸练习怎么做？"]
-                    : ["I'm feeling good today", "Write a journal for me", "Weekly review", "How do I log mood?", "What is anxiety?", "Is my data private?", "How do seeds work?", "How do breathing exercises work?"]
+                    ? ["今天有什么安排？", "我今天心情不错", "帮我写日记", "这周报告", "添加日程", "今天天气怎样？", "怎么记录心情？", "什么是焦虑？"]
+                    : ["What's on my calendar?", "I'm feeling good today", "Write a journal for me", "Weekly review", "Add a task", "What's the weather?", "How do I log mood?", "What is anxiety?"]
                   ).map((q) => (
                     <button
                       key={q}
@@ -141,7 +141,7 @@ export default function SupportChat() {
                     ? "bg-brand text-white rounded-br-sm"
                     : "bg-pm-surface-active text-pm-text rounded-bl-sm"
                 }`}>
-                  {msg.content}
+                  <span className="whitespace-pre-wrap">{msg.content}</span>
                   {msg.role === "assistant" && (
                     <button onClick={() => speak(msg.content)} className="mt-1 text-[9px] text-pm-text-muted hover:text-brand cursor-pointer">🔊</button>
                   )}
