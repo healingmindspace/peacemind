@@ -278,11 +278,25 @@ export async function POST(request: Request) {
           if (!input.title || !input.dueDate) {
             result = "Need a title and date to create a task.";
           } else {
+            // Parse date — handle relative dates if Claude didn't convert
+            let dateStr = input.dueDate;
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+              const now = new Date();
+              const lower = dateStr.toLowerCase();
+              if (lower === "today") dateStr = now.toISOString().split("T")[0];
+              else if (lower === "tomorrow") { now.setDate(now.getDate() + 1); dateStr = now.toISOString().split("T")[0]; }
+              else {
+                // Try to parse as a date
+                const parsed = new Date(dateStr);
+                if (!isNaN(parsed.getTime())) dateStr = parsed.toISOString().split("T")[0];
+                else dateStr = new Date().toISOString().split("T")[0]; // fallback to today
+              }
+            }
+
             const supabase = getSupabase(accessToken);
-            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
             const dueDateTime = input.dueTime
-              ? `${input.dueDate}T${input.dueTime}:00`
-              : `${input.dueDate}T12:00:00`;
+              ? `${dateStr}T${input.dueTime}:00`
+              : `${dateStr}T12:00:00`;
 
             const { error } = await supabase.from("tasks").insert({
               id: `task_v1_${crypto.randomUUID()}`,
@@ -294,6 +308,7 @@ export async function POST(request: Request) {
             });
 
             if (error) {
+              console.error("create_task error:", error.message, { dateStr, dueDateTime, title: input.title });
               result = `Failed to create task: ${error.message}`;
             } else {
               const dateLabel = new Date(dueDateTime).toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
