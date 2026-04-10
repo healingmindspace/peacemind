@@ -299,7 +299,6 @@ export async function POST(request: Request) {
               : `${dateStr}T12:00:00`;
 
             const { error } = await supabase.from("tasks").insert({
-              id: `task_v1_${crypto.randomUUID()}`,
               user_id: userId,
               title: encrypt(input.title),
               due_date: dueDateTime,
