@@ -83,8 +83,8 @@ export default function SupportChat() {
                 </p>
                 <div className="flex flex-wrap gap-1.5 justify-center mt-3">
                   {(lang === "zh"
-                    ? ["怎么记录心情？", "数据安全吗？", "种子怎么用？"]
-                    : ["How do I log mood?", "Is my data private?", "How do seeds work?"]
+                    ? ["我今天心情不错", "帮我写日记", "这周报告", "怎么记录心情？", "什么是焦虑？", "数据安全吗？", "种子怎么用？", "呼吸练习怎么做？"]
+                    : ["I'm feeling good today", "Write a journal for me", "Weekly review", "How do I log mood?", "What is anxiety?", "Is my data private?", "How do seeds work?", "How do breathing exercises work?"]
                   ).map((q) => (
                     <button
                       key={q}
