@@ -78,6 +78,20 @@ const TOOLS: Anthropic.Tool[] = [
     },
   },
   {
+    name: "create_task",
+    description: "Create a calendar task or reminder. Use when user says 'add', 'schedule', 'remind me', 'put on calendar', or similar. Extract the title, date, and time from the message.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        title: { type: "string", description: "Task title (e.g. 'Meeting with John')" },
+        dueDate: { type: "string", description: "ISO date string YYYY-MM-DD (e.g. '2026-04-11'). Parse from 'tomorrow', 'Friday', 'next Monday', etc." },
+        dueTime: { type: "string", description: "Time in HH:MM format (e.g. '14:00'). Parse from '2pm', '3:30', etc. Optional." },
+        duration: { type: "number", description: "Duration in minutes. Optional." },
+      },
+      required: ["title", "dueDate"],
+    },
+  },
+  {
     name: "get_weather",
     description: "Get current weather. Use when user asks about weather, temperature, or if they should bring an umbrella.",
     input_schema: {
@@ -258,6 +272,36 @@ export async function POST(request: Request) {
           if (helped.length > 0) result += ` Helped: ${helped.slice(0, 3).join(", ")}.`;
           result += " Give a brief, warm insight and one suggestion.";
           actions.push({ tool: block.name, result });
+        }
+
+        if (block.name === "create_task" && userId && accessToken) {
+          if (!input.title || !input.dueDate) {
+            result = "Need a title and date to create a task.";
+          } else {
+            const supabase = getSupabase(accessToken);
+            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+            const dueDateTime = input.dueTime
+              ? `${input.dueDate}T${input.dueTime}:00`
+              : `${input.dueDate}T12:00:00`;
+
+            const { error } = await supabase.from("tasks").insert({
+              id: `task_v1_${crypto.randomUUID()}`,
+              user_id: userId,
+              title: encrypt(input.title),
+              due_date: dueDateTime,
+              schedule_type: "once",
+              duration: input.duration ? parseInt(String(input.duration)) : null,
+            });
+
+            if (error) {
+              result = `Failed to create task: ${error.message}`;
+            } else {
+              const dateLabel = new Date(dueDateTime).toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
+              const timeLabel = input.dueTime || "12:00 PM";
+              result = `✅ Added to calendar: "${input.title}" on ${dateLabel} at ${timeLabel}`;
+            }
+          }
+          actions.push({ tool: "create_task", result });
         }
 
         if (block.name === "get_calendar" && userId && accessToken) {
