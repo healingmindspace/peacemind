@@ -271,36 +271,9 @@ export async function POST(request: Request) {
       }
     }
 
-    // If there were tool calls, get a follow-up response
-    if (actions.length > 0) {
-      const actionSummary = actions.map((a) => a.result).join(". ");
-
-      if (response.stop_reason === "tool_use") {
-        try {
-          const toolResults: Anthropic.MessageParam = {
-            role: "user",
-            content: actions.map((a) => ({
-              type: "tool_result" as const,
-              tool_use_id: (response.content.find((b) => b.type === "tool_use" && b.name === a.tool) as Anthropic.ToolUseBlock | undefined)?.id || "",
-              content: a.result,
-            })),
-          };
-
-          const followUp = await client.messages.create({
-            model: "claude-haiku-4-5-20251001",
-            max_tokens: 300,
-            system: AUTH_PROMPT,
-            messages: [...messages, { role: "assistant", content: response.content }, toolResults],
-          });
-
-          const followUpText = followUp.content.find((b) => b.type === "text");
-          textResponse = followUpText?.text || actionSummary;
-        } catch {
-          textResponse = actionSummary;
-        }
-      }
-
-      if (!textResponse) textResponse = actionSummary;
+    // Use action summary directly — no follow-up call
+    if (actions.length > 0 && !textResponse) {
+      textResponse = actions.map((a) => a.result).join(". ");
     }
 
     // Log usage
