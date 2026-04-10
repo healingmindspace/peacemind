@@ -13,6 +13,7 @@ import CommunityCounter from "./components/CommunityCounter";
 import SummaryTab from "./components/SummaryTab";
 import LangSwitcher from "./components/LangSwitcher";
 import ClaimBanner from "./components/ClaimBanner";
+import SupportChat from "./components/SupportChat";
 
 type Tab = "mood" | "calm" | "goals" | "summary";
 
@@ -164,6 +165,7 @@ export default function Home() {
     <I18nProvider>
       <AuthProvider>
         <AppContent />
+        <SupportChat />
       </AuthProvider>
     </I18nProvider>
   );
