@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { checkRateLimit, rateLimitResponse, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
 import { createClient } from "@supabase/supabase-js";
 import { getSupabase, getAuthenticatedUserId } from "@/lib/api-utils";
-import { encrypt } from "@/lib/server-encrypt";
+import { encrypt, decrypt } from "@/lib/server-encrypt";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -276,7 +276,10 @@ export async function POST(request: Request) {
           const items: string[] = [];
           const todayStr = now.toDateString();
 
-          for (const t of (taskData || [])) {
+          // Decrypt task titles
+          const decryptedTasks = (taskData || []).map((t) => ({ ...t, title: t.title ? decrypt(t.title) : t.title }));
+
+          for (const t of decryptedTasks) {
             // One-time tasks with due date
             if (t.due_date) {
               const d = new Date(t.due_date);
