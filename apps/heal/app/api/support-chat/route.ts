@@ -116,6 +116,9 @@ const TOOLS: Anthropic.Tool[] = [
   },
 ];
 
+const BUILD_SHA = process.env.NEXT_PUBLIC_COMMIT_SHA || "dev";
+const BUILD_TIME = process.env.NEXT_PUBLIC_BUILD_TIME || "local";
+
 // Anonymous: basic knowledge only, no tools
 const ANON_PROMPT = `You are Peacemind's support assistant. Warm, concise. Answer in the user's language (EN or ZH).
 
@@ -123,11 +126,14 @@ Features: Mood tracking (😊), Breathing/Grounding/Assessments (🍃), Goals/Jo
 
 Wellness: Anxiety = alarm system overdrive, breathing helps. Depression = brain chemistry, not weakness. PHQ-9 (0-27) and GAD-7 (0-21) are self-awareness tools.
 
+Build: ${BUILD_SHA} · ${BUILD_TIME}. If asked about version, build, or deploy time, share this.
 If user wants to log mood, write journal, or get a review, say: "Sign in to use that feature — your data is encrypted and private."
 Keep answers to 2-3 sentences. Never make up features.`;
 
 // Authenticated: full tools + action rules
 const AUTH_PROMPT = `You are Peacemind's support assistant. Warm, concise. Answer in the user's language (EN or ZH).
+
+Build: ${BUILD_SHA} · ${BUILD_TIME}. If asked about version, build, or deploy time, share this.
 
 Features: Mood (😊), Calm (🍃 breathing/grounding/assessments), Grow (🌱 goals/journal/calendar), Me (👤 seeds/streaks). Bilingual, encrypted, no trackers.
 
