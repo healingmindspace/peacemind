@@ -55,6 +55,17 @@ const TOOLS: Anthropic.Tool[] = [
     },
   },
   {
+    name: "get_insight",
+    description: "Generate a personalized wellness insight based on the user's recent mood and journal data. Use when they ask for 'insight', 'how am I doing emotionally', 'patterns', or 'what should I focus on'.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        period: { type: "string", enum: ["week", "month"], description: "Time period" },
+      },
+      required: ["period"],
+    },
+  },
+  {
     name: "save_feedback",
     description: "Save user feedback, bug report, or feature request.",
     input_schema: {
@@ -77,8 +88,13 @@ You have tools to help users directly:
 - **get_review**: When a user asks how they're doing or wants a summary.
 - **save_feedback**: When a user reports a bug or requests a feature.
 
-Always confirm before taking action. Example: "It sounds like you're feeling anxious. Would you like me to log that for you?"
-If the user says yes or confirms, use the tool.
+IMPORTANT RULES FOR ACTIONS:
+- NEVER call a tool if you are missing required information. Always ask the user first.
+- For log_mood: Ask "How are you feeling?" if the user doesn't specify a mood. Only call when you know the emoji/label.
+- For write_journal: Ask "What would you like to write about?" first. Only call when the user provides actual content (more than a few words).
+- For get_review: Ask "For today, this week, or this month?" if the period isn't clear.
+- For get_insight: Ask "For this week or this month?" if the period isn't clear.
+- For save_feedback: Can call directly when user clearly reports a bug or requests a feature.
 
 ## App Features
 
@@ -168,10 +184,14 @@ export async function POST(request: Request) {
         }
 
         if (block.name === "write_journal" && userId && accessToken) {
-          const supabase = getSupabase(accessToken);
-          const encrypted = encrypt(input.content);
-          await supabase.from("journals").insert({ user_id: userId, content: encrypted });
-          result = "Journal entry saved";
+          if (input.content && input.content.trim().length > 5) {
+            const supabase = getSupabase(accessToken);
+            const encrypted = encrypt(input.content.trim());
+            await supabase.from("journals").insert({ user_id: userId, content: encrypted });
+            result = "Journal entry saved";
+          } else {
+            result = "Need content to write — ask the user what they want to journal about";
+          }
           actions.push({ tool: "write_journal", result });
         }
 
@@ -190,8 +210,37 @@ export async function POST(request: Request) {
           const moods = moodRes.data || [];
           const journalCount = journalRes.data?.length || 0;
           const moodSummary = moods.map((m) => m.emoji).join(" ");
-          result = `${input.period} review: ${moods.length} mood entries (${moodSummary}), ${journalCount} journal entries`;
+          const moodCounts: Record<string, number> = {};
+          moods.forEach((m) => { moodCounts[`${m.emoji} ${m.label}`] = (moodCounts[`${m.emoji} ${m.label}`] || 0) + 1; });
+          const topMoods = Object.entries(moodCounts).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k, v]) => `${k} (${v}x)`).join(", ");
+          result = `${input.period} review: ${moods.length} mood entries, ${journalCount} journal entries. Top moods: ${topMoods || "none yet"}. Recent: ${moodSummary || "no moods logged"}`;
           actions.push({ tool: "get_review", result });
+        }
+
+        if (block.name === "get_insight" && userId && accessToken) {
+          const supabase = getSupabase(accessToken);
+          const since = new Date();
+          if (input.period === "month") since.setDate(since.getDate() - 30);
+          else since.setDate(since.getDate() - 7);
+
+          const [moodRes, journalRes] = await Promise.all([
+            supabase.from("moods").select("emoji, label, trigger, helped, created_at").eq("user_id", userId).gte("created_at", since.toISOString()).order("created_at", { ascending: false }).limit(30),
+            supabase.from("journals").select("content, created_at").eq("user_id", userId).gte("created_at", since.toISOString()).order("created_at", { ascending: false }).limit(10),
+          ]);
+
+          const moods = moodRes.data || [];
+          const journals = journalRes.data || [];
+          const moodCounts: Record<string, number> = {};
+          moods.forEach((m) => { moodCounts[m.label] = (moodCounts[m.label] || 0) + 1; });
+
+          // Build insight context for the AI to interpret
+          result = `User data for ${input.period} insight:\n`;
+          result += `Moods (${moods.length}): ${Object.entries(moodCounts).map(([k, v]) => `${k}: ${v}`).join(", ")}\n`;
+          if (moods.some((m) => m.trigger)) result += `Triggers mentioned: ${moods.filter((m) => m.trigger).map((m) => m.trigger).join(", ")}\n`;
+          if (moods.some((m) => m.helped)) result += `What helped: ${moods.filter((m) => m.helped).map((m) => m.helped).join(", ")}\n`;
+          result += `Journal entries: ${journals.length}\n`;
+          result += "Please provide a warm, personalized insight about their patterns and a gentle suggestion.";
+          actions.push({ tool: "get_insight", result });
         }
 
         if (block.name === "save_feedback") {
