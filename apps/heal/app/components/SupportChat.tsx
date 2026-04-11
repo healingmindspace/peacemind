@@ -91,6 +91,7 @@ export default function SupportChat() {
           message: userMsg,
           history: messages.slice(-10),
           accessToken,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         }),
       });
       if (res.ok) {
