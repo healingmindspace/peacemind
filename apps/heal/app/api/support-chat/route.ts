@@ -326,8 +326,9 @@ export async function POST(request: Request) {
               result = `Failed to create task: ${error.message}`;
             } else {
               const dateLabel = new Date(dueDateTime).toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
-              const timeLabel = input.dueTime || "12:00 PM";
-              result = `✅ Added to calendar: "${input.title}" on ${dateLabel} at ${timeLabel}`;
+              const timeLabel = input.dueTime || "12:00";
+              const tz = timezone || "UTC";
+              result = `✅ Added to calendar: "${input.title}" on ${dateLabel} at ${timeLabel} (${tz})`;
             }
           }
           actions.push({ tool: "create_task", result });
