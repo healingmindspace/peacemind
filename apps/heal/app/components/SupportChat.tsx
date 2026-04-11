@@ -122,7 +122,12 @@ export default function SupportChat() {
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-pm-border bg-brand text-white rounded-t-2xl">
             <span className="text-sm font-semibold">{lang === "zh" ? "🌱 Peacemind 助手" : "🌱 Peacemind Help"}</span>
-            <button onClick={() => setOpen(false)} className="text-white/80 hover:text-white cursor-pointer text-sm">✕</button>
+            <div className="flex items-center gap-2">
+              {messages.length > 0 && (
+                <button onClick={() => setMessages([])} className="text-white/60 hover:text-white cursor-pointer text-[10px]" title={lang === "zh" ? "重新开始" : "Start over"}>🏠</button>
+              )}
+              <button onClick={() => setOpen(false)} className="text-white/80 hover:text-white cursor-pointer text-sm">✕</button>
+            </div>
           </div>
 
           {/* Messages */}
