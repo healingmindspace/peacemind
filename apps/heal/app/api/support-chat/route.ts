@@ -162,7 +162,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 
-  const { message, history, accessToken, timezone } = body;
+  const { message, history, accessToken, timezone, utcOffset } = body;
   if (!message?.trim()) {
     return NextResponse.json({ error: "Missing message" }, { status: 400 });
   }
@@ -302,20 +302,14 @@ export async function POST(request: Request) {
             }
 
             const supabase = getSupabase(accessToken);
-            // Store with timezone offset so Postgres interprets correctly
             const timeStr = input.dueTime || "12:00";
-            // Get offset for user's timezone
-            let tzOffset = "";
-            try {
-              const tz = timezone || "America/Los_Angeles";
-              const d = new Date(`${dateStr}T${timeStr}:00`);
-              const utcStr = d.toLocaleString("en-US", { timeZone: "UTC" });
-              const tzStr = d.toLocaleString("en-US", { timeZone: tz });
-              const diffMs = new Date(utcStr).getTime() - new Date(tzStr).getTime();
-              const diffH = Math.round(diffMs / 3600000);
-              tzOffset = `${diffH >= 0 ? "+" : ""}${String(diffH).padStart(2, "0")}:00`;
-            } catch { tzOffset = "-07:00"; }
-            const dueDateTime = `${dateStr}T${timeStr}:00${tzOffset}`;
+            // Build timezone offset string from client's utcOffset
+            // getTimezoneOffset() returns minutes: PDT=420 means UTC-7
+            const offsetMin = typeof utcOffset === "number" ? utcOffset : 0;
+            const sign = offsetMin <= 0 ? "+" : "-";
+            const absH = String(Math.floor(Math.abs(offsetMin) / 60)).padStart(2, "0");
+            const absM = String(Math.abs(offsetMin) % 60).padStart(2, "0");
+            const dueDateTime = `${dateStr}T${timeStr}:00${sign}${absH}:${absM}`;
 
             const { error } = await supabase.from("tasks").insert({
               user_id: userId,

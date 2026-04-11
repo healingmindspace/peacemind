@@ -92,6 +92,7 @@ export default function SupportChat() {
           history: messages.slice(-10),
           accessToken,
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          utcOffset: new Date().getTimezoneOffset(),
         }),
       });
       if (res.ok) {
