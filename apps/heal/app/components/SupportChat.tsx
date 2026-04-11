@@ -139,6 +139,9 @@ export default function SupportChat() {
                 <p className="text-sm text-pm-text-secondary">
                   {lang === "zh" ? "你好！有什么可以帮你的？" : "Hi! How can I help you?"}
                 </p>
+                <p className="text-[9px] text-pm-text-muted mt-1">
+                  🕐 {Intl.DateTimeFormat().resolvedOptions().timeZone}
+                </p>
                 <div className="flex flex-wrap gap-1.5 justify-center mt-3">
                   {(suggestions.length > 0 ? suggestions : (lang === "zh"
                     ? ["今天有什么安排？", "我今天心情不错", "帮我写日记", "这周报告"]
