@@ -176,6 +176,33 @@ export async function POST(request: Request) {
     userId = await getAuthenticatedUserId(supabase);
   }
 
+  // Special: fetch today's reminders without AI call
+  if (message.trim() === "__reminders__" && userId && accessToken) {
+    const supabase = getSupabase(accessToken);
+    const { data: tasks } = await supabase
+      .from("tasks")
+      .select("title, due_date, schedule_type, schedule_rule")
+      .eq("user_id", userId);
+
+    const today = new Date().toISOString().split("T")[0];
+    const reminders: string[] = [];
+
+    for (const t of (tasks || []).filter((t: any) => !t.completed)) {
+      const title = t.title ? decrypt(t.title) : "(no title)";
+      if (t.due_date && t.due_date.split("T")[0] === today) {
+        const time = new Date(t.due_date).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: timezone || "UTC" });
+        reminders.push(`${title} at ${time}`);
+      } else if (t.schedule_type === "habit") {
+        const rule = t.schedule_rule as { freq?: string; time?: string } | null;
+        if (rule?.freq === "daily" || (rule?.freq === "weekdays" && new Date().getDay() >= 1 && new Date().getDay() <= 5)) {
+          reminders.push(`${title}${rule?.time ? ` at ${rule.time}` : ""}`);
+        }
+      }
+    }
+
+    return NextResponse.json({ reminders, response: "" });
+  }
+
   const rawHistory = Array.isArray(history) ? history.slice(-10) : [];
   // Filter out empty messages and ensure valid alternation
   const cleanHistory: Anthropic.MessageParam[] = [];

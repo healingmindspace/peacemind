@@ -22,17 +22,39 @@ export default function SupportChat() {
   const { lang } = useI18n();
   const { accessToken } = useAuth();
 
-  // Load personalized suggestions when chat opens
+  const [reminders, setReminders] = useState<string[]>([]);
+
+  // Load personalized suggestions + today's reminders when chat opens
   useEffect(() => {
-    if (!open || suggestions.length > 0) return;
-    fetch("/api/agent-suggestions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ accessToken, lang }),
-    })
-      .then((r) => r.json())
-      .then((data) => { if (Array.isArray(data)) setSuggestions(data); })
-      .catch(() => {});
+    if (!open) return;
+    if (suggestions.length === 0) {
+      fetch("/api/agent-suggestions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ accessToken, lang }),
+      })
+        .then((r) => r.json())
+        .then((data) => { if (Array.isArray(data)) setSuggestions(data); })
+        .catch(() => {});
+    }
+    if (accessToken && reminders.length === 0) {
+      fetch("/api/support-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: "__reminders__",
+          history: [],
+          accessToken,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          utcOffset: new Date().getTimezoneOffset(),
+        }),
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.reminders && data.reminders.length > 0) setReminders(data.reminders);
+        })
+        .catch(() => {});
+    }
   }, [open]);
 
   // Speech-to-text
@@ -139,6 +161,14 @@ export default function SupportChat() {
                 <p className="text-sm text-pm-text-secondary">
                   {lang === "zh" ? "你好！有什么可以帮你的？" : "Hi! How can I help you?"}
                 </p>
+                {reminders.length > 0 && (
+                  <div className="mt-2 text-left bg-pm-surface-active rounded-xl p-2.5 space-y-1">
+                    <p className="text-[10px] font-semibold text-pm-text-secondary">{lang === "zh" ? "📅 今日提醒" : "📅 Today's reminders"}</p>
+                    {reminders.map((r, i) => (
+                      <p key={i} className="text-[10px] text-pm-text-secondary">• {r}</p>
+                    ))}
+                  </div>
+                )}
                 <p className="text-[9px] text-pm-text-muted mt-1">
                   🕐 {Intl.DateTimeFormat().resolvedOptions().timeZone}
                 </p>
