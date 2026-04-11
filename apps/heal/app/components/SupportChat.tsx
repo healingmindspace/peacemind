@@ -159,7 +159,17 @@ export default function SupportChat() {
             {messages.length === 0 && (
               <div className="text-center py-6">
                 <p className="text-sm text-pm-text-secondary">
-                  {lang === "zh" ? "你好！有什么可以帮你的？" : "Hi! How can I help you?"}
+                  {(() => {
+                    const h = new Date().getHours();
+                    if (lang === "zh") {
+                      if (h < 12) return "🌅 早上好！新的一天，你已经很棒了。";
+                      if (h < 17) return "☀️ 下午好！记得休息一下，深呼吸。";
+                      return "🌙 晚上好！今天辛苦了，你做得很好。";
+                    }
+                    if (h < 12) return "🌅 Good morning! Showing up is already a win.";
+                    if (h < 17) return "☀️ Good afternoon! Remember to pause and breathe.";
+                    return "🌙 Good evening! You made it through today — that matters.";
+                  })()}
                 </p>
                 {reminders.length > 0 && (
                   <div className="mt-2 text-left bg-pm-surface-active rounded-xl p-2.5 space-y-1">
