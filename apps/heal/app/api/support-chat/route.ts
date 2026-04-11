@@ -130,8 +130,10 @@ Build: ${BUILD_SHA} · ${BUILD_TIME}. If asked about version, build, or deploy t
 If user wants to log mood, write journal, get a review, check calendar, get weather, or any action, say: "Please sign in to use that feature — your data is encrypted and private." Always suggest signing in for any action request.
 Keep answers to 2-3 sentences. Never make up features.`;
 
-// Authenticated: full tools + action rules
-const AUTH_PROMPT = `You are Peacemind's support assistant. Warm, concise. Answer in the user's language (EN or ZH).
+// Authenticated: full tools + action rules (timezone injected at runtime)
+const getAuthPrompt = (tz: string) => `You are Peacemind's support assistant. Warm, concise. Answer in the user's language (EN or ZH).
+
+User's timezone: ${tz}. When creating tasks, use the time as the user states it — it will be stored in their timezone automatically. Confirm the time and timezone when adding calendar items.
 
 Build: ${BUILD_SHA} · ${BUILD_TIME}. If asked about version, build, or deploy time, share this.
 
@@ -198,7 +200,7 @@ export async function POST(request: Request) {
     const response = await client.messages.create({
       model: "claude-haiku-4-5-20251001",
       max_tokens: isAuth ? 500 : 300,
-      system: [{ type: "text", text: isAuth ? AUTH_PROMPT : ANON_PROMPT, cache_control: { type: "ephemeral" } }],
+      system: [{ type: "text", text: isAuth ? getAuthPrompt(timezone || "UTC") : ANON_PROMPT, cache_control: { type: "ephemeral" } }],
       ...(isAuth ? { tools: TOOLS } : {}),
       messages,
     });
@@ -435,7 +437,7 @@ export async function POST(request: Request) {
           const followUp = await client.messages.create({
             model: "claude-haiku-4-5-20251001",
             max_tokens: 300,
-            system: AUTH_PROMPT,
+            system: getAuthPrompt(timezone || "UTC"),
             messages: [
               ...messages,
               { role: "assistant", content: response.content },
