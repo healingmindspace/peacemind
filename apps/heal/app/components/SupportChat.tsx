@@ -179,6 +179,19 @@ export default function SupportChat() {
                     ))}
                   </div>
                 )}
+                <details className="mt-2 text-left">
+                  <summary className="text-[10px] text-pm-text-muted cursor-pointer hover:text-brand">
+                    ✨ {lang === "zh" ? "最新更新" : "What's new"}
+                  </summary>
+                  <div className="mt-1 space-y-1 text-[10px] text-pm-text-tertiary">
+                    <p>🎤 Talk to the agent by voice</p>
+                    <p>📅 Add tasks by saying "add meeting tomorrow 3pm"</p>
+                    <p>🌤️ Ask about the weather</p>
+                    <p>📊 Get a weekly wellness review</p>
+                    <p>📅 Month view on calendar</p>
+                    <p>🔗 Link journal entries to paths</p>
+                  </div>
+                </details>
                 <p className="text-[9px] text-pm-text-muted mt-1">
                   🕐 {Intl.DateTimeFormat().resolvedOptions().timeZone}
                 </p>
