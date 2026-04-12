@@ -51,6 +51,7 @@ export default function JournalHistory({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState("");
   const [associatingId, setAssociatingId] = useState<string | null>(null);
 
@@ -99,7 +100,13 @@ export default function JournalHistory({
                 )}
                 {entry.photo_path && photoUrls[entry.photo_path] && (
                   <div className="mb-2 relative inline-block">
-                    <img src={photoUrls[entry.photo_path]} alt="" className="w-20 h-20 rounded-xl object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                    <img
+                      src={photoUrls[entry.photo_path]}
+                      alt=""
+                      className="w-20 h-20 rounded-xl object-cover cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => setLightboxUrl(photoUrls[entry.photo_path!])}
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                    />
                     <button
                       onClick={async () => { if (accessToken) { await deletePhoto(accessToken, entry.photo_path!); onLoadHistory(userId); } }}
                       className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-pm-surface-hover text-[10px] text-pm-text-muted hover:text-red-400 cursor-pointer flex items-center justify-center"
@@ -205,6 +212,19 @@ export default function JournalHistory({
         >
           {loadingMore ? (lang === "zh" ? "加载中..." : "Loading...") : (lang === "zh" ? "加载更多" : "Load more")}
         </button>
+      )}
+      {/* Lightbox */}
+      {lightboxUrl && (
+        <div
+          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+          onClick={() => setLightboxUrl(null)}
+        >
+          <img src={lightboxUrl} alt="" className="max-w-full max-h-full rounded-xl" />
+          <button
+            onClick={() => setLightboxUrl(null)}
+            className="absolute top-4 right-4 text-white text-xl cursor-pointer"
+          >✕</button>
+        </div>
       )}
     </div>
   );
