@@ -702,6 +702,8 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
           onDeleteMood={deleteMood}
           onUpdateMood={updateMood}
           onDeletePhoto={deleteEntryPhoto}
+          triggerTags={[...TRIGGER_KEYS.map((k) => t(k)), ...savedTriggers.map((s) => s.label)]}
+          helpedTags={[...HELPED_KEYS.map((k) => t(k)), ...savedHelped.map((s) => s.label)]}
           onNavigateToGrow={onNavigateToGrow}
           hasMore={hasMore}
           loadingMore={loadingMore}

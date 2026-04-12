@@ -29,12 +29,14 @@ interface MoodHistoryListProps {
   onDeletePhoto: (entryId: string, photoPath: string) => void;
   onUpdateMood?: (id: string, trigger: string, helped: string) => void;
   onNavigateToGrow?: (intent: GrowIntent) => void;
+  triggerTags?: string[];
+  helpedTags?: string[];
   hasMore?: boolean;
   loadingMore?: boolean;
   onLoadMore?: () => void;
 }
 
-export default function MoodHistoryList({ history, photoUrls, onDeleteMood, onDeletePhoto, onUpdateMood, onNavigateToGrow, hasMore, loadingMore, onLoadMore }: MoodHistoryListProps) {
+export default function MoodHistoryList({ history, photoUrls, onDeleteMood, onDeletePhoto, onUpdateMood, onNavigateToGrow, triggerTags = [], helpedTags = [], hasMore, loadingMore, onLoadMore }: MoodHistoryListProps) {
   const { t, lang } = useI18n();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTrigger, setEditTrigger] = useState("");
@@ -69,21 +71,49 @@ export default function MoodHistoryList({ history, photoUrls, onDeleteMood, onDe
               <div className="flex-1 text-left min-w-0">
                 <span className="text-pm-text-tertiary text-xs">{formatDate(entry.created_at)}</span>
                 {editingId === entry.id ? (
-                  <div className="space-y-1.5 mt-1">
-                    <input
-                      type="text"
-                      value={editTrigger}
-                      onChange={(e) => setEditTrigger(e.target.value)}
-                      placeholder={lang === "zh" ? "什么触发了这种心情？" : "What triggered this?"}
-                      className="w-full px-2 py-1 rounded-lg bg-pm-surface border border-pm-border text-xs focus:outline-none focus:border-brand"
-                    />
-                    <input
-                      type="text"
-                      value={editHelped}
-                      onChange={(e) => setEditHelped(e.target.value)}
-                      placeholder={lang === "zh" ? "什么帮助了你？" : "What helped?"}
-                      className="w-full px-2 py-1 rounded-lg bg-pm-surface border border-pm-border text-xs focus:outline-none focus:border-brand"
-                    />
+                  <div className="space-y-2 mt-1">
+                    <div>
+                      <p className="text-[10px] text-pm-text-muted mb-1">{lang === "zh" ? "触发因素" : "Trigger"}</p>
+                      <div className="flex flex-wrap gap-1 mb-1">
+                        {triggerTags.map((tag) => (
+                          <button
+                            key={tag}
+                            onClick={() => setEditTrigger((prev) => prev ? `${prev}, ${tag}` : tag)}
+                            className={`px-2 py-0.5 rounded-full text-[10px] cursor-pointer transition-all ${
+                              editTrigger.includes(tag) ? "bg-brand text-white" : "bg-pm-surface text-pm-text-secondary hover:bg-pm-surface-hover"
+                            }`}
+                          >{tag}</button>
+                        ))}
+                      </div>
+                      <input
+                        type="text"
+                        value={editTrigger}
+                        onChange={(e) => setEditTrigger(e.target.value)}
+                        placeholder={lang === "zh" ? "或输入自定义..." : "Or type custom..."}
+                        className="w-full px-2 py-1 rounded-lg bg-pm-surface border border-pm-border text-xs focus:outline-none focus:border-brand"
+                      />
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-pm-text-muted mb-1">{lang === "zh" ? "什么帮助了你" : "What helped"}</p>
+                      <div className="flex flex-wrap gap-1 mb-1">
+                        {helpedTags.map((tag) => (
+                          <button
+                            key={tag}
+                            onClick={() => setEditHelped((prev) => prev ? `${prev}, ${tag}` : tag)}
+                            className={`px-2 py-0.5 rounded-full text-[10px] cursor-pointer transition-all ${
+                              editHelped.includes(tag) ? "bg-brand text-white" : "bg-pm-surface text-pm-text-secondary hover:bg-pm-surface-hover"
+                            }`}
+                          >{tag}</button>
+                        ))}
+                      </div>
+                      <input
+                        type="text"
+                        value={editHelped}
+                        onChange={(e) => setEditHelped(e.target.value)}
+                        placeholder={lang === "zh" ? "或输入自定义..." : "Or type custom..."}
+                        className="w-full px-2 py-1 rounded-lg bg-pm-surface border border-pm-border text-xs focus:outline-none focus:border-brand"
+                      />
+                    </div>
                     <div className="flex gap-2">
                       <button onClick={saveEdit} className="text-xs text-brand cursor-pointer">{lang === "zh" ? "保存" : "Save"}</button>
                       <button onClick={() => setEditingId(null)} className="text-xs text-pm-text-muted cursor-pointer">{lang === "zh" ? "取消" : "Cancel"}</button>
