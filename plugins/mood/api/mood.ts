@@ -53,6 +53,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ id: data.id });
   }
 
+  // UPDATE — edit trigger and helped
+  if (action === "update") {
+    const { id, trigger, helped } = body;
+    if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
+    const updates: Record<string, unknown> = {};
+    if (trigger !== undefined) updates.trigger = trigger ? encrypt(trigger) : null;
+    if (helped !== undefined) updates.helped = helped ? encrypt(helped) : null;
+    const { error } = await supabase.from("moods").update(updates).eq("id", id).eq("user_id", userId);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: true });
+  }
+
   // DELETE
   if (action === "delete") {
     const { id } = body;

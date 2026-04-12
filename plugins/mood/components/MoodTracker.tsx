@@ -379,6 +379,16 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
     loadHistory(user.id, timeRange);
   };
 
+  const updateMood = async (id: string, trigger: string, helped: string) => {
+    if (!user || (!accessToken && !isAnonymous)) return;
+    await apiFetch("/api/mood", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "update", userId: user.id, accessToken, id, trigger: trigger || null, helped: helped || null }),
+    });
+    setHistory((prev) => prev.map((e) => e.id === id ? { ...e, trigger: trigger || null, helped: helped || null } : e));
+  };
+
   const deleteMood = async (id: string) => {
     if (!user) return;
     // Also delete photo from storage if exists (server-only)
@@ -690,6 +700,7 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
           history={history}
           photoUrls={photoUrls}
           onDeleteMood={deleteMood}
+          onUpdateMood={updateMood}
           onDeletePhoto={deleteEntryPhoto}
           onNavigateToGrow={onNavigateToGrow}
           hasMore={hasMore}
