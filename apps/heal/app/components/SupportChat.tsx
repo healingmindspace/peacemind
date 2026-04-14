@@ -95,6 +95,60 @@ export default function SupportChat() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Check if a string is only emojis (and whitespace)
+  const isEmojiOnly = (text: string): boolean => {
+    const stripped = text.replace(/\s/g, "");
+    if (!stripped) return false;
+    const emojiRegex = /^[\p{Emoji_Presentation}\p{Emoji}\uFE0F\u200D\u20E3\uFE0E\s]+$/u;
+    return emojiRegex.test(stripped);
+  };
+
+  const logEmojiMood = async (emojis: string) => {
+    if (!accessToken) return;
+    // Score the emojis
+    const great = "🥳🤩😍🥰🎉💪✨🌟😎🤗💃🕺🏆🎊👏";
+    const good = "😊🙂😄😁👍🌈☺️😌🫶🙏💚🍀😋🤭";
+    const low = "😔😞😓😟🥺😿💔🫤😕☹️😩🤕";
+    const struggling = "😢😭😰😱💀👎😡😤🤬😖😫🆘😵🤮";
+    let label = "Neutral";
+    for (const ch of emojis) {
+      if (great.includes(ch)) { label = "Great"; break; }
+      if (good.includes(ch)) { label = "Good"; break; }
+      if (low.includes(ch)) { label = "Low"; break; }
+      if (struggling.includes(ch)) { label = "Struggling"; break; }
+    }
+
+    const res = await fetch("/api/mood", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "insert",
+        accessToken,
+        emoji: emojis,
+        label,
+        trigger: null,
+        helped: null,
+      }),
+    });
+    const data = await res.json();
+    if (data?.id) {
+      // Request AI response
+      fetch("/api/mood-respond", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          accessToken,
+          mood: { emoji: emojis, label },
+          trigger: null,
+          helped: null,
+          moodId: data.id,
+          lang,
+        }),
+      });
+    }
+    return label;
+  };
+
   const send = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || sending) return;
@@ -104,6 +158,17 @@ export default function SupportChat() {
     setInput("");
     setMessages((prev) => [...prev, { role: "user", content: userMsg }]);
     setSending(true);
+
+    // Emoji-only message → log as mood
+    if (isEmojiOnly(userMsg)) {
+      const label = await logEmojiMood(userMsg);
+      const confirmMsg = lang === "zh"
+        ? `已记录 ${userMsg} (${label})。你可以在心情记录中查看。`
+        : `Logged ${userMsg} as "${label}". You can see it in your mood history.`;
+      setMessages((prev) => [...prev, { role: "assistant", content: confirmMsg }]);
+      setSending(false);
+      return;
+    }
 
     try {
       const res = await fetch("/api/support-chat", {
