@@ -48,8 +48,11 @@ interface GrowIntent {
 }
 
 export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: { onNavigateToGrow?: (intent: GrowIntent) => void; onSuggestAssessment?: (type: "phq9" | "gad7") => void }) {
+  const [trackerMode, setTrackerMode] = useState<"mood" | "emoji">("mood");
   const [step, setStep] = useState<Step>("mood");
   const [selected, setSelected] = useState<number | null>(null);
+  const [freeEmoji, setFreeEmoji] = useState("");
+  const [freeLabel, setFreeLabel] = useState("");
   const [selectedTriggers, setSelectedTriggers] = useState<string[]>([]);
   const [customTrigger, setCustomTrigger] = useState("");
   const [selectedHelped, setSelectedHelped] = useState<string[]>([]);
@@ -240,6 +243,50 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
     setStep("trigger");
   };
 
+  const selectFreeEmoji = async () => {
+    if (!freeEmoji || !user || !accessToken) return;
+    if (!backfillDate && getTodayCount() >= 5) return;
+    setSaving(true);
+
+    const scored = getEmojiScore(freeEmoji);
+    const moodLabel = freeLabel.trim() || scored.label;
+    const res = await fetch("/api/mood", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "insert",
+        userId: user.id,
+        accessToken,
+        emoji: freeEmoji,
+        label: moodLabel,
+        trigger: null,
+        helped: null,
+        createdAt: backfillDate ? new Date(backfillDate + "T12:00:00").toISOString() : undefined,
+      }),
+    });
+    const insertedData = await res.json();
+    if (insertedData?.id) {
+      // Get AI response for the emoji
+      fetch("/api/mood-respond", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          accessToken,
+          mood: { emoji: freeEmoji, label: moodLabel },
+          trigger: null,
+          helped: null,
+          moodId: insertedData.id,
+          lang,
+        }),
+      });
+      loadHistory(user.id, timeRange);
+      setFreeEmoji("");
+      setFreeLabel("");
+      setBackfillDate("");
+    }
+    setSaving(false);
+  };
+
   const toggleTrigger = (key: string) => {
     setSelectedTriggers((prev) =>
       prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
@@ -274,8 +321,27 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
     return labels.join(", ");
   };
 
+  // Map emoji to a mood score (1-5) for AI analysis (uses first emoji if multiple)
+  const getEmojiScore = (emojis: string): { score: number; label: string } => {
+    const great = "🥳🤩😍🥰🎉💪✨🌟😎🤗💃🕺🏆🎊👏";
+    const good = "😊🙂😄😁👍🌈☺️😌🫶🙏💚🍀😋🤭";
+    const low = "😔😞😓😟🥺😿💔🫤😕☹️😩🤕";
+    const struggling = "😢😭😰😱💀👎😡😤🤬😖😫🆘😵🤮";
+    // Check each character in the string
+    for (const ch of emojis) {
+      if (great.includes(ch)) return { score: 5, label: "Great" };
+      if (good.includes(ch)) return { score: 4, label: "Good" };
+      if (low.includes(ch)) return { score: 2, label: "Low" };
+      if (struggling.includes(ch)) return { score: 1, label: "Struggling" };
+    }
+    return { score: 3, label: "Neutral" };
+  };
+
   const saveMood = async () => {
-    if (selected === null || !user) return;
+    const isEmojiMode = trackerMode === "emoji";
+    if (isEmojiMode && !freeEmoji) return;
+    if (!isEmojiMode && selected === null) return;
+    if (!user) return;
     if (!backfillDate && getTodayCount() >= 5) return;
 
     setSaving(true);
@@ -286,6 +352,17 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
 
     if (!accessToken) { setSaving(false); return; }
 
+    let moodEmoji: string;
+    let moodLabel: string;
+    if (isEmojiMode) {
+      const scored = getEmojiScore(freeEmoji);
+      moodEmoji = freeEmoji;
+      moodLabel = freeLabel.trim() || scored.label;
+    } else {
+      moodEmoji = moods[selected!].emoji;
+      moodLabel = moods[selected!].label;
+    }
+
     const res = await fetch("/api/mood", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -293,8 +370,8 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
         action: "insert",
         userId: user.id,
         accessToken: accessToken,
-        emoji: moods[selected].emoji,
-        label: moods[selected].label,
+        emoji: moodEmoji,
+        label: moodLabel,
         trigger: triggerStr || null,
         helped: helpedLabels || null,
         createdAt: backfillDate ? new Date(backfillDate + "T12:00:00").toISOString() : undefined,
@@ -310,7 +387,8 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
       const recentMoods = history.filter((e) => new Date(e.created_at) >= sevenDaysAgo);
-      const lowCount = recentMoods.filter((e) => e.label === "Low" || e.label === "Struggling").length + (selected >= 3 ? 1 : 0);
+      const currentIsLow = isEmojiMode ? getEmojiScore(freeEmoji).score <= 2 : (selected !== null && selected >= 3);
+      const lowCount = recentMoods.filter((e) => e.label === "Low" || e.label === "Struggling").length + (currentIsLow ? 1 : 0);
       const anxietyTriggers = ["stress", "loneliness", "压力", "孤独"];
       const hasAnxietyTriggers = triggerStr && anxietyTriggers.some((t) => triggerStr.toLowerCase().includes(t));
 
@@ -330,6 +408,8 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
   const resetFlow = () => {
     setStep("mood");
     setSelected(null);
+    setFreeEmoji("");
+    setFreeLabel("");
     setSelectedTriggers([]);
     setSelectedHelped([]);
     setCustomTrigger("");
@@ -377,6 +457,26 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
       {/* Step 1: Pick mood */}
       {step === "mood" && (
         <>
+        {/* Mode toggle */}
+        <div className="flex justify-center gap-1 mb-3">
+          <button
+            onClick={() => setTrackerMode("mood")}
+            className={`px-3 py-1 rounded-full text-xs cursor-pointer transition-colors ${
+              trackerMode === "mood" ? "bg-brand text-white" : "bg-pm-surface-active text-pm-text-muted"
+            }`}
+          >
+            {lang === "zh" ? "心情" : "Mood"}
+          </button>
+          <button
+            onClick={() => setTrackerMode("emoji")}
+            className={`px-3 py-1 rounded-full text-xs cursor-pointer transition-colors ${
+              trackerMode === "emoji" ? "bg-brand text-white" : "bg-pm-surface-active text-pm-text-muted"
+            }`}
+          >
+            {lang === "zh" ? "表情" : "Emoji"}
+          </button>
+        </div>
+
         {/* Date picker toggle */}
         {user && (
           <div className="flex justify-center items-center gap-2 mb-2">
@@ -409,23 +509,58 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
             />
           </div>
         )}
-        <div className="flex justify-center gap-2 flex-wrap mt-4">
-          {moods.map((mood, i) => (
+        {trackerMode === "mood" ? (
+          <div className="flex justify-center gap-2 flex-wrap mt-4">
+            {moods.map((mood, i) => (
+              <button
+                key={i}
+                onClick={() => user ? selectMood(i) : setSelected(i)}
+                disabled={saving}
+                className={`flex flex-col items-center gap-1 p-3 rounded-2xl transition-all cursor-pointer ${
+                  selected === i
+                    ? "bg-brand text-white scale-110 shadow-lg"
+                    : "bg-pm-surface-active hover:bg-pm-surface-hover"
+                }`}
+              >
+                <span className="text-3xl">{mood.emoji}</span>
+                <span className="text-xs font-medium">{t(mood.labelKey)}</span>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center gap-3 mt-4">
+            <p className="text-xs text-pm-text-muted">
+              {lang === "zh" ? "输入一个表情符号来表达你的感受" : "Type any emoji that represents how you feel"}
+            </p>
+            <input
+              type="text"
+              value={freeEmoji}
+              onChange={(e) => setFreeEmoji(e.target.value)}
+              placeholder="😊"
+              className="w-40 h-20 text-center text-4xl rounded-2xl bg-pm-surface-active border border-pm-border focus:outline-none focus:ring-2 focus:ring-brand-light"
+              autoFocus
+            />
+            <input
+              type="text"
+              value={freeLabel}
+              onChange={(e) => setFreeLabel(e.target.value)}
+              placeholder={lang === "zh" ? "描述 (可选)" : "Label (optional)"}
+              className="px-3 py-1.5 rounded-xl bg-pm-surface-active border border-pm-border text-pm-text text-xs text-center focus:outline-none focus:ring-2 focus:ring-brand-light w-40"
+            />
+            {freeEmoji && (
+              <div className="text-[10px] text-pm-text-muted">
+                {lang === "zh" ? "AI 分析评分" : "AI score"}: {getEmojiScore(freeEmoji).label} ({getEmojiScore(freeEmoji).score}/5)
+              </div>
+            )}
             <button
-              key={i}
-              onClick={() => user ? selectMood(i) : setSelected(i)}
-              disabled={saving}
-              className={`flex flex-col items-center gap-1 p-3 rounded-2xl transition-all cursor-pointer ${
-                selected === i
-                  ? "bg-brand text-white scale-110 shadow-lg"
-                  : "bg-pm-surface-active hover:bg-pm-surface-hover"
-              }`}
+              onClick={() => user ? selectFreeEmoji() : null}
+              disabled={!freeEmoji || saving}
+              className="px-6 py-2 rounded-full bg-brand text-white text-sm cursor-pointer disabled:opacity-50"
             >
-              <span className="text-3xl">{mood.emoji}</span>
-              <span className="text-xs font-medium">{t(mood.labelKey)}</span>
+              {lang === "zh" ? "继续" : "Continue"}
             </button>
-          ))}
-        </div>
+          </div>
+        )}
         </>
       )}
 
@@ -652,6 +787,15 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
           photoUrls={photoUrls}
           onDeleteMood={deleteMood}
           onDeletePhoto={deleteEntryPhoto}
+          onUpdateMood={async (id, trigger, helped) => {
+            if (!accessToken) return;
+            await fetch("/api/mood", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ action: "update", accessToken, id, trigger, helped }),
+            });
+            if (user) loadHistory(user.id, timeRange);
+          }}
           onNavigateToGrow={onNavigateToGrow}
         />
       )}
