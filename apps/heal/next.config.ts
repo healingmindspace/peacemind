@@ -9,3 +9,4 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+// v2 - emoji tracker
