@@ -19,7 +19,7 @@ import { InitProvider } from "@/lib/init-context";
 type Tab = "mood" | "calm" | "goals" | "summary";
 
 const tabKeys: { id: Tab; labelKey: string; icon: string }[] = [
-  { id: "mood", labelKey: "tab.mood", icon: "🌈" },
+  { id: "mood", labelKey: "tab.mood", icon: "" },
   { id: "calm", labelKey: "tab.calm", icon: "🍃" },
   { id: "goals", labelKey: "tab.goals", icon: "🌱" },
   { id: "summary", labelKey: "tab.me", icon: "✨" },

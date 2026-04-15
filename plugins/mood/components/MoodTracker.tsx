@@ -609,8 +609,8 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
 
       {/* Header with streak */}
       <div className="flex items-center justify-center gap-2 mb-4">
-        <h2 className="text-lg font-semibold text-pm-text">
-          {lang === "zh" ? "心情" : "Emotions"}
+        <h2 className="text-2xl">
+          😊
         </h2>
         {streak > 1 && (
           <span className="text-xs px-2 py-0.5 rounded-full bg-orange-100 text-orange-600 font-medium">

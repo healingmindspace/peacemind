@@ -33,7 +33,7 @@ export default definePlugin({
 
   i18n: {
     en: {
-      "tab.mood": "Mood",
+      "tab.mood": "😊",
       "mood.title": "How are you feeling?",
       "mood.subtitle": "No judgment — just checking in",
       "mood.limit": "You've logged 5 moods today — come back tomorrow!",
@@ -57,7 +57,7 @@ export default definePlugin({
       "mood.readingPhoto": "Reading photo...",
     },
     zh: {
-      "tab.mood": "心情",
+      "tab.mood": "😊",
       "mood.title": "你现在感觉怎么样？",
       "mood.subtitle": "不带评判 — 只是关心",
       "mood.limit": "今天已记录5次 — 明天再来吧！",
