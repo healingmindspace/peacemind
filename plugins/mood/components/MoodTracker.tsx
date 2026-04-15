@@ -80,6 +80,10 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
   const { apiFetch } = useApi();
   const { t, lang } = useI18n();
 
+  // Emoji grid for quick-tap logging
+  const EMOJI_GRID = ["😊", "😔", "😴", "🥳", "😤", "😢", "😌", "🤩", "😰", "🥱", "💪", "😭", "😶", "🔥", "💀", "🙏", "😂", "🥺", "😎", "🫠"];
+
+  // Keep moods array for backward compat with saveMood/TriggerStep
   const moods = [
     { emoji: "😊", label: "Good", labelKey: "mood.good", responseKey: "mood.response.good" },
     { emoji: "🙂", label: "Okay", labelKey: "mood.okay", responseKey: "mood.response.okay" },
@@ -87,6 +91,9 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
     { emoji: "😔", label: "Low", labelKey: "mood.low", responseKey: "mood.response.low" },
     { emoji: "😢", label: "Struggling", labelKey: "mood.struggling", responseKey: "mood.response.struggling" },
   ];
+
+  const [justSaved, setJustSaved] = useState<string | null>(null);
+  const [showDetails, setShowDetails] = useState(false);
 
 
   useEffect(() => {
@@ -214,6 +221,30 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
     loadSavedOptions();
   };
 
+  // Compute frequent emojis from history
+  const frequentEmojis = useMemo(() => {
+    const counts = new Map<string, number>();
+    history.forEach((e) => {
+      if (e.emoji) counts.set(e.emoji, (counts.get(e.emoji) || 0) + 1);
+    });
+    return Array.from(counts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 8)
+      .map(([emoji]) => emoji);
+  }, [history]);
+
+  // Compute streak (consecutive days with at least one log)
+  const streak = useMemo(() => {
+    const days = new Set(history.map((e) => new Date(e.created_at).toDateString()));
+    let count = 0;
+    const d = new Date();
+    while (days.has(d.toDateString())) {
+      count++;
+      d.setDate(d.getDate() - 1);
+    }
+    return count;
+  }, [history]);
+
   // Compute frequent triggers from history (sorted by frequency)
   const frequentTriggers = useMemo(() => {
     const counts = new Map<string, number>();
@@ -312,7 +343,10 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
     });
     const insertedData = await res.json();
     if (insertedData?.id) {
-      // Get AI response
+      // Bounce animation
+      setJustSaved(freeEmoji);
+      setTimeout(() => setJustSaved(null), 800);
+      // Get AI emoji response
       fetch("/api/mood-respond", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -325,12 +359,27 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
           lang,
         }),
       });
+      awardSeeds("mood", accessToken);
+      setMoodLogCount((c) => c + 1);
       loadHistory(user.id, timeRange);
       setFreeEmoji("");
       setFreeLabel("");
       setBackfillDate("");
     }
     setSaving(false);
+  };
+
+  // Quick-tap emoji from grid
+  const quickLogEmoji = (emoji: string) => {
+    setFreeEmoji(emoji);
+    // Auto-save immediately
+    setTimeout(() => {
+      const input = document.getElementById("emoji-input") as HTMLInputElement;
+      if (input) {
+        input.value = emoji;
+        input.form?.requestSubmit();
+      }
+    }, 50);
   };
 
   const toggleTrigger = (key: string) => {
@@ -477,357 +526,330 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
     }
   };
 
+  // Save emoji with details (trigger/helped) via the detail flow
+  const saveWithDetails = async () => {
+    if (!freeEmoji || !user) return;
+    if (!backfillDate && getTodayCount() >= 5) return;
+    setSaving(true);
+
+    const scored = getEmojiScore(freeEmoji);
+    const moodLabel = scored.label;
+    const triggerStr = buildTriggerString();
+    const helpedParts = selectedHelped.map((k) => k.startsWith("saved:") ? k.replace("saved:", "") : t(k));
+    if (customHelped.trim()) helpedParts.push(customHelped.trim());
+    const helpedLabels = helpedParts.join(", ");
+
+    if (!accessToken && !isAnonymous) { setSaving(false); return; }
+
+    const res = await fetch("/api/mood", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "insert",
+        userId: user.id,
+        accessToken,
+        emoji: freeEmoji,
+        label: moodLabel,
+        trigger: triggerStr || null,
+        helped: helpedLabels || null,
+        createdAt: backfillDate ? new Date(backfillDate + "T12:00:00").toISOString() : undefined,
+      }),
+    });
+    const insertedData = await res.json();
+    if (insertedData?.id) {
+      setJustSaved(freeEmoji);
+      setTimeout(() => setJustSaved(null), 800);
+      fetch("/api/mood-respond", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ accessToken, mood: { emoji: freeEmoji, label: moodLabel }, trigger: triggerStr, helped: helpedLabels, moodId: insertedData.id, lang }),
+      });
+      awardSeeds("mood", accessToken);
+      setMoodLogCount((c) => c + 1);
+      loadHistory(user.id, timeRange);
+
+      // Wellness check
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      const recentMoods = history.filter((e) => new Date(e.created_at) >= sevenDaysAgo);
+      const currentIsLow = getEmojiScore(freeEmoji).score <= 2;
+      const lowCount = recentMoods.filter((e) => e.label === "Low" || e.label === "Struggling").length + (currentIsLow ? 1 : 0);
+      const anxietyTriggers = ["stress", "loneliness", "压力", "孤独"];
+      const hasAnxietyTriggers = triggerStr && anxietyTriggers.some((t) => triggerStr.toLowerCase().includes(t));
+      if (lowCount >= 4) setWellnessNudge("phq9");
+      else if (lowCount >= 2 && hasAnxietyTriggers) setWellnessNudge("gad7");
+      else setWellnessNudge(null);
+    }
+    setShowDetails(false);
+    setFreeEmoji("");
+    setSelectedTriggers([]);
+    setSelectedHelped([]);
+    setCustomTrigger("");
+    setCustomHelped("");
+    setSaving(false);
+  };
+
   return (
-    <section className="py-6 px-4 text-center">
+    <section className="py-6 px-4">
+      <style>{`
+        @keyframes emoji-bounce {
+          0% { transform: scale(1); opacity: 1; }
+          30% { transform: scale(1.5); }
+          60% { transform: scale(0.9); }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        .emoji-bounce { animation: emoji-bounce 0.6s ease-out; }
+      `}</style>
+
       <StreakBanner onMoodLogged={moodLogCount > 0} />
-      <h2 className="text-xl font-semibold text-pm-text mb-1">
-        {t("mood.title")}
-      </h2>
-      {user && getTodayCount() >= 5 && !backfillDate && (
-        <p className="text-sm text-pm-text-muted mb-6">{t("mood.limit")}</p>
-      )}
 
-      {/* Step 1: Pick mood */}
-      {step === "mood" && (
-        <>
-        {/* Mode toggle */}
-        <div className="flex justify-center gap-1 mb-3">
-          <button
-            onClick={() => setTrackerMode("mood")}
-            className={`px-3 py-1 rounded-full text-xs cursor-pointer transition-colors ${
-              trackerMode === "mood" ? "bg-brand text-white" : "bg-pm-surface-active text-pm-text-muted"
-            }`}
-          >
-            {lang === "zh" ? "心情" : "Mood"}
-          </button>
-          <button
-            onClick={() => setTrackerMode("emoji")}
-            className={`px-3 py-1 rounded-full text-xs cursor-pointer transition-colors ${
-              trackerMode === "emoji" ? "bg-brand text-white" : "bg-pm-surface-active text-pm-text-muted"
-            }`}
-          >
-            {lang === "zh" ? "表情" : "Emoji"}
-          </button>
+      {/* Bounce animation overlay */}
+      {justSaved && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
+          <span className="text-7xl emoji-bounce">{justSaved}</span>
         </div>
-
-        {/* Date picker toggle */}
-        {user && (
-          <div className="flex justify-center items-center gap-2 mb-2">
-            <button
-              onClick={() => setShowDatePicker(!showDatePicker)}
-              className="text-xs text-pm-text-muted hover:text-brand cursor-pointer"
-            >
-              {backfillDate
-                ? `📅 ${new Date(backfillDate + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
-                : (lang === "zh" ? "📅 补录过去" : "📅 Log past day")}
-            </button>
-            {backfillDate && (
-              <button
-                onClick={() => { setBackfillDate(""); setShowDatePicker(false); }}
-                className="text-xs text-pm-text-muted hover:text-red-400 cursor-pointer"
-              >
-                ×
-              </button>
-            )}
-          </div>
-        )}
-        {showDatePicker && (
-          <div className="mb-3">
-            <input
-              type="date"
-              value={backfillDate}
-              max={new Date().toISOString().split("T")[0]}
-              onChange={(e) => { setBackfillDate(e.target.value); setShowDatePicker(false); }}
-              className="px-3 py-1.5 rounded-xl bg-pm-surface-active border border-pm-border text-pm-text text-xs focus:outline-none focus:ring-2 focus:ring-brand-light"
-            />
-          </div>
-        )}
-        {trackerMode === "mood" ? (
-          <div className="flex justify-center gap-2 flex-wrap mt-4">
-            {moods.map((mood, i) => (
-              <button
-                key={i}
-                onClick={() => user ? selectMood(i) : setSelected(i)}
-                disabled={saving}
-                className={`flex flex-col items-center gap-1 p-3 rounded-2xl transition-all cursor-pointer ${
-                  selected === i
-                    ? "bg-brand text-white scale-110 shadow-lg"
-                    : "bg-pm-surface-active hover:bg-pm-surface-hover"
-                }`}
-              >
-                <span className="text-3xl">{mood.emoji}</span>
-                <span className="text-xs font-medium">{t(mood.labelKey)}</span>
-              </button>
-            ))}
-          </div>
-        ) : (
-          <div className="flex flex-col items-center gap-3 mt-4">
-            <p className="text-xs text-pm-text-muted">
-              {lang === "zh" ? "输入表情符号来表达你的感受" : "Type any emoji that represents how you feel"}
-            </p>
-            <input
-              type="text"
-              value={freeEmoji}
-              onChange={(e) => setFreeEmoji(e.target.value)}
-              placeholder="😊"
-              className="w-40 h-20 text-center text-4xl rounded-2xl bg-pm-surface-active border border-pm-border focus:outline-none focus:ring-2 focus:ring-brand-light"
-              autoFocus
-            />
-            <input
-              type="text"
-              value={freeLabel}
-              onChange={(e) => setFreeLabel(e.target.value)}
-              placeholder={lang === "zh" ? "描述 (可选)" : "Label (optional)"}
-              className="px-3 py-1.5 rounded-xl bg-pm-surface-active border border-pm-border text-pm-text text-xs text-center focus:outline-none focus:ring-2 focus:ring-brand-light w-40"
-            />
-            {freeEmoji && (
-              <div className="text-[10px] text-pm-text-muted">
-                {lang === "zh" ? "AI 分析" : "AI score"}: {getEmojiScore(freeEmoji).label}
-              </div>
-            )}
-            <button
-              onClick={() => user ? selectFreeEmoji() : null}
-              disabled={!freeEmoji || saving}
-              className="px-6 py-2 rounded-full bg-brand text-white text-sm cursor-pointer disabled:opacity-50"
-            >
-              {saving ? (lang === "zh" ? "保存中..." : "Saving...") : (lang === "zh" ? "记录" : "Log")}
-            </button>
-          </div>
-        )}
-        </>
       )}
 
-      {/* Step 2: What happened? */}
-      {step === "trigger" && (
-        <TriggerStep
-          moods={moods}
-          selected={selected}
-          selectedTriggers={selectedTriggers}
-          customTrigger={customTrigger}
-          customTriggers={customTriggers}
-          savedTriggers={savedTriggers}
-          hiddenTriggerKeys={hiddenTriggerKeys}
-          triggerPattern={triggerPattern}
-          triggerKeys={TRIGGER_KEYS}
-          onSelectMood={setSelected}
-          onToggleTrigger={toggleTrigger}
-          onToggleCustomTrigger={toggleCustomTrigger}
-          onCustomTriggerChange={setCustomTrigger}
-          onAddSaved={(label) => addSavedOption("trigger", label)}
-          onDeleteSaved={deleteSavedOption}
-          onHidePreset={hidePresetTrigger}
-          onShowAllPresets={showAllPresets}
-          onNext={() => setStep("helped")}
-          onSkip={() => { setSelectedTriggers([]); setCustomTrigger(""); setStep("helped"); }}
-        />
+      {/* Header with streak */}
+      <div className="flex items-center justify-center gap-2 mb-4">
+        <h2 className="text-lg font-semibold text-pm-text">
+          {lang === "zh" ? "心情" : "Emotions"}
+        </h2>
+        {streak > 1 && (
+          <span className="text-xs px-2 py-0.5 rounded-full bg-orange-100 text-orange-600 font-medium">
+            🔥 {streak} {lang === "zh" ? "天" : streak === 1 ? "day" : "days"}
+          </span>
+        )}
+      </div>
+
+      {/* Limit warning */}
+      {user && getTodayCount() >= 5 && !backfillDate && (
+        <p className="text-xs text-pm-text-muted mb-4 text-center">{t("mood.limit")}</p>
       )}
 
-      {/* Step 3: What helped? */}
-      {step === "helped" && selected !== null && (
-        <div className="mt-4 max-w-sm md:max-w-lg mx-auto">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <span className="text-2xl">{moods[selected].emoji}</span>
-            <p className="text-sm text-pm-text-secondary font-medium">
-              {t("mood.whatHelped")}
-            </p>
-          </div>
-
-          {/* Saved custom helped */}
-          {savedHelped.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 justify-center mb-2">
-              {savedHelped.map((opt) => (
-                <div key={opt.id} className="relative">
-                  <button
-                    onClick={() => {
-                      if (selectedHelped.includes(`saved:${opt.label}`)) {
-                        setSelectedHelped((prev) => prev.filter((k) => k !== `saved:${opt.label}`));
-                      } else {
-                        setSelectedHelped((prev) => [...prev, `saved:${opt.label}`]);
-                      }
-                    }}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer ${
-                      selectedHelped.includes(`saved:${opt.label}`) ? "bg-brand text-white" : "bg-pm-accent-light text-brand hover:bg-pm-accent"
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                  {showAddHelped && (
-                    <button
-                      onClick={() => deleteSavedOption(opt.id)}
-                      className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-400 text-white text-[10px] flex items-center justify-center cursor-pointer"
-                    >×</button>
-                  )}
-                </div>
+      {/* Main view — emoji input + details toggle */}
+      {!showDetails ? (
+        <div className="max-w-sm mx-auto">
+          {/* Frequent emojis — quick tap */}
+          {frequentEmojis.length > 0 && (
+            <div className="flex justify-center gap-1.5 mb-3 flex-wrap">
+              <span className="text-[10px] text-pm-text-muted w-full text-center mb-1">
+                {lang === "zh" ? "常用" : "Recent"}
+              </span>
+              {frequentEmojis.map((emoji) => (
+                <button
+                  key={emoji}
+                  onClick={() => { setFreeEmoji(emoji); }}
+                  className="text-2xl p-1.5 rounded-xl hover:bg-pm-surface-hover cursor-pointer transition-transform hover:scale-125 active:scale-90"
+                >
+                  {emoji}
+                </button>
               ))}
             </div>
           )}
 
-          <div className="flex flex-wrap gap-2 justify-center mb-2">
-            {HELPED_KEYS.map((key) => (
+          {/* Emoji grid */}
+          <div className="flex justify-center gap-1 mb-3 flex-wrap">
+            {EMOJI_GRID.filter((e) => !frequentEmojis.includes(e)).map((emoji) => (
               <button
-                key={key}
-                onClick={() => toggleHelped(key)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer ${
-                  selectedHelped.includes(key)
-                    ? "bg-brand text-white"
-                    : "bg-pm-surface-active text-pm-text-secondary hover:bg-pm-surface-hover"
-                }`}
+                key={emoji}
+                onClick={() => { setFreeEmoji(emoji); }}
+                className="text-xl p-1 rounded-lg hover:bg-pm-surface-hover cursor-pointer transition-transform hover:scale-110 active:scale-90"
               >
-                {t(key)}
+                {emoji}
               </button>
             ))}
           </div>
 
-          {/* Add / Manage helped */}
-          <div className="flex justify-center gap-2 mb-3">
+          {/* Input + send */}
+          <form
+            onSubmit={(e) => { e.preventDefault(); if (freeEmoji && user) selectFreeEmoji(); }}
+            className="flex items-center gap-2 mb-2"
+          >
+            <input
+              id="emoji-input"
+              type="text"
+              value={freeEmoji}
+              onChange={(e) => setFreeEmoji(e.target.value)}
+              placeholder={lang === "zh" ? "输入表情..." : "Type emoji..."}
+              className="flex-1 px-4 py-2.5 rounded-2xl bg-pm-surface-active border border-pm-border text-xl text-center focus:outline-none focus:ring-2 focus:ring-brand-light"
+            />
             <button
-              onClick={() => { setShowAddHelped(!showAddHelped); setNewHelpedInput(""); }}
+              type="submit"
+              disabled={!freeEmoji || saving || !user}
+              className="w-10 h-10 rounded-full bg-brand text-white flex items-center justify-center cursor-pointer disabled:opacity-40 text-lg"
+            >
+              ⏎
+            </button>
+          </form>
+
+          {/* Actions row */}
+          <div className="flex justify-center gap-3 mb-6">
+            <button
+              onClick={() => { if (freeEmoji) setShowDetails(true); else setShowDetails(true); }}
               className="text-[10px] text-pm-text-muted hover:text-brand cursor-pointer"
             >
-              {showAddHelped ? (lang === "zh" ? "完成" : "Done") : `+ ${lang === "zh" ? "添加标签" : "Add tag"}`}
+              {lang === "zh" ? "📝 记录详情" : "📝 Log with details"}
             </button>
+            <button
+              onClick={() => setShowDatePicker(!showDatePicker)}
+              className="text-[10px] text-pm-text-muted hover:text-brand cursor-pointer"
+            >
+              {backfillDate
+                ? `📅 ${new Date(backfillDate + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
+                : (lang === "zh" ? "📅 补录" : "📅 Past day")}
+            </button>
+            {backfillDate && (
+              <button onClick={() => { setBackfillDate(""); setShowDatePicker(false); }} className="text-[10px] text-pm-text-muted hover:text-red-400 cursor-pointer">×</button>
+            )}
           </div>
 
-          {showAddHelped && (
-            <div className="flex gap-2 mb-3">
+          {showDatePicker && (
+            <div className="mb-4 text-center">
               <input
-                type="text"
-                value={newHelpedInput}
-                onChange={(e) => setNewHelpedInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && newHelpedInput.trim()) {
-                    addSavedOption("helped", newHelpedInput.trim());
-                    setNewHelpedInput("");
-                  }
-                }}
-                placeholder={lang === "zh" ? "输入新标签..." : "New helped tag..."}
-                className="flex-1 px-3 py-1.5 rounded-xl bg-pm-surface-active border border-pm-border text-pm-text text-xs focus:outline-none focus:ring-2 focus:ring-brand-light"
-                autoFocus
+                type="date"
+                value={backfillDate}
+                max={new Date().toISOString().split("T")[0]}
+                onChange={(e) => { setBackfillDate(e.target.value); setShowDatePicker(false); }}
+                className="px-3 py-1.5 rounded-xl bg-pm-surface-active border border-pm-border text-pm-text text-xs focus:outline-none focus:ring-2 focus:ring-brand-light"
               />
-              <button
-                onClick={() => { if (newHelpedInput.trim()) { addSavedOption("helped", newHelpedInput.trim()); setNewHelpedInput(""); } }}
-                disabled={!newHelpedInput.trim()}
-                className="px-3 py-1.5 rounded-full text-xs bg-brand text-white cursor-pointer disabled:opacity-40"
-              >
-                {lang === "zh" ? "保存" : "Save"}
-              </button>
             </div>
           )}
 
-          <input
-            type="text"
-            placeholder={lang === "zh" ? "或输入其他方法..." : "Or type what helped..."}
-            value={customHelped}
-            onChange={(e) => setCustomHelped(e.target.value)}
-            className="w-full px-4 py-2 rounded-xl bg-pm-surface-active border border-pm-border text-pm-text text-xs placeholder-pm-placeholder focus:outline-none focus:ring-2 focus:ring-brand-light mb-4"
-          />
-          <div className="flex justify-center gap-3">
-            <button
-              onClick={saveMood}
-              disabled={saving}
-              className="px-6 py-2 rounded-full text-xs font-medium bg-brand text-white cursor-pointer disabled:opacity-40"
-            >
-              {saving ? "..." : t("mood.done")}
-            </button>
-            <button
-              onClick={() => { setSelectedHelped([]); setCustomHelped(""); saveMood(); }}
-              disabled={saving}
-              className="px-6 py-2 rounded-full text-xs font-medium bg-pm-surface-active text-pm-text-secondary cursor-pointer"
-            >
-              {t("mood.skip")}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Step 4: AI Response */}
-      {step === "done" && selected !== null && (
-        <div className="mt-4 max-w-xs mx-auto">
-          <p className="text-3xl mb-3">{moods[selected].emoji}</p>
-          <p className="text-sm text-pm-text-secondary">
-            {t(moods[selected].responseKey)}
-          </p>
-          {/* Layer 1: Grow suggestion for low/struggling moods */}
-          {selected !== null && selected >= 3 && buildTriggerString() && onNavigateToGrow && (
-            <button
-              onClick={() => {
-                const triggerStr = buildTriggerString();
-                const helpedLabels = selectedHelped.map((k) => t(k)).join(", ");
-                onNavigateToGrow({
-                  trigger: triggerStr,
-                  moodLabel: moods[selected].label,
-                  moodEmoji: moods[selected].emoji,
-                  helped: helpedLabels || null,
-                  source: "mood-done",
-                });
-              }}
-              className="mt-3 px-4 py-2 rounded-full text-xs bg-pm-accent-light text-brand hover:bg-pm-accent cursor-pointer transition-all"
-            >
-              {t("mood.growSuggestion")} 🌱
-            </button>
-          )}
           {/* Wellness nudge */}
           {wellnessNudge && (
-            <div className="mt-4 bg-pm-accent-light/70 rounded-2xl p-3 text-left">
+            <div className="mb-4 bg-pm-accent-light/70 rounded-2xl p-3 text-left">
               <p className="text-xs text-pm-text-secondary leading-relaxed">
                 {lang === "zh"
-                  ? "我们注意到你最近情绪偏低。做一个简单的自我评估，也许能帮助你更好地了解自己。"
-                  : "We've noticed you've been feeling low lately. A quick self check-in might help you understand how you're doing."}
+                  ? "我们注意到你最近情绪偏低。做一个简单的自我评估？"
+                  : "We've noticed a pattern. A quick self check-in might help."}
               </p>
               <button
-                onClick={() => {
-                  resetFlow();
-                  onSuggestAssessment?.(wellnessNudge);
-                }}
+                onClick={() => onSuggestAssessment?.(wellnessNudge)}
                 className="mt-2 px-4 py-1.5 rounded-full text-xs bg-brand text-white cursor-pointer"
               >
                 {wellnessNudge === "phq9"
-                  ? (lang === "zh" ? "🌧️ 抑郁自评" : "🌧️ Depression Check-In")
-                  : (lang === "zh" ? "🌊 焦虑自评" : "🌊 Anxiety Check-In")}
+                  ? (lang === "zh" ? "🌧️ 抑郁自评" : "🌧️ Check-In")
+                  : (lang === "zh" ? "🌊 焦虑自评" : "🌊 Check-In")}
               </button>
             </div>
           )}
-          <button
-            onClick={resetFlow}
-            className="mt-3 text-xs text-pm-text-muted hover:text-brand cursor-pointer"
-          >
-            {lang === "zh" ? "完成" : "Done"}
-          </button>
+
+          {/* Chart */}
+          {user && history.length > 0 && (
+            <MoodChart history={history} timeRange={timeRange} onTimeRangeChange={setTimeRange} />
+          )}
+
+          {/* History */}
+          {user && history.length > 0 && (
+            <MoodHistoryList
+              history={history}
+              photoUrls={photoUrls}
+              onDeleteMood={deleteMood}
+              onUpdateMood={updateMood}
+              onDeletePhoto={deleteEntryPhoto}
+              triggerTags={[...TRIGGER_KEYS.map((k) => t(k)), ...savedTriggers.map((s) => s.label)]}
+              helpedTags={[...HELPED_KEYS.map((k) => t(k)), ...savedHelped.map((s) => s.label)]}
+              onNavigateToGrow={onNavigateToGrow}
+              hasMore={hasMore}
+              loadingMore={loadingMore}
+              onLoadMore={loadMore}
+            />
+          )}
         </div>
-      )}
+      ) : (
+        /* Detail mode — trigger + helped flow */
+        <div className="max-w-sm mx-auto">
+          <div className="flex items-center justify-between mb-4">
+            <button onClick={() => setShowDetails(false)} className="text-xs text-pm-text-muted hover:text-brand cursor-pointer">← Back</button>
+            <span className="text-2xl">{freeEmoji || "😊"}</span>
+            <div className="w-12" />
+          </div>
 
-      {/* Not logged in and not anonymous (shouldn't happen normally) */}
-      {!user && !isAnonymous && selected !== null && step === "mood" && (
-        <>
-          <p className="mt-4 text-sm text-pm-text-secondary max-w-xs mx-auto">
-            {t(moods[selected].responseKey)}
-          </p>
-          <p className="mt-2 text-sm text-pm-text-muted">{t("mood.signIn")}</p>
-        </>
-      )}
+          {/* Emoji input if not set */}
+          {!freeEmoji && (
+            <div className="mb-4">
+              <div className="flex justify-center gap-1 mb-2 flex-wrap">
+                {EMOJI_GRID.slice(0, 10).map((emoji) => (
+                  <button key={emoji} onClick={() => setFreeEmoji(emoji)} className="text-xl p-1 rounded-lg hover:bg-pm-surface-hover cursor-pointer">{emoji}</button>
+                ))}
+              </div>
+              <input
+                type="text"
+                value={freeEmoji}
+                onChange={(e) => setFreeEmoji(e.target.value)}
+                placeholder={lang === "zh" ? "选择表情..." : "Pick an emoji..."}
+                className="w-full px-4 py-2 rounded-xl bg-pm-surface-active border border-pm-border text-xl text-center focus:outline-none focus:ring-2 focus:ring-brand-light"
+                autoFocus
+              />
+            </div>
+          )}
 
-      {user && history.length > 0 && step === "mood" && (
-        <MoodChart
-          history={history}
-          timeRange={timeRange}
-          onTimeRangeChange={setTimeRange}
-        />
-      )}
+          {/* Trigger step */}
+          <TriggerStep
+            moods={moods}
+            selected={null}
+            selectedTriggers={selectedTriggers}
+            customTrigger={customTrigger}
+            customTriggers={customTriggers}
+            savedTriggers={savedTriggers}
+            hiddenTriggerKeys={hiddenTriggerKeys}
+            triggerPattern={triggerPattern}
+            triggerKeys={TRIGGER_KEYS}
+            onSelectMood={() => {}}
+            onToggleTrigger={toggleTrigger}
+            onToggleCustomTrigger={toggleCustomTrigger}
+            onCustomTriggerChange={setCustomTrigger}
+            onAddSaved={(label) => addSavedOption("trigger", label)}
+            onDeleteSaved={deleteSavedOption}
+            onHidePreset={hidePresetTrigger}
+            onShowAllPresets={showAllPresets}
+            onNext={() => {}}
+            onSkip={() => {}}
+          />
 
-      {user && history.length > 0 && step === "mood" && (
-        <MoodHistoryList
-          history={history}
-          photoUrls={photoUrls}
-          onDeleteMood={deleteMood}
-          onUpdateMood={updateMood}
-          onDeletePhoto={deleteEntryPhoto}
-          triggerTags={[...TRIGGER_KEYS.map((k) => t(k)), ...savedTriggers.map((s) => s.label)]}
-          helpedTags={[...HELPED_KEYS.map((k) => t(k)), ...savedHelped.map((s) => s.label)]}
-          onNavigateToGrow={onNavigateToGrow}
-          hasMore={hasMore}
-          loadingMore={loadingMore}
-          onLoadMore={loadMore}
-        />
+          {/* Helped section */}
+          <div className="mt-4">
+            <p className="text-xs text-pm-text-secondary font-medium mb-2 text-center">{t("mood.whatHelped")}</p>
+            <div className="flex flex-wrap gap-1.5 justify-center mb-2">
+              {HELPED_KEYS.map((key) => (
+                <button
+                  key={key}
+                  onClick={() => toggleHelped(key)}
+                  className={`px-3 py-1.5 rounded-full text-xs cursor-pointer transition-all ${
+                    selectedHelped.includes(key) ? "bg-brand text-white" : "bg-pm-surface-active text-pm-text-secondary hover:bg-pm-surface-hover"
+                  }`}
+                >
+                  {t(key)}
+                </button>
+              ))}
+            </div>
+            <input
+              type="text"
+              placeholder={lang === "zh" ? "或输入..." : "Or type..."}
+              value={customHelped}
+              onChange={(e) => setCustomHelped(e.target.value)}
+              className="w-full px-3 py-1.5 rounded-xl bg-pm-surface-active border border-pm-border text-pm-text text-xs focus:outline-none focus:ring-2 focus:ring-brand-light mb-3"
+            />
+          </div>
+
+          {/* Save */}
+          <div className="flex justify-center gap-3">
+            <button
+              onClick={saveWithDetails}
+              disabled={!freeEmoji || saving}
+              className="px-6 py-2 rounded-full text-xs font-medium bg-brand text-white cursor-pointer disabled:opacity-40"
+            >
+              {saving ? "..." : (lang === "zh" ? "保存" : "Save")}
+            </button>
+            <button
+              onClick={() => setShowDetails(false)}
+              className="px-6 py-2 rounded-full text-xs font-medium bg-pm-surface-active text-pm-text-secondary cursor-pointer"
+            >
+              {lang === "zh" ? "取消" : "Cancel"}
+            </button>
+          </div>
+        </div>
       )}
     </section>
   );
