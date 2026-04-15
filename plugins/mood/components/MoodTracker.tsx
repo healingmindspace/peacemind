@@ -632,10 +632,11 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
               </span>
               {frequentEmojis.map((emoji) => (
                 <button
-                  key={emoji}
-                  onClick={() => setFreeEmoji((prev) => prev + emoji)}
-                  className={`text-2xl p-1.5 rounded-xl cursor-pointer transition-all active:scale-90 ${
-                    freeEmoji.includes(emoji) ? "bg-brand/20 scale-110 ring-2 ring-brand" : "hover:bg-pm-surface-hover hover:scale-125"
+                  key={`freq-${emoji}`}
+                  type="button"
+                  onPointerDown={(e) => { e.preventDefault(); setFreeEmoji((prev) => prev + emoji); }}
+                  className={`text-2xl p-1.5 rounded-xl cursor-pointer select-none ${
+                    freeEmoji.includes(emoji) ? "bg-brand/20 ring-2 ring-brand" : "hover:bg-pm-surface-hover active:bg-brand/10"
                   }`}
                 >
                   {emoji}
@@ -648,10 +649,11 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
           <div className="flex justify-center gap-1 mb-3 flex-wrap">
             {EMOJI_GRID.filter((e) => !frequentEmojis.includes(e)).map((emoji) => (
               <button
-                key={emoji}
-                onClick={() => setFreeEmoji((prev) => prev + emoji)}
-                className={`text-xl p-1 rounded-lg cursor-pointer transition-all active:scale-90 ${
-                  freeEmoji.includes(emoji) ? "bg-brand/20 scale-110 ring-2 ring-brand" : "hover:bg-pm-surface-hover hover:scale-110"
+                key={`grid-${emoji}`}
+                type="button"
+                onPointerDown={(e) => { e.preventDefault(); setFreeEmoji((prev) => prev + emoji); }}
+                className={`text-xl p-1 rounded-lg cursor-pointer select-none ${
+                  freeEmoji.includes(emoji) ? "bg-brand/20 ring-2 ring-brand" : "hover:bg-pm-surface-hover active:bg-brand/10"
                 }`}
               >
                 {emoji}
@@ -783,10 +785,11 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
             <div className="flex justify-center gap-1 mb-2 flex-wrap">
               {EMOJI_GRID.map((emoji) => (
                 <button
-                  key={emoji}
-                  onClick={() => setFreeEmoji((prev) => prev + emoji)}
-                  className={`text-xl p-1 rounded-lg cursor-pointer transition-all active:scale-90 ${
-                    freeEmoji.includes(emoji) ? "bg-brand/20 ring-2 ring-brand" : "hover:bg-pm-surface-hover"
+                  key={`detail-${emoji}`}
+                  type="button"
+                  onPointerDown={(e) => { e.preventDefault(); setFreeEmoji((prev) => prev + emoji); }}
+                  className={`text-xl p-1 rounded-lg cursor-pointer select-none ${
+                    freeEmoji.includes(emoji) ? "bg-brand/20 ring-2 ring-brand" : "hover:bg-pm-surface-hover active:bg-brand/10"
                   }`}
                 >
                   {emoji}
