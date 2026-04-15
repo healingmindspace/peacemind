@@ -97,9 +97,10 @@ const translations: Record<Lang, Record<string, string>> = {
     "mood.readingPhoto": "Reading photo...",
 
     // Chart
+    "chart.today": "Today",
+    "chart.3days": "3 days",
     "chart.week": "Week",
     "chart.month": "Month",
-    "chart.3mo": "3mo",
 
     // Breathing
     "breathe.title": "Guided Breathing",
@@ -474,9 +475,10 @@ const translations: Record<Lang, Record<string, string>> = {
     "mood.readingPhoto": "正在读取照片...",
 
     // Chart
+    "chart.today": "今天",
+    "chart.3days": "3天",
     "chart.week": "周",
     "chart.month": "月",
-    "chart.3mo": "季",
 
     // Breathing
     "breathe.title": "引导呼吸",

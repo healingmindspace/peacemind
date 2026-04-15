@@ -62,7 +62,7 @@ function CustomTooltip(props: any) {
   );
 }
 
-type TimeRange = "week" | "month" | "3months";
+type TimeRange = "today" | "3days" | "week" | "month";
 
 interface MoodChartProps {
   history: MoodEntry[];
@@ -75,7 +75,7 @@ export default function MoodChart({ history, timeRange, onTimeRangeChange }: Moo
 
   if (history.length < 2) return null;
 
-  const useShortDate = timeRange !== "week";
+  const useShortDate = timeRange !== "today" && timeRange !== "3days" && timeRange !== "week";
 
   const data = [...history]
     .reverse()
@@ -121,9 +121,10 @@ export default function MoodChart({ history, timeRange, onTimeRangeChange }: Moo
   }
 
   const rangeLabels: Record<TimeRange, string> = {
+    today: t("chart.today"),
+    "3days": t("chart.3days"),
     week: t("chart.week"),
     month: t("chart.month"),
-    "3months": t("chart.3mo"),
   };
 
   return (

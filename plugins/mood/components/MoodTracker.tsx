@@ -22,10 +22,10 @@ interface MoodEntry {
   created_at: string;
 }
 
-type TimeRange = "week" | "month" | "3months";
+type TimeRange = "today" | "3days" | "week" | "month";
 
-const RANGE_DAYS: Record<TimeRange, number> = { week: 7, month: 30, "3months": 90 };
-const RANGE_LIMITS: Record<TimeRange, number> = { week: 35, month: 150, "3months": 450 };
+const RANGE_DAYS: Record<TimeRange, number> = { today: 1, "3days": 3, week: 7, month: 30 };
+const RANGE_LIMITS: Record<TimeRange, number> = { today: 10, "3days": 30, week: 35, month: 150 };
 
 const TRIGGER_KEYS = [
   "mood.trigger.work", "mood.trigger.relationship", "mood.trigger.family",
