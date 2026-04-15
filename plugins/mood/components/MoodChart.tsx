@@ -18,55 +18,32 @@ interface MoodEntry {
   created_at: string;
 }
 
-const MOOD_LEVEL: Record<string, number> = {
-  Struggling: 1,
-  Low: 2,
-  Neutral: 3,
-  Okay: 4,
-  Good: 5,
-};
+// Dynamic emoji scoring — same as MoodTracker
+function getEmojiScore(emojis: string): number {
+  const great = "🥳🤩😍🥰🎉💪✨🌟😎🤗💃🕺🏆🎊👏";
+  const good = "😊🙂😄😁👍🌈☺️😌🫶🙏💚🍀😋🤭";
+  const low = "😔😞😓😟🥺😿💔🫤😕☹️😩🤕";
+  const struggling = "😢😭😰😱💀👎😡😤🤬😖😫🆘😵🤮";
+  for (const ch of emojis) {
+    if (great.includes(ch)) return 5;
+    if (good.includes(ch)) return 4;
+    if (low.includes(ch)) return 2;
+    if (struggling.includes(ch)) return 1;
+  }
+  return 3;
+}
 
-const LEVEL_EMOJI: Record<number, string> = {
-  1: "😢",
-  2: "😔",
-  3: "😐",
-  4: "🙂",
-  5: "😊",
+// Also support legacy label-based scoring
+const MOOD_LEVEL: Record<string, number> = {
+  Struggling: 1, Low: 2, Neutral: 3, Okay: 4, Good: 5, Great: 5,
 };
 
 function formatDateShort(dateStr: string) {
-  const d = new Date(dateStr);
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-}
-
-function formatDateFull(dateStr: string) {
-  const d = new Date(dateStr);
-  return d.toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
+  return new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
 function formatTime(dateStr: string) {
-  const d = new Date(dateStr);
-  return d.toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function EmojiTick(props: any) {
-  const { x, y, payload } = props;
-  return (
-    <text x={x - 20} y={y + 5} textAnchor="middle" fontSize={14}>
-      {LEVEL_EMOJI[payload?.value as number] ?? ""}
-    </text>
-  );
+  return new Date(dateStr).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -102,15 +79,35 @@ export default function MoodChart({ history, timeRange, onTimeRangeChange }: Moo
 
   const data = [...history]
     .reverse()
-    .map((entry) => ({
-      date: useShortDate
-        ? formatDateShort(entry.created_at)
-        : formatDateFull(entry.created_at),
-      fullDate: formatTime(entry.created_at),
-      level: MOOD_LEVEL[entry.label] ?? 3,
-      emoji: entry.emoji,
-      label: entry.label,
-    }));
+    .map((entry) => {
+      // Score from emoji first, fall back to label
+      const level = getEmojiScore(entry.emoji) || MOOD_LEVEL[entry.label] || 3;
+      return {
+        date: useShortDate ? formatDateShort(entry.created_at) : formatTime(entry.created_at),
+        fullDate: formatTime(entry.created_at),
+        level,
+        emoji: entry.emoji,
+        label: entry.label,
+      };
+    });
+
+  // Dynamic range based on actual data
+  const levels = data.map((d) => d.level);
+  const minLevel = Math.max(1, Math.min(...levels) - 1);
+  const maxLevel = Math.min(5, Math.max(...levels) + 1);
+  const ticks = Array.from({ length: maxLevel - minLevel + 1 }, (_, i) => minLevel + i);
+
+  const TICK_EMOJI: Record<number, string> = { 1: "😢", 2: "😔", 3: "😐", 4: "🙂", 5: "😊" };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function EmojiTick(props: any) {
+    const { x, y, payload } = props;
+    return (
+      <text x={x - 20} y={y + 5} textAnchor="middle" fontSize={14}>
+        {TICK_EMOJI[payload?.value as number] ?? ""}
+      </text>
+    );
+  }
 
   const rangeLabels: Record<TimeRange, string> = {
     week: t("chart.week"),
@@ -150,8 +147,8 @@ export default function MoodChart({ history, timeRange, onTimeRangeChange }: Moo
             axisLine={{ stroke: "#d8cfe8" }}
           />
           <YAxis
-            domain={[1, 5]}
-            ticks={[1, 2, 3, 4, 5]}
+            domain={[minLevel, maxLevel]}
+            ticks={ticks}
             tick={<EmojiTick />}
             tickLine={false}
             axisLine={{ stroke: "#d8cfe8" }}

@@ -633,8 +633,10 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
               {frequentEmojis.map((emoji) => (
                 <button
                   key={emoji}
-                  onClick={() => { setFreeEmoji(emoji); }}
-                  className="text-2xl p-1.5 rounded-xl hover:bg-pm-surface-hover cursor-pointer transition-transform hover:scale-125 active:scale-90"
+                  onClick={() => setFreeEmoji((prev) => prev + emoji)}
+                  className={`text-2xl p-1.5 rounded-xl cursor-pointer transition-all active:scale-90 ${
+                    freeEmoji.includes(emoji) ? "bg-brand/20 scale-110 ring-2 ring-brand" : "hover:bg-pm-surface-hover hover:scale-125"
+                  }`}
                 >
                   {emoji}
                 </button>
@@ -647,31 +649,47 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
             {EMOJI_GRID.filter((e) => !frequentEmojis.includes(e)).map((emoji) => (
               <button
                 key={emoji}
-                onClick={() => { setFreeEmoji(emoji); }}
-                className="text-xl p-1 rounded-lg hover:bg-pm-surface-hover cursor-pointer transition-transform hover:scale-110 active:scale-90"
+                onClick={() => setFreeEmoji((prev) => prev + emoji)}
+                className={`text-xl p-1 rounded-lg cursor-pointer transition-all active:scale-90 ${
+                  freeEmoji.includes(emoji) ? "bg-brand/20 scale-110 ring-2 ring-brand" : "hover:bg-pm-surface-hover hover:scale-110"
+                }`}
               >
                 {emoji}
               </button>
             ))}
           </div>
 
-          {/* Input + send */}
+          {/* Selected emojis display + input */}
           <form
             onSubmit={(e) => { e.preventDefault(); if (freeEmoji && user) selectFreeEmoji(); }}
             className="flex items-center gap-2 mb-2"
           >
-            <input
-              id="emoji-input"
-              type="text"
-              value={freeEmoji}
-              onChange={(e) => setFreeEmoji(e.target.value)}
-              placeholder={lang === "zh" ? "输入表情..." : "Type emoji..."}
-              className="flex-1 px-4 py-2.5 rounded-2xl bg-pm-surface-active border border-pm-border text-xl text-center focus:outline-none focus:ring-2 focus:ring-brand-light"
-            />
+            <div className="flex-1 flex items-center gap-1 px-3 py-2 rounded-2xl bg-pm-surface-active border border-pm-border focus-within:ring-2 focus-within:ring-brand-light">
+              {freeEmoji && (
+                <>
+                  <span className="text-xl">{freeEmoji}</span>
+                  <button
+                    type="button"
+                    onClick={() => setFreeEmoji("")}
+                    className="text-xs text-pm-text-muted hover:text-red-400 cursor-pointer ml-1"
+                  >
+                    ✕
+                  </button>
+                </>
+              )}
+              <input
+                id="emoji-input"
+                type="text"
+                value=""
+                onChange={(e) => setFreeEmoji((prev) => prev + e.target.value)}
+                placeholder={freeEmoji ? "" : (lang === "zh" ? "选择或输入表情..." : "Tap or type emoji...")}
+                className="flex-1 bg-transparent text-xl text-center outline-none min-w-[40px]"
+              />
+            </div>
             <button
               type="submit"
               disabled={!freeEmoji || saving || !user}
-              className="w-10 h-10 rounded-full bg-brand text-white flex items-center justify-center cursor-pointer disabled:opacity-40 text-lg"
+              className="w-10 h-10 rounded-full bg-brand text-white flex items-center justify-center cursor-pointer disabled:opacity-40 text-lg shrink-0"
             >
               ⏎
             </button>
@@ -760,24 +778,37 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
             <div className="w-12" />
           </div>
 
-          {/* Emoji input if not set */}
-          {!freeEmoji && (
-            <div className="mb-4">
-              <div className="flex justify-center gap-1 mb-2 flex-wrap">
-                {EMOJI_GRID.slice(0, 10).map((emoji) => (
-                  <button key={emoji} onClick={() => setFreeEmoji(emoji)} className="text-xl p-1 rounded-lg hover:bg-pm-surface-hover cursor-pointer">{emoji}</button>
-                ))}
-              </div>
+          {/* Emoji picker for details mode */}
+          <div className="mb-4">
+            <div className="flex justify-center gap-1 mb-2 flex-wrap">
+              {EMOJI_GRID.map((emoji) => (
+                <button
+                  key={emoji}
+                  onClick={() => setFreeEmoji((prev) => prev + emoji)}
+                  className={`text-xl p-1 rounded-lg cursor-pointer transition-all active:scale-90 ${
+                    freeEmoji.includes(emoji) ? "bg-brand/20 ring-2 ring-brand" : "hover:bg-pm-surface-hover"
+                  }`}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+            <div className="flex items-center gap-1 px-3 py-2 rounded-xl bg-pm-surface-active border border-pm-border">
+              {freeEmoji && (
+                <>
+                  <span className="text-xl">{freeEmoji}</span>
+                  <button type="button" onClick={() => setFreeEmoji("")} className="text-xs text-pm-text-muted hover:text-red-400 cursor-pointer ml-1">✕</button>
+                </>
+              )}
               <input
                 type="text"
-                value={freeEmoji}
-                onChange={(e) => setFreeEmoji(e.target.value)}
-                placeholder={lang === "zh" ? "选择表情..." : "Pick an emoji..."}
-                className="w-full px-4 py-2 rounded-xl bg-pm-surface-active border border-pm-border text-xl text-center focus:outline-none focus:ring-2 focus:ring-brand-light"
-                autoFocus
+                value=""
+                onChange={(e) => setFreeEmoji((prev) => prev + e.target.value)}
+                placeholder={freeEmoji ? "" : (lang === "zh" ? "选择或输入..." : "Tap or type...")}
+                className="flex-1 bg-transparent text-xl text-center outline-none min-w-[40px]"
               />
             </div>
-          )}
+          </div>
 
           {/* Trigger step */}
           <TriggerStep
