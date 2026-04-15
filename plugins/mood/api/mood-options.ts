@@ -41,7 +41,7 @@ export async function POST(request: Request) {
   // INSERT
   if (action === "insert") {
     const { type, label } = body;
-    if (!type || !label || !["trigger", "helped", "hidden_trigger", "hidden_helped"].includes(type)) {
+    if (!type || !label || !["trigger", "helped", "hidden_trigger", "hidden_helped", "emoji"].includes(type)) {
       return NextResponse.json({ error: "Missing type or label" }, { status: 400 });
     }
     const safeLabel = String(label).slice(0, MAX_LENGTHS.name);

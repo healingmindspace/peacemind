@@ -72,6 +72,8 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
   const [wellnessNudge, setWellnessNudge] = useState<"phq9" | "gad7" | null>(null);
   const [savedTriggers, setSavedTriggers] = useState<{ id: string; label: string }[]>([]);
   const [savedHelped, setSavedHelped] = useState<{ id: string; label: string }[]>([]);
+  const [savedEmojis, setSavedEmojis] = useState<{ id: string; label: string }[]>([]);
+  const [editingEmojis, setEditingEmojis] = useState(false);
   const [newTriggerInput, setNewTriggerInput] = useState("");
   const [newHelpedInput, setNewHelpedInput] = useState("");
   const [showAddHelped, setShowAddHelped] = useState(false);
@@ -172,11 +174,12 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
     if (json.data) {
       setSavedTriggers(json.data.filter((o: { type: string }) => o.type === "trigger"));
       setSavedHelped(json.data.filter((o: { type: string }) => o.type === "helped"));
+      setSavedEmojis(json.data.filter((o: { type: string }) => o.type === "emoji"));
       setHiddenTriggerKeys(json.data.filter((o: { type: string }) => o.type === "hidden_trigger").map((o: { label: string }) => o.label));
     }
   };
 
-  const addSavedOption = async (type: "trigger" | "helped", label: string) => {
+  const addSavedOption = async (type: "trigger" | "helped" | "emoji" | "hidden_trigger", label: string) => {
     if (!label.trim()) return;
     if (!accessToken && !isAnonymous) return;
     await apiFetch("/api/mood-options", {
@@ -198,7 +201,7 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
   };
 
   const hidePresetTrigger = async (key: string) => {
-    await addSavedOption("hidden_trigger" as "trigger", key);
+    await addSavedOption("hidden_trigger", key);
   };
 
   const showAllPresets = async () => {
@@ -220,22 +223,6 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
     }
     loadSavedOptions();
   };
-
-  // Compute frequent emojis from history
-  const frequentEmojis = useMemo(() => {
-    const counts = new Map<string, number>();
-    history.forEach((e) => {
-      if (e.emoji) {
-        for (const { segment } of new Intl.Segmenter("en", { granularity: "grapheme" }).segment(e.emoji)) {
-          counts.set(segment, (counts.get(segment) || 0) + 1);
-        }
-      }
-    });
-    return Array.from(counts.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 8)
-      .map(([emoji]) => emoji);
-  }, [history]);
 
   // Compute streak (consecutive days with at least one log)
   const streak = useMemo(() => {
@@ -628,41 +615,62 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
       {/* Main view — emoji input + details toggle */}
       {!showDetails ? (
         <div className="max-w-sm mx-auto">
-          {/* Frequent emojis — quick tap */}
-          {frequentEmojis.length > 0 && (
-            <div className="flex justify-center gap-1.5 mb-3 flex-wrap">
-              <span className="text-[10px] text-pm-text-muted w-full text-center mb-1">
-                {lang === "zh" ? "常用" : "Recent"}
-              </span>
-              {frequentEmojis.map((emoji) => (
-                <button
-                  key={`freq-${emoji}`}
-                  type="button"
-                  onPointerDown={(e) => { e.preventDefault(); setFreeEmoji(emoji); }}
-                  className={`text-2xl p-1.5 rounded-xl cursor-pointer select-none ${
-                    freeEmoji.includes(emoji) ? "bg-brand/20 ring-2 ring-brand" : "hover:bg-pm-surface-hover active:bg-brand/10"
-                  }`}
-                >
-                  {emoji}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Emoji grid */}
+          {/* Emoji quick-tap list (favorites or default grid) */}
           <div className="flex justify-center gap-1 mb-3 flex-wrap">
-            {EMOJI_GRID.filter((e) => !frequentEmojis.includes(e)).map((emoji) => (
-              <button
-                key={`grid-${emoji}`}
-                type="button"
-                onPointerDown={(e) => { e.preventDefault(); setFreeEmoji((prev) => prev + emoji); }}
-                className={`text-xl p-1 rounded-lg cursor-pointer select-none ${
-                  freeEmoji.includes(emoji) ? "bg-brand/20 ring-2 ring-brand" : "hover:bg-pm-surface-hover active:bg-brand/10"
-                }`}
-              >
-                {emoji}
-              </button>
-            ))}
+            {!editingEmojis ? (
+              <>
+                {(savedEmojis.length > 0 ? savedEmojis.map((s) => s.label) : EMOJI_GRID).map((emoji) => (
+                  <button
+                    key={`tap-${emoji}`}
+                    type="button"
+                    onPointerDown={(e) => { e.preventDefault(); setFreeEmoji((prev) => prev + emoji); }}
+                    className={`text-xl p-1 rounded-lg cursor-pointer select-none ${
+                      freeEmoji.includes(emoji) ? "bg-brand/20 ring-2 ring-brand" : "hover:bg-pm-surface-hover active:bg-brand/10"
+                    }`}
+                  >
+                    {emoji}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setEditingEmojis(true)}
+                  className="text-sm p-1 rounded-lg cursor-pointer select-none text-pm-text-muted hover:bg-pm-surface-hover"
+                >
+                  ✏️
+                </button>
+              </>
+            ) : (
+              <>
+                <span className="text-[10px] text-pm-text-muted w-full text-center mb-1">
+                  {lang === "zh" ? "点击添加或移除常用表情" : "Tap to add/remove favorites"}
+                </span>
+                {EMOJI_GRID.map((emoji) => {
+                  const saved = savedEmojis.find((s) => s.label === emoji);
+                  return (
+                    <button
+                      key={`edit-${emoji}`}
+                      type="button"
+                      onClick={() => {
+                        if (saved) deleteSavedOption(saved.id);
+                        else addSavedOption("emoji", emoji);
+                      }}
+                      className={`text-xl p-1 rounded-lg cursor-pointer select-none ${
+                        saved ? "bg-brand/20 ring-2 ring-brand" : "opacity-40 hover:opacity-100"
+                      }`}
+                    >
+                      {emoji}
+                    </button>
+                  );
+                })}
+                <button
+                  type="button"
+                  onClick={() => setEditingEmojis(false)}
+                  className="text-[10px] text-pm-text-muted hover:text-brand cursor-pointer mt-1 w-full text-center"
+                >
+                  {lang === "zh" ? "完成" : "Done"}
+                </button>
+              </>
+            )}
           </div>
 
           {/* Selected emojis display + input */}
