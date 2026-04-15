@@ -225,7 +225,11 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
   const frequentEmojis = useMemo(() => {
     const counts = new Map<string, number>();
     history.forEach((e) => {
-      if (e.emoji) counts.set(e.emoji, (counts.get(e.emoji) || 0) + 1);
+      if (e.emoji) {
+        for (const { segment } of new Intl.Segmenter("en", { granularity: "grapheme" }).segment(e.emoji)) {
+          counts.set(segment, (counts.get(segment) || 0) + 1);
+        }
+      }
     });
     return Array.from(counts.entries())
       .sort((a, b) => b[1] - a[1])
@@ -634,7 +638,7 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
                 <button
                   key={`freq-${emoji}`}
                   type="button"
-                  onPointerDown={(e) => { e.preventDefault(); setFreeEmoji((prev) => prev + emoji); }}
+                  onPointerDown={(e) => { e.preventDefault(); setFreeEmoji(emoji); }}
                   className={`text-2xl p-1.5 rounded-xl cursor-pointer select-none ${
                     freeEmoji.includes(emoji) ? "bg-brand/20 ring-2 ring-brand" : "hover:bg-pm-surface-hover active:bg-brand/10"
                   }`}

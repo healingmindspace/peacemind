@@ -100,6 +100,17 @@ export default function MoodChart({ history, timeRange, onTimeRangeChange }: Moo
   const TICK_EMOJI: Record<number, string> = { 1: "😢", 2: "😔", 3: "😐", 4: "🙂", 5: "😊" };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function EmojiDot(props: any) {
+    const { cx, cy, payload } = props;
+    if (!cx || !cy) return null;
+    return (
+      <text x={cx} y={cy + 5} textAnchor="middle" fontSize={16}>
+        {payload.emoji}
+      </text>
+    );
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function EmojiTick(props: any) {
     const { x, y, payload } = props;
     return (
@@ -160,8 +171,8 @@ export default function MoodChart({ history, timeRange, onTimeRangeChange }: Moo
             dataKey="level"
             stroke="#7c6a9e"
             strokeWidth={3}
-            dot={{ r: 4, fill: "#7c6a9e", stroke: "#fff", strokeWidth: 2 }}
-            activeDot={{ r: 6, fill: "#5a4a7a", stroke: "#fff", strokeWidth: 2 }}
+            dot={<EmojiDot />}
+            activeDot={<EmojiDot />}
           />
         </LineChart>
       </ResponsiveContainer>
