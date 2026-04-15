@@ -322,7 +322,6 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
 
   const selectFreeEmoji = async () => {
     if (!freeEmoji || !user || !accessToken) return;
-    if (!backfillDate && getTodayCount() >= 5) return;
     setSaving(true);
 
     const scored = getEmojiScore(freeEmoji);
@@ -418,7 +417,6 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
 
   const saveMood = async () => {
     if (selected === null || !user) return;
-    if (!backfillDate && getTodayCount() >= 5) return;
 
     setSaving(true);
     const triggerStr = buildTriggerString();
@@ -529,7 +527,6 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
   // Save emoji with details (trigger/helped) via the detail flow
   const saveWithDetails = async () => {
     if (!freeEmoji || !user) return;
-    if (!backfillDate && getTodayCount() >= 5) return;
     setSaving(true);
 
     const scored = getEmojiScore(freeEmoji);
@@ -623,9 +620,6 @@ export default function MoodTracker({ onNavigateToGrow, onSuggestAssessment }: {
       </div>
 
       {/* Limit warning */}
-      {user && getTodayCount() >= 5 && !backfillDate && (
-        <p className="text-xs text-pm-text-muted mb-4 text-center">{t("mood.limit")}</p>
-      )}
 
       {/* Main view — emoji input + details toggle */}
       {!showDetails ? (

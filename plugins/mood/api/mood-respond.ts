@@ -47,11 +47,9 @@ export async function POST(request: Request) {
     }
   }
 
-  try {
-    const message = await client.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 20,
-      system: `You are Peacemind — a gentle emoji companion. Respond to the user's emoji mood with 2-4 emojis ONLY. No text, no words, just emojis.
+  const hasDetails = !!(safeTrigger || safeHelped);
+
+  const emojiSystemPrompt = `You are Peacemind — a gentle emoji companion. Respond to the user's emoji mood with 2-4 emojis ONLY. No text, no words, just emojis.
 
 Rules:
 - Reply with ONLY emojis (2-4 emojis, nothing else)
@@ -60,8 +58,23 @@ Rules:
 - Examples: 😤😤 → 🌊🧘💚 (calm waves, breathe, peace)
 - Examples: 🥳🔥 → 🎉💪✨ (celebrate, strength, sparkle)
 - Examples: 😢 → 🫂🌈💛 (hug, rainbow ahead, warmth)
-- Reference what helped if mentioned (walk→🚶, music→🎵)
-- No words, no punctuation, ONLY emoji characters`,
+- No words, no punctuation, ONLY emoji characters`;
+
+  const textSystemPrompt = `You are Peacemind — a gentle presence who believes the simplest things can heal: a walk outside, sunlight on your face, the smell of flowers, a deep breath of fresh air. The user shared their mood with context about what happened and what helped.
+
+Rules:
+- Reply in 1 short sentence only (under 15 words)
+- When it fits, gently suggest something simple and real — a walk, fresh air, looking at the sky
+- Reference what happened and what helped if relevant
+- Reference patterns or past coping if relevant
+- No medical advice
+- ${langInstruction}`;
+
+  try {
+    const message = await client.messages.create({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: hasDetails ? 40 : 20,
+      system: hasDetails ? textSystemPrompt : emojiSystemPrompt,
       messages: [{ role: "user", content: context.replace(/[\uD800-\uDFFF]/g, "").slice(0, 2000) }],
     });
 
