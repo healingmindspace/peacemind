@@ -108,7 +108,7 @@ export default function BreathingExercise() {
               body: JSON.stringify({ action: "insert", userId: user.id, accessToken, method: methods[methodIndex].name }),
             }).then(() => {
               window.dispatchEvent(new Event("breathe-complete"));
-              awardSeeds("breathing");
+              awardSeeds("breathing", accessToken);
             });
           }
         }

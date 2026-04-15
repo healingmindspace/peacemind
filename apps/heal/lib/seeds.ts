@@ -138,30 +138,8 @@ export async function awardSeeds(action: SeedAction, accessToken?: string | null
   if (typeof window === "undefined") return 0;
 
   const amount = SEED_REWARDS[action];
-  const today = new Date().toDateString();
 
-  // Local dedup check (for both anonymous and authenticated)
-  if (!action.startsWith("streak")) {
-    const log = getLocalLog();
-    const key = `${action}:${today}`;
-    if (log[key]) return 0;
-    log[key] = today;
-    // Clean old entries
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    for (const [k, v] of Object.entries(log)) {
-      if (new Date(v) < sevenDaysAgo) delete log[k];
-    }
-    setLocalLog(log);
-  }
-
-  // Update localStorage (immediate, for UI responsiveness)
-  const newLocal = Math.max(0, getLocalSeeds() + amount);
-  setLocalSeeds(newLocal);
-  addLocalHistory(action, amount);
-  emitSeedsChanged(newLocal);
-
-  // Sync to server if authenticated
+  // Authenticated: server is source of truth
   if (accessToken) {
     try {
       const res = await fetch("/api/seeds", {
@@ -170,15 +148,36 @@ export async function awardSeeds(action: SeedAction, accessToken?: string | null
         body: JSON.stringify({ action: "award", accessToken, seedAction: action, amount }),
       });
       const data = await res.json();
+      if (data.awarded === 0) return 0; // already awarded today
       if (data.balance !== undefined) {
         setLocalSeeds(data.balance);
+        addLocalHistory(action, amount);
         emitSeedsChanged(data.balance);
       }
+      return data.awarded ?? amount;
     } catch {
-      // Server sync failed — localStorage has the data, will sync later
+      // Server unreachable — fall through to localStorage
     }
   }
 
+  // Anonymous or offline: localStorage only
+  const today = new Date().toDateString();
+  if (!action.startsWith("streak")) {
+    const log = getLocalLog();
+    const key = `${action}:${today}`;
+    if (log[key]) return 0;
+    log[key] = today;
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    for (const [k, v] of Object.entries(log)) {
+      if (new Date(v) < sevenDaysAgo) delete log[k];
+    }
+    setLocalLog(log);
+  }
+  const newLocal = Math.max(0, getLocalSeeds() + amount);
+  setLocalSeeds(newLocal);
+  addLocalHistory(action, amount);
+  emitSeedsChanged(newLocal);
   return amount;
 }
 
@@ -190,13 +189,7 @@ export async function deductSeeds(action: "mood" | "journal", accessToken?: stri
 
   const amount = SEED_REWARDS[action];
 
-  // Update localStorage
-  const newLocal = Math.max(0, getLocalSeeds() - amount);
-  setLocalSeeds(newLocal);
-  addLocalHistory(`delete-${action}`, -amount);
-  emitSeedsChanged(newLocal);
-
-  // Sync to server
+  // Authenticated: server is source of truth
   if (accessToken) {
     try {
       const res = await fetch("/api/seeds", {
@@ -207,13 +200,20 @@ export async function deductSeeds(action: "mood" | "journal", accessToken?: stri
       const data = await res.json();
       if (data.balance !== undefined) {
         setLocalSeeds(data.balance);
+        addLocalHistory(`delete-${action}`, -amount);
         emitSeedsChanged(data.balance);
       }
+      return amount;
     } catch {
-      // Server sync failed — localStorage has the data
+      // Server unreachable — fall through to localStorage
     }
   }
 
+  // Anonymous or offline
+  const newLocal = Math.max(0, getLocalSeeds() - amount);
+  setLocalSeeds(newLocal);
+  addLocalHistory(`delete-${action}`, -amount);
+  emitSeedsChanged(newLocal);
   return amount;
 }
 

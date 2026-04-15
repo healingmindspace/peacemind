@@ -139,7 +139,7 @@ export default function SelfAssessment({ suggestedType }: SelfAssessmentProps) {
       loadHistory();
     }
     setResult({ score, type: test.type });
-    awardSeeds("assessment");
+    awardSeeds("assessment", accessToken);
     setSaving(false);
   };
 

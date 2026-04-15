@@ -27,7 +27,7 @@ export default function GroundingExercise() {
       setStepIndex(stepIndex + 1);
     } else {
       setDone(true);
-      awardSeeds("grounding");
+      awardSeeds("grounding", accessToken);
       // Save session
       if (user && accessToken) {
         fetch("/api/breathing", {

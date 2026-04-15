@@ -52,10 +52,13 @@ export default function CrisisResources({ compact }: { compact?: boolean }) {
           {t("crisis.needHelp")}
         </button>
         {open && (
-          <div className="absolute top-8 md:top-auto md:bottom-8 left-0 z-50 bg-white/95 backdrop-blur-md rounded-2xl p-4 shadow-lg w-72 text-left">
-            <p className="text-sm font-semibold text-pm-text mb-2">{t("crisis.title")}</p>
-            {resources}
-          </div>
+          <>
+            <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+            <div className="absolute top-8 md:top-auto md:bottom-8 left-0 z-50 bg-white/95 backdrop-blur-md rounded-2xl p-4 shadow-lg w-72 text-left">
+              <p className="text-sm font-semibold text-pm-text mb-2">{t("crisis.title")}</p>
+              {resources}
+            </div>
+          </>
         )}
       </div>
     );
