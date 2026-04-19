@@ -27,10 +27,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Missing mood" }, { status: 400 });
   }
 
-  const langInstruction = lang === "zh"
-    ? "Respond entirely in Simplified Chinese."
-    : "Respond in English.";
-
   const safeTrigger = trigger ? String(trigger).slice(0, 500) : null;
   const safeHelped = helped ? String(helped).slice(0, 500) : null;
 
@@ -47,41 +43,25 @@ export async function POST(request: Request) {
     }
   }
 
-  const hasDetails = !!(safeTrigger || safeHelped);
-
-  const emojiSystemPrompt = `You are Peacemind — a gentle emoji companion. Respond with 2-3 emojis that show you UNDERSTAND their feeling. Mirror their emotion, then add warmth.
+  const systemPrompt = `You are Peacemind. Respond with exactly 1 emoji that mirrors the user's feeling.
 
 Rules:
-- Reply with ONLY emojis (2-3 emojis, nothing else)
-- First emoji: mirror/echo their feeling (show you get it)
-- Second emoji: gentle warmth or acknowledgment
-- Optional third: a soft hopeful touch
-- Do NOT suggest activities (no coffee, yoga, walks)
-- Do NOT give advice — just show understanding
-- Examples: 😴😴 → 😴💤🌙
-- Examples: 😤😤 → 😤💨🫂
-- Examples: 🥳🔥 → 🥳🎉✨
-- Examples: 😢 → 😢🫂💜
-- Examples: 😊 → 😊🌸💛
-- Examples: 💪 → 💪🔥⭐
-- Examples: �� → 😰🫂💙
-- No words, no punctuation, ONLY emoji characters`;
-
-  const textSystemPrompt = `You are Peacemind — a gentle presence who believes the simplest things can heal: a walk outside, sunlight on your face, the smell of flowers, a deep breath of fresh air. The user shared their mood with context about what happened and what helped.
-
-Rules:
-- Reply in 1 short sentence only (under 15 words)
-- When it fits, gently suggest something simple and real — a walk, fresh air, looking at the sky
-- Reference what happened and what helped if relevant
-- Reference patterns or past coping if relevant
-- No medical advice
-- ${langInstruction}`;
+- Reply with ONLY 1 emoji (one single emoji character, nothing else)
+- Mirror/echo their emotion — show you understand
+- No words, no punctuation, no extra emojis
+- Examples: 😴😴 → 💤
+- Examples: 😤😤 → 💨
+- Examples: 🥳🔥 → 🎉
+- Examples: 😢 → 🫂
+- Examples: 😊 → 🌸
+- Examples: 💪 → 🔥
+- Examples: 😰 → 💙`;
 
   try {
     const message = await client.messages.create({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: hasDetails ? 40 : 20,
-      system: hasDetails ? textSystemPrompt : emojiSystemPrompt,
+      max_tokens: 4,
+      system: systemPrompt,
       messages: [{ role: "user", content: context.replace(/[\uD800-\uDFFF]/g, "").slice(0, 2000) }],
     });
 
