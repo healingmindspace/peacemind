@@ -231,11 +231,13 @@ export default function SummaryTab() {
       .filter((g: { deleted: boolean }) => !g.deleted)
       .map((g: { id: string; name: string; icon: string }) => {
         const goalTasks = (tasksJson.data || []).filter((t: { goal_id: string }) => t.goal_id === g.id);
+        const completedTasks = goalTasks.filter((t: { completed: boolean }) => t.completed);
         return {
           name: g.name,
           icon: g.icon,
-          completed: goalTasks.filter((t: { completed: boolean }) => t.completed).length,
+          completed: completedTasks.length,
           total: goalTasks.length,
+          estimatedMinutes: completedTasks.reduce((sum: number, t: { duration: number | null }) => sum + (t.duration || 0), 0),
         };
       }).filter((p: { total: number }) => p.total > 0);
 
