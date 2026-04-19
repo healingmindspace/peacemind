@@ -225,7 +225,10 @@ export default function SummaryTab() {
 
     const journalData = (journalsJson.data || [])
       .filter((j: { created_at: string }) => new Date(j.created_at) >= since)
-      .map((j: { content: string }) => ({ content: j.content }));
+      .map((j: { content: string; created_at: string }) => ({
+        content: j.content,
+        time: new Date(j.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      }));
 
     const pathsData = (goalsJson.data || [])
       .filter((g: { deleted: boolean }) => !g.deleted)

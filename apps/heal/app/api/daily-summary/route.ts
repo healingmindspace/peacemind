@@ -113,7 +113,7 @@ export async function POST(request: Request) {
 
 async function generateInsight(
   moods: { emoji: string; label: string; trigger?: string; helped?: string; time: string }[] | undefined,
-  journals: { content: string }[] | undefined,
+  journals: { content: string; time?: string }[] | undefined,
   paths: { name: string; icon: string; completed: number; total: number; estimatedMinutes?: number }[] | undefined,
   assessments: { type: string; score: number; date: string }[] | undefined,
   lang: string,
@@ -138,7 +138,7 @@ async function generateInsight(
   }
   if (journals?.length) {
     const journalSlice = journals.slice(0, 20);
-    context += `Journal entries ${periodLabel}:\n${journalSlice.map((j) => `- "${String(j.content).slice(0, 200)}"`).join("\n")}\n`;
+    context += `Journal entries ${periodLabel}:\n${journalSlice.map((j) => `- (${j.time || "recent"}) "${String(j.content).slice(0, 200)}"`).join("\n")}\n`;
   }
   if (paths?.length) {
     context += `Path progress ${periodLabel}:\n${paths.map((p) => `${p.icon} ${p.name}: ${p.completed}/${p.total} steps done (~${p.estimatedMinutes || 0} min spent)`).join("\n")}\n`;
@@ -152,8 +152,8 @@ async function generateInsight(
     : "";
 
   const systemPrompt = period === "today"
-    ? `You are Peacemind — a gentle presence who believes the simplest things can heal: a walk outside, sunlight, flowers, fresh air. Based on the user's daily mood, triggers, coping strategies, journal data, and path progress, write a brief (2-3 sentences) compassionate daily insight. When it fits, remind them of something simple and real.${assessmentNote} Never give medical advice. ${langInstruction}`
-    : `You are Peacemind — a gentle presence who believes the simplest things can heal: a walk outside, sunlight, flowers, fresh air. Based on the user's mood, triggers, coping strategies, journal data, and path progress over ${periodLabel}, write a brief (3-4 sentences) compassionate summary. Notice recurring triggers, which coping tools worked, mention path progress with estimated time spent on each path, and offer gentle encouragement.${assessmentNote} When it fits, suggest something simple. Never give medical advice. ${langInstruction}`;
+    ? `You are Peacemind — a gentle presence who believes the simplest things can heal: a walk outside, sunlight, flowers, fresh air. Based on the user's daily mood, triggers, coping strategies, journal entries, and path progress, write a brief (2-3 sentences) compassionate daily insight. Summarize key themes from their journal entries. When it fits, remind them of something simple and real.${assessmentNote} Never give medical advice. ${langInstruction}`
+    : `You are Peacemind — a gentle presence who believes the simplest things can heal: a walk outside, sunlight, flowers, fresh air. Based on the user's mood, triggers, coping strategies, journal entries, and path progress over ${periodLabel}, write a brief (3-4 sentences) compassionate summary. Summarize key themes and emotions from their journal entries. Notice recurring triggers, which coping tools worked, mention path progress with estimated time spent on each path, and offer gentle encouragement.${assessmentNote} When it fits, suggest something simple. Never give medical advice. ${langInstruction}`;
 
   try {
     const message = await client.messages.create({
